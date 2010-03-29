@@ -6,7 +6,7 @@
 	<!--
 		Load the Google Maps GWT bindings from the gwt-google-apis project
 	-->
-	<inherits name="com.google.gwt.maps.GoogleMaps" />
+<!--	<inherits name="com.google.gwt.maps.GoogleMaps" />-->
 
 	<!-- Inherit the default GWT style sheet.  You can change       -->
 	<!-- the theme of your GWT application by uncommenting          -->
@@ -36,8 +36,8 @@
 		Set the 'sensor' parameter to true if your app makes use of an onboard
 		positioning sensor, such as a GPS reciever.
 	-->
-	<script
-		src="http://maps.google.com/maps?gwt=1&amp;file=api&amp;v=2&amp;sensor=false" />
+<!--	<script-->
+<!--		src="http://maps.google.com/maps?gwt=1&amp;file=api&amp;v=2&amp;sensor=false" />-->
 
 	<!-- Specify the app entry point class.                         -->
 	<entry-point class='org.labis.risp.client.RdfTest' />

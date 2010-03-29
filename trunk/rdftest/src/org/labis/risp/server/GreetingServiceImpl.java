@@ -3,6 +3,8 @@ package org.labis.risp.server;
 import org.labis.risp.client.GreetingService;
 import org.labis.risp.shared.FieldVerifier;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 
 /**
  * The server side implementation of the RPC service.
@@ -20,6 +22,11 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 					"Name must be at least 4 characters long");
 		}
 
+		
+		Model m = ModelFactory.createDefaultModel();
+		//geonamesRdf.read("http://ws.geonames.org/rdf?geonameId=2950159");
+		//geonamesRdf.write(System.out, "Turtle");
+		
 		String serverInfo = getServletContext().getServerInfo();
 		String userAgent = getThreadLocalRequest().getHeader("User-Agent");
 		return "Hello, " + input + "!<br><br>I am running " + serverInfo

@@ -8,11 +8,11 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
-import com.google.gwt.maps.client.InfoWindowContent;
-import com.google.gwt.maps.client.MapWidget;
-import com.google.gwt.maps.client.control.LargeMapControl;
-import com.google.gwt.maps.client.geom.LatLng;
-import com.google.gwt.maps.client.overlay.Marker;
+//import com.google.gwt.maps.client.InfoWindowContent;
+//import com.google.gwt.maps.client.MapWidget;
+//import com.google.gwt.maps.client.control.LargeMapControl;
+//import com.google.gwt.maps.client.geom.LatLng;
+//import com.google.gwt.maps.client.overlay.Marker;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DialogBox;
@@ -26,7 +26,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
  * Entry point classes define <code>onModuleLoad()</code>.
  */
 public class RdfTest implements EntryPoint {
-	private MapWidget map;
+//	private MapWidget map;
 
 	/**
 	 * The message displayed to the user when the server cannot be reached or
@@ -156,25 +156,25 @@ public class RdfTest implements EntryPoint {
 		sendButton.addClickHandler(handler);
 		nameField.addKeyUpHandler(handler);
 		
-		// Add a map
-		LatLng cawkerCity = LatLng.newInstance(39.509,-98.434);
-	    // Open a map centered on Cawker City, KS USA
-
-	    map = new MapWidget(cawkerCity, 2);
-	    map.setSize("500px", "300px");
-	    
-	    // Add some controls for the zoom level
-	    map.addControl(new LargeMapControl());
-	    
-	    // Add a marker
-	    map.addOverlay(new Marker(cawkerCity));
-
-	    // Add an info window to highlight a point of interest
-	    map.getInfoWindow().open(map.getCenter(), 
-	        new InfoWindowContent("World's Largest Ball of Sisal Twine"));
-	    
-	    // Add the map to the HTML host page
-	    RootPanel.get("mapContainer").add(map);
+//		// Add a map
+//		LatLng cawkerCity = LatLng.newInstance(39.509,-98.434);
+//	    // Open a map centered on Cawker City, KS USA
+//
+//	    map = new MapWidget(cawkerCity, 2);
+//	    map.setSize("500px", "300px");
+//	    
+//	    // Add some controls for the zoom level
+//	    map.addControl(new LargeMapControl());
+//	    
+//	    // Add a marker
+//	    map.addOverlay(new Marker(cawkerCity));
+//
+//	    // Add an info window to highlight a point of interest
+//	    map.getInfoWindow().open(map.getCenter(), 
+//	        new InfoWindowContent("World's Largest Ball of Sisal Twine"));
+//	    
+//	    // Add the map to the HTML host page
+//	    RootPanel.get("mapContainer").add(map);
 		
 	}
 }
