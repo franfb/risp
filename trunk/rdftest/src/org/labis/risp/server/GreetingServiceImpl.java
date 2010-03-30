@@ -5,6 +5,7 @@ import org.labis.risp.shared.FieldVerifier;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Property;
 
 /**
  * The server side implementation of the RPC service.
@@ -24,8 +25,12 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 
 		
 		Model m = ModelFactory.createDefaultModel();
-		//geonamesRdf.read("http://ws.geonames.org/rdf?geonameId=2950159");
-		//geonamesRdf.write(System.out, "Turtle");
+		m.read("http://ws.geonames.org/rdf?geonameId=2950159");
+		m.write(System.out, "N3");
+//		Property p = m.getProperty("http://www.w3.org/2003/01/geo/wgs84_pos#", "lat");
+//		System.out.println(p.toString());
+		
+//		m.write(System.out, "Turtle");
 		
 		String serverInfo = getServletContext().getServerInfo();
 		String userAgent = getThreadLocalRequest().getHeader("User-Agent");
