@@ -1,5 +1,7 @@
 package org.labis.risp.client;
 
+
+
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
@@ -7,5 +9,5 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  */
 public interface GreetingServiceAsync {
 	void greetServer(String input, AsyncCallback<String> callback)
-			throws IllegalArgumentException;
+			throws Exception;
 }

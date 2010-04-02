@@ -8,11 +8,15 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
+import com.google.gwt.maps.client.InfoWindow;
 import com.google.gwt.maps.client.InfoWindowContent;
 import com.google.gwt.maps.client.MapWidget;
 import com.google.gwt.maps.client.control.LargeMapControl;
+import com.google.gwt.maps.client.event.MarkerClickHandler;
 import com.google.gwt.maps.client.geom.LatLng;
 import com.google.gwt.maps.client.overlay.Marker;
+import com.google.gwt.maps.client.overlay.MarkerOptions;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DialogBox;
@@ -21,6 +25,10 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.xml.client.DOMException;
+import com.google.gwt.xml.client.Document;
+import com.google.gwt.xml.client.NodeList;
+import com.google.gwt.xml.client.XMLParser;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -156,18 +164,35 @@ public class RdfTest implements EntryPoint {
 //		sendButton.addClickHandler(handler);
 //		nameField.addKeyUpHandler(handler);
 		
+		try {
+			greetingService.greetServer("texto",
+			new AsyncCallback<String>() {
+				public void onFailure(Throwable caught) {
+					// Error en la RPC
+					System.out.println("Error.");
+				}
+
+				public void onSuccess(String result) {
+					parseXml(result);
+				}
+			});
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		// Add a map
 		LatLng tenerife = LatLng.newInstance(28.4682385853027,-16.2546157836914);
 	    // Open a map centered on Santa Cruz de Tenerife
 
-	    map = new MapWidget(tenerife, 10);
+	    map = new MapWidget();
 	    map.setSize("500px", "300px");
 	    
 	    // Add some controls for the zoom level
 	    map.addControl(new LargeMapControl());
 	    
 	    // Add a marker
-	    map.addOverlay(new Marker(tenerife));
+	    //map.addOverlay(new Marker(tenerife));
 
 	    // Add an info window to highlight a point of interest
 //	    map.getInfoWindow().open(map.getCenter(), 
@@ -177,4 +202,55 @@ public class RdfTest implements EntryPoint {
 	    RootPanel.get("mapContainer").add(map);
 		
 	}
+	
+    private void parseXml(String serverXml) {
+        if (serverXml.equals("Error")) {
+            map.setVisible(false);
+        } else {
+            try {
+                // parse the XML document into a DOM
+                Document messageDom = XMLParser.parse(serverXml);
+
+                NodeList companiesList = messageDom.getElementsByTagName("company");
+                boolean centered = false;
+
+                for (int i = 0; i < companiesList.getLength(); i++) {
+                    NodeList compAttr = companiesList.item(i).getChildNodes();
+                    double lat = Double.parseDouble(compAttr.item(1).getFirstChild().getNodeValue());
+                    double lng = Double.parseDouble(compAttr.item(2).getFirstChild().getNodeValue());
+                    if ((lat != -1.0) && (lng != -1.0)) {
+                        String compName = compAttr.item(0).getFirstChild().getNodeValue();
+                        String info = compAttr.item(3).getFirstChild().getNodeValue();
+
+                        map.addOverlay(createMarker(lat, lng, compName, info));
+                        if (!centered) {
+                            map.setCenter(LatLng.newInstance(lat, lng), 7);
+                            centered = true;
+                        }
+                    }
+                }
+            } catch (DOMException e) {
+                Window.alert("Could not parse XML document.");
+            }
+        }
+    }
+
+    private Marker createMarker(Double lat, Double lng, final String name, final String information) {
+        MarkerOptions markerOpt = MarkerOptions.newInstance();
+//        markerOpt.setIcon(icon);
+        markerOpt.setClickable(true);
+        final Marker marker = new Marker(LatLng.newInstance(lat, lng));
+
+        marker.addMarkerClickHandler(new MarkerClickHandler() {
+
+            public void onClick(MarkerClickEvent event) {
+                InfoWindow info = map.getInfoWindow();
+                info.open(marker,
+                        new InfoWindowContent("<b>" + name + "</b><br>Información: " + information));
+            }
+        });
+
+        return marker;
+    }
+
 }

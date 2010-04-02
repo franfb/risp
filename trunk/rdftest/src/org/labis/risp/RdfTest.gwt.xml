@@ -2,7 +2,9 @@
 <module rename-to='rdftest'>
 	<!-- Inherit the core Web Toolkit stuff.                        -->
 	<inherits name='com.google.gwt.user.User' />
-
+	
+	<!-- Inherit the XML module                                     -->
+	<inherits name="com.google.gwt.xml.XML" />
 	<!--
 		Load the Google Maps GWT bindings from the gwt-google-apis project
 	-->
