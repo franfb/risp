@@ -50,7 +50,9 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		// En su lugar, vamos a crear un modelo de ejemplo mediante Jena.
 //		Model m = createRdfModel();
 		Model m = ModelFactory.createDefaultModel();
-		m.read("file:/d:/etsii/labis/rdfs/doc.rdf", "N-TRIPLE");
+		m.read("file:/c:/labis/rdfs/fichero.rdf", "N-TRIPLE");
+//		m.read()
+//		m.read("http://localhost:2020/sparql?query=SELECT+DISTINCT+*+WHERE+{?s+?p+?o+}", "TURTLE");
 		
 		// Creamos el documento XML que vamos a devolver al cliente
 		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().getDOMImplementation().createDocument(null, null, null);
@@ -60,6 +62,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		lat = m.createProperty("http://localhost:2020/vocab/resource/", "licencia_localizacionLat");
 		lng = m.createProperty("http://localhost:2020/vocab/resource/", "licencia_LocalizacionLog");
 		info = m.createProperty("http://localhost:2020/vocab/resource/", "licencia_cif");
+		
 		ResIterator iter = m.listResourcesWithProperty(lat);
 		Resource r;
 		
