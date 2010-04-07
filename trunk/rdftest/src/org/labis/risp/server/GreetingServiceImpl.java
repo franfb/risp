@@ -34,6 +34,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 	Property lat;
 	Property lng;
 	Property info;
+	Property name;
 	
 	public String greetServer(String input) throws Exception {
 		// Verify that the input is valid. 
@@ -47,28 +48,38 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		
 		// Aquí se debería obtener el modelo desde el servidor D2RServer
 		// En su lugar, vamos a crear un modelo de ejemplo mediante Jena.
-		Model m = createRdfModel();
-//		Model m = ModelFactory.createDefaultModel();
-//		m.read("http://ws.geonames.org/rdf?geonameId=2950159");
+//		Model m = createRdfModel();
+		Model m = ModelFactory.createDefaultModel();
+		m.read("file:/d:/etsii/labis/rdfs/doc.rdf", "N-TRIPLE");
 		
 		// Creamos el documento XML que vamos a devolver al cliente
 		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().getDOMImplementation().createDocument(null, null, null);
 		Element companies = doc.createElement("companies");
 		
+		name = m.createProperty("http://localhost:2020/vocab/resource/", "licencia_nombreEmpresa");
+		lat = m.createProperty("http://localhost:2020/vocab/resource/", "licencia_localizacionLat");
+		lng = m.createProperty("http://localhost:2020/vocab/resource/", "licencia_LocalizacionLog");
+		info = m.createProperty("http://localhost:2020/vocab/resource/", "licencia_cif");
 		ResIterator iter = m.listResourcesWithProperty(lat);
 		Resource r;
+		
 		while (iter.hasNext()) {
 			Element company = doc.createElement("company");
 			r = iter.nextResource();
 			System.out.println("Recurso: " + r.getURI());
-			System.out.println("\tNombre: " + r.getProperty(VCARD.FN).getObject().toString());
-			company.appendChild(doc.createElement("name")).appendChild(doc.createTextNode(r.getProperty(VCARD.FN).getObject().toString()));
-			System.out.println("\tLatitud: " + r.getProperty(lat).getObject().toString());
-			company.appendChild(doc.createElement("lat")).appendChild(doc.createTextNode(r.getProperty(lat).getObject().toString()));
-			System.out.println("\tLongitud: " + r.getProperty(lng).getObject().toString());
-			company.appendChild(doc.createElement("long")).appendChild(doc.createTextNode(r.getProperty(lng).getObject().toString()));
+			System.out.println("\tNombre: " + r.getProperty(name).getObject().toString());
+//			new Double(r.getProperty(lat).getDouble()).toString()
+			company.appendChild(doc.createElement("name")).appendChild(doc.createTextNode(r.getProperty(name).getObject().toString()));
+			
+			System.out.println("\tLatitud: " + new Double(r.getProperty(lat).getDouble()).toString());
+			company.appendChild(doc.createElement("lat")).appendChild(doc.createTextNode(new Double(r.getProperty(lat).getDouble()).toString()));
+			
+			System.out.println("\tLongitud: " + new Float(r.getProperty(lng).getFloat()).toString());
+			company.appendChild(doc.createElement("long")).appendChild(doc.createTextNode(new Float(r.getProperty(lng).getFloat()).toString()));
+			
 			System.out.println("\tInformación: " + r.getProperty(info).getObject().toString());
 			company.appendChild(doc.createElement("info")).appendChild(doc.createTextNode(r.getProperty(info).getObject().toString()));
+			
 			companies.appendChild(company);
 		}
 		doc.appendChild(companies);
@@ -87,11 +98,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 //		System.out.println(p.toString());
 		
 //		m.write(System.out, "Turtle");
-		
-//		String serverInfo = getServletContext().getServerInfo();
-//		String userAgent = getThreadLocalRequest().getHeader("User-Agent");
-//		return "Hello, " + input + "!<br><br>I am running " + serverInfo
-//				+ ".<br><br>It looks like you are using:<br>" + userAgent;
+        
         // Devolvemos el XML generado al cliente
 		return strXml;
 	}
