@@ -1,0 +1,22 @@
+#summary Descripción del esquema utilizado para desarrollar este proyecto.
+
+= Introducción =
+
+La reutilización de la información del sector público (RISP) consta de dos partes:
+  * Publicación de la información por parte de las Administraciones Públicas.
+  * Reutilización de la información publicada por parte de personas físicas o jurídicas.
+
+En este proyecto se pretende implementar las dos partes, desarrollando un producto que consuma la información publicada, para que sirva a modo de ejemplo de las posibilidades que ofrece la RISP.
+
+
+= Esquema publicación - reutilización =
+
+IMAGEN
+
+= Publicación =
+
+OPENOFFICE
+
+= Reutilización =
+
+Las aplicaciones web que mezclan datos de distintas fuentes para crear nuevo contenido se denominan "mashups" ([http://es.wikipedia.org/wiki/Mashup_%28aplicaci%C3%B3n_web_h%C3%ADbrida%29 Wikipedia]). Para la reutilización de los datos publicados por este proyecto se ha decidido desarrollar un mashup, implementado mediante GWT y Google Maps para crear la interfaz de usuario de la aplicación web, apoyado en el uso de Jena en el lado del servidor web para consumir los datos publicados en RDF.
