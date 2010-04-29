@@ -13,7 +13,7 @@ En este proyecto se pretende implementar las dos partes, desarrollando un produc
 
 = Esquema publicación - reutilización =
 
-<img src="http://risp.googlecode.com/files/esquema_proyecto_r1.PNG" alt="Esquema de la implementación del proyecto" align=middle width=700>
+<img src="http://risp.googlecode.com/files/esquema_proyecto_r1.PNG" alt="Esquema de la implementación del proyecto" align=middle width=800 border=1>
 
 = Publicación =
 
