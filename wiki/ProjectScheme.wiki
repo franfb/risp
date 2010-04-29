@@ -1,5 +1,7 @@
 #summary Descripción del esquema utilizado para desarrollar este proyecto.
 
+<wiki:toc max_depth="1" />
+
 = Introducción =
 
 La reutilización de la información del sector público (RISP) consta de dos partes:
