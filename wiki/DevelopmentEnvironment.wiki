@@ -1,12 +1,12 @@
 #summary Instalación del Entorno de Desarrollo
 #labels Phase-Implementation,Environment,Development,Instalación,Installation,Eclipse,Jena,Subclipse,GWT
 
-= Introduction =
+= Introducción =
 
 Esta página describe cómo instalar el entorno de desarrollo necesario para utilizar Jena con Eclipse y descargarse el proyecto desde el repositorio subversion de este sitio.
 
 
-= Details =
+= Detalles =
 
 Para preparar el entorno de desarrollo es necesario descargar y/o instalar los siguientes componentes:
   * JDK 6
