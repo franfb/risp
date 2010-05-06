@@ -36,14 +36,14 @@ Como primera aproximación creamos una base de datos llamada “licencias”, qu
 
 [http://www4.wiwiss.fu-berlin.de/bizer/d2r-server/ D2R Server] es una herramienta para publicar bases de datos relacionales en la Web Semántica. Permite a los exploradores HTML y RDF navegar por el contenido de la base de datos y, además, permite a las aplicaciones realizar consultas a la base de datos usando el lenguaje SPARQL, todo ello mediante un mapeo directo sobre la base de datos relacional.
 
-Los pasos a realizar para conectar la base de datos con D2RServer son:
-  * Descargar [http://www4.wiwiss.fu-berlin.de/bizer/d2r-server/ D2RServer].
-  * Abrir la carpeta y en el subdirectorio _/lib/dbdrivers_ descomprimimos el fichero _mysql-connector-java-5.1.7-bin.jar_ y copiamos el fichero _java.sql.Driver_ en la carpeta _d2rq_.
-  * Abrimos una consola y nos ponemos dentro de la carpeta de _d2rq_, donde están los ficheros _generate-mapping_ y _dump-rdf_.
-  * Para generar el fichero .n3 escribimos:
-  {{{ generate-mapping -d java.sql.Driver -u root -p contraseña jdbc:mysql://127.0.01/licencia > fichero.n3 }}}
-  * Para generar el fichero .rdf escribimos:
-  {{{ drump-rdf -m fichero.n3 > fichero.rdf }}}
+Los pasos a realizar para conectar la base de datos con D2RServer son (puedes encontrar una descripción más detallada en la página oficial de D2RServer, en la sección Quick Start):
+  * Descargar [http://www4.wiwiss.fu-berlin.de/bizer/d2r-server/ D2RServer] y descomprimirlo.
+  * Si no vamos a utilizar MySql, tendremos que descargarnos un driver JDBC para la base de datos que vayamos a usar. En nuestro caso, este paso no es necesario.
+  * Abrimos una consola y nos ponemos dentro de la carpeta de _D2RServer_, donde está el script _generate-mapping_.
+  * Para generar el fichero de mapeo .n3 escribimos:
+  {{{ generate-mapping -o mapping.n3 -u root -p contraseña jdbc:mysql://127.0.01/licencias }}}
+  * Si queremos volcar en un único fichero RDF toda la base de datos escribimos:
+  {{{ drump-rdf -m mapping.n3 > fichero.rdf }}}
 
 
 = Reutilización =
