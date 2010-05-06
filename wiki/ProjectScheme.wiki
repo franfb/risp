@@ -13,11 +13,38 @@ En este proyecto se pretende implementar las dos partes, desarrollando un produc
 
 = Esquema publicación - reutilización =
 
-<img src="http://risp.googlecode.com/files/esquema_proyecto_r1.PNG" alt="Esquema de la implementación del proyecto" border=1 width=800 align=middle>
+<img src="http://risp.googlecode.com/files/esquema_proyecto_r2.PNG" alt="Esquema de la implementación del proyecto" border=1 width=800 align=middle>
 
 = Publicación =
 
-OPENOFFICE
+La primera parte consiste en la publicación de datos que las Administraciones Públicas quieran poner a disposición de los usuarios. En nuestro caso, vamos a crear una base de datos a modo de ejemplo para ilustrar cómo realizaremos la publicación de la información. Para ello, utilizaremos una base de datos MySql para crear una base de datos relacional de prueba y la utilidad [http://www4.wiwiss.fu-berlin.de/bizer/d2r-server/ D2RServer] que permite publicar en RDF los datos disponibles en una base de datos relacional.
+
+== Creación de la base de datos ==
+
+Para crear la base de datos utilizamos la herramienta [http://www.appservnetwork.com/ AppServ] que facilita la instalación de Apache, MySQL y PHP y en la cual estas aplicaciones se configuran en forma automática.
+
+Como primera aproximación creamos una base de datos llamada “licencias”, que contiene una única tabla llamada “licencia”. Dicha tabla consta de 6 campos para recoger la información referente a las mismas:
+
+C.I.F: Código de Identificación Fiscal. Se trata de un atributo formado por una letra seguida de ocho números, por ello el tipo de datos que elegimos para este campo es varchar(9).
+nombreEmpresa: Nombre de la empresa que ha solicitado la licencia. El tipo de datos elegido es varchar(30).
+LocalizacionLat: Latitud de la coordenada a través de la cual podemos geolocalizar el lugar en el que se ha solicitado la licencia. Se trata de un atributo de tipo float.
+LocalizacionLog: Longitud de la coordenada a través de la cual podemos geolocalizar el lugar en el que se ha solicitado la licencia. Se trata de un atributo de tipo float.
+fechaLicencia: Fecha en que se ha solicitado la licencia. Se trata de un atributo de tipo date.
+estadoLicencia: Estado en el que se encuentra la tramitación de la licencia: en trámite o resuelta.
+
+== Conexión entre la base de datos y D2R Server ==
+
+[http://www4.wiwiss.fu-berlin.de/bizer/d2r-server/ D2R Server] es una herramienta para publicar bases de datos relacionales en la Web Semántica. Permite a los exploradores HTML y RDF navegar por el contenido de la base de datos y, además, permite a las aplicaciones realizar consultas a la base de datos usando el lenguaje SPARQL, todo ello mediante un mapeo directo sobre la base de datos relacional.
+
+Los pasos a realizar para conectar la base de datos con D2RServer son:
+  * Descargar [http://www4.wiwiss.fu-berlin.de/bizer/d2r-server/ D2RServer].
+  * Abrir la carpeta y en el subdirectorio _/lib/dbdrivers_ descomprimimos el fichero _mysql-connector-java-5.1.7-bin.jar_ y copiamos el fichero _java.sql.Driver_ en la carpeta _d2rq_.
+  * Abrimos una consola y nos ponemos dentro de la carpeta de _d2rq_, donde están los ficheros _generate-mapping_ y _dump-rdf_.
+  * Para generar el fichero .n3 escribimos:
+  {{{ generate-mapping -d java.sql.Driver -u root -p contraseña jdbc:mysql://127.0.01/licencia > fichero.n3 }}}
+  * Para generar el fichero .rdf escribimos:
+  {{{ drump-rdf -m fichero.n3 > fichero.rdf }}}
+
 
 = Reutilización =
 
