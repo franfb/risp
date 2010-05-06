@@ -25,12 +25,12 @@ Para crear la base de datos utilizamos la herramienta [http://www.appservnetwork
 
 Como primera aproximación creamos una base de datos llamada “licencias”, que contiene una única tabla llamada “licencia”. Dicha tabla consta de 6 campos para recoger la información referente a las mismas:
 
-C.I.F: Código de Identificación Fiscal. Se trata de un atributo formado por una letra seguida de ocho números, por ello el tipo de datos que elegimos para este campo es varchar(9).
-nombreEmpresa: Nombre de la empresa que ha solicitado la licencia. El tipo de datos elegido es varchar(30).
-LocalizacionLat: Latitud de la coordenada a través de la cual podemos geolocalizar el lugar en el que se ha solicitado la licencia. Se trata de un atributo de tipo float.
-LocalizacionLog: Longitud de la coordenada a través de la cual podemos geolocalizar el lugar en el que se ha solicitado la licencia. Se trata de un atributo de tipo float.
-fechaLicencia: Fecha en que se ha solicitado la licencia. Se trata de un atributo de tipo date.
-estadoLicencia: Estado en el que se encuentra la tramitación de la licencia: en trámite o resuelta.
+  * C.I.F: Código de Identificación Fiscal. Se trata de un atributo formado por una letra seguida de ocho números, por ello el tipo de datos que elegimos para este campo es varchar(9).
+  * nombreEmpresa: Nombre de la empresa que ha solicitado la licencia. El tipo de datos elegido es varchar(30).
+  * LocalizacionLat: Latitud de la coordenada a través de la cual podemos geolocalizar el lugar en el que se ha solicitado la licencia. Se trata de un atributo de tipo float.
+  * LocalizacionLog: Longitud de la coordenada a través de la cual podemos geolocalizar el lugar en el que se ha solicitado la licencia. Se trata de un atributo de tipo float.
+  * fechaLicencia: Fecha en que se ha solicitado la licencia. Se trata de un atributo de tipo date.
+  * estadoLicencia: Estado en el que se encuentra la tramitación de la licencia: en trámite o resuelta.
 
 == Conexión entre la base de datos y D2R Server ==
 
