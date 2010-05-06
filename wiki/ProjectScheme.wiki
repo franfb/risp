@@ -43,7 +43,7 @@ Los pasos a realizar para conectar la base de datos con D2RServer son (una descr
   * Para generar el fichero de mapeo .n3 escribimos:
   {{{ generate-mapping -o mapping.n3 -u root -p contraseña jdbc:mysql://127.0.01/licencias }}}
   * Si queremos volcar en un único fichero RDF toda la base de datos escribimos:
-  {{{ drump-rdf -m mapping.n3 > fichero.rdf }}}
+  {{{ drump-rdf -m mapping.n3 -o fichero.rdf }}}
 
 
 = Reutilización =
