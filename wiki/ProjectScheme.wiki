@@ -36,7 +36,7 @@ Como primera aproximación creamos una base de datos llamada “licencias”, qu
 
 [http://www4.wiwiss.fu-berlin.de/bizer/d2r-server/ D2R Server] es una herramienta para publicar bases de datos relacionales en la Web Semántica. Permite a los exploradores HTML y RDF navegar por el contenido de la base de datos y, además, permite a las aplicaciones realizar consultas a la base de datos usando el lenguaje SPARQL, todo ello mediante un mapeo directo sobre la base de datos relacional.
 
-Los pasos a realizar para conectar la base de datos con D2RServer son (puedes encontrar una descripción más detallada en la página oficial de D2RServer, en la sección Quick Start):
+Los pasos a realizar para conectar la base de datos con D2RServer son (una descripción más detallada está disponible en la página oficial de D2RServer, en la sección Quick Start):
   * Descargar [http://www4.wiwiss.fu-berlin.de/bizer/d2r-server/ D2RServer] y descomprimirlo.
   * Si no vamos a utilizar MySql, tendremos que descargarnos un driver JDBC para la base de datos que vayamos a usar. En nuestro caso, este paso no es necesario.
   * Abrimos una consola y nos ponemos dentro de la carpeta de _D2RServer_, donde está el script _generate-mapping_.
