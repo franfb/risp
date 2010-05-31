@@ -186,10 +186,11 @@ public class RdfTest implements EntryPoint {
 	    // Open a map centered on Santa Cruz de Tenerife
 
 	    map = new MapWidget();
-	    map.setSize("500px", "300px");
+	    map.setSize("700px", "500px");
+	    map.setUIToDefault();
 	    
 	    // Add some controls for the zoom level
-	    map.addControl(new LargeMapControl());
+//	    map.addControl(new LargeMapControl());
 	    
 	    // Add a marker
 	    //map.addOverlay(new Marker(tenerife));
@@ -246,7 +247,7 @@ public class RdfTest implements EntryPoint {
             public void onClick(MarkerClickEvent event) {
                 InfoWindow info = map.getInfoWindow();
                 info.open(marker,
-                        new InfoWindowContent("<b>" + name + "</b><br>Información: " + information));
+                        new InfoWindowContent("<b>" + name + "</b><br>CIF: " + information));
             }
         });
 

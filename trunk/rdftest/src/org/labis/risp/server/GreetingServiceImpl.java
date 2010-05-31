@@ -20,8 +20,13 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.ResIterator;
 import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.rdf.model.SimpleSelector;
+import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.rdf.model.StmtIterator;
+import com.hp.hpl.jena.vocabulary.RDFS;
 import com.hp.hpl.jena.vocabulary.VCARD;
 
 /**
@@ -50,45 +55,63 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		// En su lugar, vamos a crear un modelo de ejemplo mediante Jena.
 //		Model m = createRdfModel();
 		Model m = ModelFactory.createDefaultModel();
-		m.read("file:/c:/labis/rdfs/fichero.rdf", "N-TRIPLE");
-//		m.read()
-//		m.read("http://localhost:2020/sparql?query=SELECT+DISTINCT+*+WHERE+{?s+?p+?o+}", "TURTLE");
+//		m.read("file:/d:/etsii/labis/rdfs/licencia.rdf", "N-TRIPLE");
+		m.read("http://localhost:2020/all/licencia", "RDF/XML");
+		
+		StmtIterator siter = m.listStatements(
+				new SimpleSelector(null, RDFS.label, (RDFNode) null) {
+					public boolean selects(Statement s)
+		            { return s.getObject().toString().startsWith("licencia"); }
+			    });
 		
 		// Creamos el documento XML que vamos a devolver al cliente
 		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().getDOMImplementation().createDocument(null, null, null);
 		Element companies = doc.createElement("companies");
 		
-		name = m.createProperty("http://localhost:2020/vocab/resource/", "licencia_nombreEmpresa");
-		lat = m.createProperty("http://localhost:2020/vocab/resource/", "licencia_localizacionLat");
-		lng = m.createProperty("http://localhost:2020/vocab/resource/", "licencia_LocalizacionLog");
-		info = m.createProperty("http://localhost:2020/vocab/resource/", "licencia_cif");
-		
-		ResIterator iter = m.listResourcesWithProperty(lat);
-		Resource r;
-		
-		while (iter.hasNext()) {
-			Element company = doc.createElement("company");
-			r = iter.nextResource();
-			System.out.println("Recurso: " + r.getURI());
-			System.out.println("\tNombre: " + r.getProperty(name).getObject().toString());
-//			new Double(r.getProperty(lat).getDouble()).toString()
-			company.appendChild(doc.createElement("name")).appendChild(doc.createTextNode(r.getProperty(name).getObject().toString()));
-			
-			System.out.println("\tLatitud: " + new Double(r.getProperty(lat).getDouble()).toString());
-			company.appendChild(doc.createElement("lat")).appendChild(doc.createTextNode(new Double(r.getProperty(lat).getDouble()).toString()));
-			
-			System.out.println("\tLongitud: " + new Float(r.getProperty(lng).getFloat()).toString());
-			company.appendChild(doc.createElement("long")).appendChild(doc.createTextNode(new Float(r.getProperty(lng).getFloat()).toString()));
-			
-			System.out.println("\tInformación: " + r.getProperty(info).getObject().toString());
-			company.appendChild(doc.createElement("info")).appendChild(doc.createTextNode(r.getProperty(info).getObject().toString()));
-			
-			companies.appendChild(company);
+		if (siter.hasNext()) {
+		    System.out.println("The database contains labels for:");
+		    
+			name = m.createProperty("http://localhost:2020/vocab/resource/", "label");
+			lat = m.createProperty("http://localhost:2020/vocab/resource/", "licencia_localizacionLat");
+			lng = m.createProperty("http://localhost:2020/vocab/resource/", "licencia_LocalizacionLog");
+			info = m.createProperty("http://localhost:2020/vocab/resource/", "licencia_cif");
+					    
+		    
+		    while (siter.hasNext()) {
+		    	Statement s = siter.nextStatement();
+		        System.out.println("http://localhost:2020/data/licencia/" + s.getSubject().getLocalName());
+		        Model m2 = ModelFactory.createDefaultModel();
+		        m2.read("http://localhost:2020/data/licencia/" + s.getSubject().getLocalName(), "RDF/XML");
+				ResIterator iter = m2.listResourcesWithProperty(lat);
+				Resource r;
+				
+				while (iter.hasNext()) {
+					Element company = doc.createElement("company");
+					r = iter.nextResource();
+					System.out.println("Recurso: " + r.getURI());
+					System.out.println("\tNombre: " + r.getProperty(name).getObject().toString());
+//					new Double(r.getProperty(lat).getDouble()).toString()
+					company.appendChild(doc.createElement("name")).appendChild(doc.createTextNode(r.getProperty(name).getObject().toString()));
+					
+					System.out.println("\tLatitud: " + new Double(r.getProperty(lat).getDouble()).toString());
+					company.appendChild(doc.createElement("lat")).appendChild(doc.createTextNode(new Double(r.getProperty(lat).getDouble()).toString()));
+					
+					System.out.println("\tLongitud: " + new Float(r.getProperty(lng).getFloat()).toString());
+					company.appendChild(doc.createElement("long")).appendChild(doc.createTextNode(new Float(r.getProperty(lng).getFloat()).toString()));
+					
+					System.out.println("\tInformacion: " + r.getProperty(info).getObject().toString());
+					company.appendChild(doc.createElement("info")).appendChild(doc.createTextNode(r.getProperty(info).getObject().toString()));
+					
+					companies.appendChild(company);
+				}				
+		    }
+			doc.appendChild(companies);		    
+		} else {
+		    System.out.println("No statements were found in the database");
 		}
-		doc.appendChild(companies);
-		
+
 		// Mostramos el resultado por la consola
-		//System.out.println(doc.toString());
+		System.out.println(doc.toString());
 		StringWriter writer = new StringWriter();
         Result result = new StreamResult(writer);
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
@@ -96,14 +119,12 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
         String strXml = writer.toString();
         System.out.println(strXml);
 		
-//		m.write(System.out, "N3");
-//		Property p = m.getProperty("http://www.w3.org/2003/01/geo/wgs84_pos#", "lat");
-//		System.out.println(p.toString());
+//		m.write(System.out, "N-TRIPLE");;
 		
-//		m.write(System.out, "Turtle");
         
         // Devolvemos el XML generado al cliente
 		return strXml;
+//		return "prueba";
 	}
 
 	public Model createRdfModel() {
