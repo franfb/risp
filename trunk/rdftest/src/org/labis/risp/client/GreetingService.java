@@ -1,6 +1,7 @@
 package org.labis.risp.client;
 
 
+
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 
@@ -10,4 +11,7 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 @RemoteServiceRelativePath("greet")
 public interface GreetingService extends RemoteService {
 	String greetServer(String name) throws Exception;
+	
+	Street[] getStreets(LatLong topRight, LatLong BottonLeft);
+	Street getStreet(LatLong place);
 }

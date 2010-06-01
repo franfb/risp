@@ -10,9 +10,12 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.labis.risp.client.GreetingService;
+import org.labis.risp.client.LatLong;
+import org.labis.risp.client.Street;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 //import org.labis.risp.shared.FieldVerifier;
+import com.google.gwt.maps.client.geom.LatLng;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 //import com.google.gwt.xml.client.Document;
 //import com.google.gwt.xml.client.Element;
@@ -42,6 +45,8 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 	Property name;
 	
 	public String greetServer(String input) throws Exception {
+		if (true)
+			return "feo";
 		// Verify that the input is valid. 
 //		if (!FieldVerifier.isValidName(input)) {
 //			// If the input is not valid, throw an IllegalArgumentException back to
@@ -164,6 +169,26 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		
 		// Devolvemos el modelo
 		return m;
+	}
+
+	
+	public Street[] getStreets(LatLong topRight, LatLong BottonLeft) {
+		int n = 30;
+		int pMax = 400;
+		Street[] streets = new Street[n];
+		for (int i = 0; i < n; i++){
+			double lat = Math.random() * (topRight.getLatitude() - BottonLeft.getLatitude()) + BottonLeft.getLatitude(); 
+			double lng = Math.random() * (topRight.getLongitude() - BottonLeft.getLongitude()) + BottonLeft.getLongitude();
+			int p = new Double(Math.random() * pMax).intValue();
+			streets[i] = new Street(i, new LatLong(lat, lng), p, p / 10 + 1, 'N', "nombre de la calle");
+		}
+		return streets;
+	}
+
+	public Street getStreet(LatLong place) {
+		int pMax = 400;
+		int p = new Double(Math.random() * pMax).intValue();
+		return new Street(69, place, p, p / 10 + 1, 'I', "nombre de la calle");
 	}
 	
 }

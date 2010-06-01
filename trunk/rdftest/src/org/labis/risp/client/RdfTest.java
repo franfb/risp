@@ -1,257 +1,202 @@
 package org.labis.risp.client;
 
-import org.labis.risp.shared.FieldVerifier;
+import java.util.ArrayList;
+
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.dom.client.KeyCodes;
-import com.google.gwt.event.dom.client.KeyUpEvent;
-import com.google.gwt.event.dom.client.KeyUpHandler;
+
 import com.google.gwt.maps.client.InfoWindow;
 import com.google.gwt.maps.client.InfoWindowContent;
 import com.google.gwt.maps.client.MapWidget;
-import com.google.gwt.maps.client.control.LargeMapControl;
+import com.google.gwt.maps.client.event.MapClickHandler;
 import com.google.gwt.maps.client.event.MarkerClickHandler;
+import com.google.gwt.maps.client.event.PolygonMouseOutHandler;
+import com.google.gwt.maps.client.event.PolygonMouseOverHandler;
 import com.google.gwt.maps.client.geom.LatLng;
 import com.google.gwt.maps.client.overlay.Marker;
 import com.google.gwt.maps.client.overlay.MarkerOptions;
-import com.google.gwt.user.client.Window;
+import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.DialogBox;
-import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.VerticalPanel;
-import com.google.gwt.xml.client.DOMException;
-import com.google.gwt.xml.client.Document;
-import com.google.gwt.xml.client.NodeList;
-import com.google.gwt.xml.client.XMLParser;
 
-/**
- * Entry point classes define <code>onModuleLoad()</code>.
- */
-public class RdfTest implements EntryPoint {
+public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler, PolygonMouseOverHandler, PolygonMouseOutHandler {
 	private MapWidget map;
-
-	/**
-	 * The message displayed to the user when the server cannot be reached or
-	 * returns an error.
-	 */
-	private static final String SERVER_ERROR = "An error occurred while "
-			+ "attempting to contact the server. Please check your network "
-			+ "connection and try again.";
-
-	/**
-	 * Create a remote service proxy to talk to the server-side Greeting service.
-	 */
+	private Button button;
+	private LatLng first, second;
+	private ArrayList<Area> areas;
+	private InfoWindow info;
+	
+	private ArrayList<Marker> path;
+	
 	private final GreetingServiceAsync greetingService = GWT
 			.create(GreetingService.class);
 
-	/**
-	 * This is the entry point method.
-	 */
 	public void onModuleLoad() {
-//		final Button sendButton = new Button("Send");
-//		final TextBox nameField = new TextBox();
-//		nameField.setText("GWT User");
-//		final Label errorLabel = new Label();
-//
-//		// We can add style names to widgets
-//		sendButton.addStyleName("sendButton");
-//
-//		// Add the nameField and sendButton to the RootPanel
-//		// Use RootPanel.get() to get the entire body element
-//		RootPanel.get("nameFieldContainer").add(nameField);
-//		RootPanel.get("sendButtonContainer").add(sendButton);
-//		RootPanel.get("errorLabelContainer").add(errorLabel);
-//
-//		// Focus the cursor on the name field when the app loads
-//		nameField.setFocus(true);
-//		nameField.selectAll();
-//
-//		// Create the popup dialog box
-//		final DialogBox dialogBox = new DialogBox();
-//		dialogBox.setText("Remote Procedure Call");
-//		dialogBox.setAnimationEnabled(true);
-//		final Button closeButton = new Button("Close");
-//		// We can set the id of a widget by accessing its Element
-//		closeButton.getElement().setId("closeButton");
-//		final Label textToServerLabel = new Label();
-//		final HTML serverResponseLabel = new HTML();
-//		VerticalPanel dialogVPanel = new VerticalPanel();
-//		dialogVPanel.addStyleName("dialogVPanel");
-//		dialogVPanel.add(new HTML("<b>Sending name to the server:</b>"));
-//		dialogVPanel.add(textToServerLabel);
-//		dialogVPanel.add(new HTML("<br><b>Server replies:</b>"));
-//		dialogVPanel.add(serverResponseLabel);
-//		dialogVPanel.setHorizontalAlignment(VerticalPanel.ALIGN_RIGHT);
-//		dialogVPanel.add(closeButton);
-//		dialogBox.setWidget(dialogVPanel);
-//
-//		// Add a handler to close the DialogBox
-//		closeButton.addClickHandler(new ClickHandler() {
-//			public void onClick(ClickEvent event) {
-//				dialogBox.hide();
-//				sendButton.setEnabled(true);
-//				sendButton.setFocus(true);
-//			}
-//		});
-//
-//		// Create a handler for the sendButton and nameField
-//		class MyHandler implements ClickHandler, KeyUpHandler {
-//			/**
-//			 * Fired when the user clicks on the sendButton.
-//			 */
-//			public void onClick(ClickEvent event) {
-//				sendNameToServer();
-//			}
-//
-//			/**
-//			 * Fired when the user types in the nameField.
-//			 */
-//			public void onKeyUp(KeyUpEvent event) {
-//				if (event.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
-//					sendNameToServer();
-//				}
-//			}
-//
-//			/**
-//			 * Send the name from the nameField to the server and wait for a response.
-//			 */
-//			private void sendNameToServer() {
-//				// First, we validate the input.
-//				errorLabel.setText("");
-//				String textToServer = nameField.getText();
-//				if (!FieldVerifier.isValidName(textToServer)) {
-//					errorLabel.setText("Please enter at least four characters");
-//					return;
-//				}
-//
-//				// Then, we send the input to the server.
-//				sendButton.setEnabled(false);
-//				textToServerLabel.setText(textToServer);
-//				serverResponseLabel.setText("");
-//				greetingService.greetServer(textToServer,
-//						new AsyncCallback<String>() {
-//							public void onFailure(Throwable caught) {
-//								// Show the RPC error message to the user
-//								dialogBox
-//										.setText("Remote Procedure Call - Failure");
-//								serverResponseLabel
-//										.addStyleName("serverResponseLabelError");
-//								serverResponseLabel.setHTML(SERVER_ERROR);
-//								dialogBox.center();
-//								closeButton.setFocus(true);
-//							}
-//
-//							public void onSuccess(String result) {
-//								dialogBox.setText("Remote Procedure Call");
-//								serverResponseLabel
-//										.removeStyleName("serverResponseLabelError");
-//								serverResponseLabel.setHTML(result);
-//								dialogBox.center();
-//								closeButton.setFocus(true);
-//							}
-//						});
-//			}
-//		}
-//
-//		// Add a handler to send the name to the server
-//		MyHandler handler = new MyHandler();
-//		sendButton.addClickHandler(handler);
-//		nameField.addKeyUpHandler(handler);
+		button = new Button("new area");
+		RootPanel.get().add(button);
 		
-		try {
-			greetingService.greetServer("texto",
-			new AsyncCallback<String>() {
-				public void onFailure(Throwable caught) {
-					// Error en la RPC
-					System.out.println("Error.");
-				}
-
-				public void onSuccess(String result) {
-					parseXml(result);
-				}
-			});
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		
-		// Add a map
-		LatLng tenerife = LatLng.newInstance(28.4682385853027,-16.2546157836914);
-	    // Open a map centered on Santa Cruz de Tenerife
+		//LatLng tenerife = LatLng.newInstance(28.4682385853027,-16.2546157836914);
 
 	    map = new MapWidget();
 	    map.setSize("700px", "500px");
 	    map.setUIToDefault();
-	    
-	    // Add some controls for the zoom level
-//	    map.addControl(new LargeMapControl());
-	    
-	    // Add a marker
-	    //map.addOverlay(new Marker(tenerife));
-
-	    // Add an info window to highlight a point of interest
-//	    map.getInfoWindow().open(map.getCenter(), 
-//	        new InfoWindowContent("World's Largest Ball of Sisal Twine"));
-	    
-	    // Add the map to the HTML host page
 	    RootPanel.get("mapContainer").add(map);
-		
+	    button.addClickHandler(this);
+		map.addMapClickHandler(this);
+		areas = new ArrayList<Area>();
 	}
 	
-    private void parseXml(String serverXml) {
-        if (serverXml.equals("Error")) {
-            map.setVisible(false);
-        } else {
-            try {
-                // parse the XML document into a DOM
-                Document messageDom = XMLParser.parse(serverXml);
-
-                NodeList companiesList = messageDom.getElementsByTagName("company");
-                boolean centered = false;
-
-                for (int i = 0; i < companiesList.getLength(); i++) {
-                    NodeList compAttr = companiesList.item(i).getChildNodes();
-                    double lat = Double.parseDouble(compAttr.item(1).getFirstChild().getNodeValue());
-                    double lng = Double.parseDouble(compAttr.item(2).getFirstChild().getNodeValue());
-                    if ((lat != -1.0) && (lng != -1.0)) {
-                        String compName = compAttr.item(0).getFirstChild().getNodeValue();
-                        String info = compAttr.item(3).getFirstChild().getNodeValue();
-
-                        map.addOverlay(createMarker(lat, lng, compName, info));
-                        if (!centered) {
-                            map.setCenter(LatLng.newInstance(lat, lng), 7);
-                            centered = true;
-                        }
-                    }
-                }
-            } catch (DOMException e) {
-                Window.alert("Could not parse XML document.");
-            }
-        }
-    }
-
-    private Marker createMarker(Double lat, Double lng, final String name, final String information) {
+    private Marker createMarker(final Street street) {
         MarkerOptions markerOpt = MarkerOptions.newInstance();
-//        markerOpt.setIcon(icon);
         markerOpt.setClickable(true);
-        final Marker marker = new Marker(LatLng.newInstance(lat, lng));
-
+        final Marker marker = new Marker(LatLng.newInstance(street.getCoord().getLatitude(), street.getCoord().getLongitude()));
         marker.addMarkerClickHandler(new MarkerClickHandler() {
-
             public void onClick(MarkerClickEvent event) {
                 InfoWindow info = map.getInfoWindow();
                 info.open(marker,
-                        new InfoWindowContent("<b>" + name + "</b><br>CIF: " + information));
+                        new InfoWindowContent("<b>" + street.getName() + "</b>" + 
+                        		"<br>Code: " + street.getCode() +
+                        		"<br>Population: " + street.getPopulation() +
+                        		"<br>Registers: " + street.getRegisters() +
+                        		"<br>Type: " + street.getKind()
+                        )
+                );
             }
         });
-
         return marker;
     }
+
+	public void onClick(MapClickEvent event) {
+		if (event.getLatLng() == null){
+			return;
+		}
+		if (button.isEnabled()){
+			showStreet(event.getLatLng());
+			return;
+		}
+		if (first == null){
+			first = event.getLatLng();
+		}
+		else{
+			second = event.getLatLng();
+			map.removeMapClickHandler(this);
+			
+			LatLng left = first;
+			LatLng right = second;
+			if (second.getLongitude() < first.getLongitude()){
+				left = second;
+				right = first;
+			}
+
+			LatLng topRight;
+			LatLng bottomLeft;
+			LatLng topLeft;
+			LatLng bottomRight;
+			
+			if (left.getLatitude() < right.getLatitude()){
+				topRight = right;
+				bottomLeft = left;
+				topLeft = LatLng.newInstance(topRight.getLatitude(), bottomLeft.getLongitude());
+				bottomRight = LatLng.newInstance(bottomLeft.getLatitude(), topRight.getLongitude());
+			}
+			else{
+				bottomRight = right;
+				topLeft = left;
+				topRight = LatLng.newInstance(topLeft.getLatitude(), bottomRight.getLongitude());
+				bottomLeft = LatLng.newInstance(bottomRight.getLatitude(), topLeft.getLongitude());
+			}
+			
+			newArea(topRight, bottomRight, bottomLeft, topLeft);
+			button.setEnabled(true);
+			map.addMapClickHandler(this);
+		}
+	}
+
+	public void onClick(ClickEvent event) {
+		if (event.getSource() == button){
+			button.setEnabled(false);
+			first = null;
+			second = null;
+		}
+	}
+	
+	private void newArea(final LatLng topRight, final LatLng bottomRight, final LatLng bottomLeft, final LatLng topLeft){
+		final RdfTest This = this;
+		try {
+			greetingService.getStreets(
+					new LatLong(topRight),
+					new LatLong(bottomLeft),
+					new AsyncCallback<Street[]>() {
+						public void onFailure(Throwable caught) {
+							System.out.println("Error.");
+						}
+						public void onSuccess(Street[] result) {
+							LatLng[] coord = {topRight, bottomRight, bottomLeft, topLeft, topRight};
+							Polygon p = new Polygon(coord, "#f33f00", 5, 1, "#ff0000", 0.2);
+							//p.getBounds().get
+							map.addOverlay(p);
+							p.addPolygonMouseOverHandler(This);
+							p.addPolygonMouseOutHandler(This);
+							areas.add(new Area(p, result));
+							for (int i = 0; i < result.length; i++){
+								map.addOverlay(createMarker(result[i]));
+							}
+							
+						}
+					});
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void showStreet(final LatLng point){
+		try {
+			greetingService.getStreet(
+					new LatLong(point),
+					new AsyncCallback<Street>() {
+						public void onFailure(Throwable caught) {
+							System.out.println("Error.");
+						}
+						public void onSuccess(Street result) {
+							InfoWindow info = map.getInfoWindow();
+				            info.open(point,
+				                    new InfoWindowContent("<b>" + result.getName() + "</b>" + 
+				                    		"<br>Code: " + result.getCode() +
+				                    		"<br>Population: " + result.getPopulation() +
+				                    		"<br>Registers: " + result.getRegisters() +
+				                    		"<br>Type: " + result.getKind()
+				                    )
+				            );
+						}
+					});
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void onMouseOver(PolygonMouseOverEvent event) {
+		for (Area area: areas){
+			if (area.getPoly() == event.getSource()){
+				info = map.getInfoWindow();
+		        info.open(area.getPoly().getBounds().getCenter(),
+		                new InfoWindowContent( 
+		                		"<br>Area: " + area.getPoly().getArea() + " m^2" + 
+		                		"<br>Population: " + area.getPopulation() +
+		                		"<br>Registers: " + area.getRegisters()
+		                )
+		        );
+			}
+		}
+	}
+
+	public void onMouseOut(PolygonMouseOutEvent event) {
+		if (info != null){
+			info.close();
+		}
+	}
 
 }
