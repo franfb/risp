@@ -14,10 +14,14 @@ import com.google.gwt.maps.client.event.MapClickHandler;
 import com.google.gwt.maps.client.event.MarkerClickHandler;
 import com.google.gwt.maps.client.event.PolygonMouseOutHandler;
 import com.google.gwt.maps.client.event.PolygonMouseOverHandler;
+import com.google.gwt.maps.client.event.PolylineEndLineHandler;
+import com.google.gwt.maps.client.event.PolylineLineUpdatedHandler;
 import com.google.gwt.maps.client.geom.LatLng;
 import com.google.gwt.maps.client.overlay.Marker;
 import com.google.gwt.maps.client.overlay.MarkerOptions;
+import com.google.gwt.maps.client.overlay.PolyStyleOptions;
 import com.google.gwt.maps.client.overlay.Polygon;
+import com.google.gwt.maps.client.overlay.Polyline;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -25,7 +29,6 @@ import com.google.gwt.user.client.ui.RootPanel;
 public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler, PolygonMouseOverHandler, PolygonMouseOutHandler {
 	private MapWidget map;
 	private Button button;
-	private LatLng first, second;
 	private ArrayList<Area> areas;
 	private InfoWindow info;
 	
@@ -70,74 +73,93 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler, Polyg
         return marker;
     }
 
+    private void createPolyline() {
+    	final RdfTest This = this;
+    	String color = "#FF0000";
+    	double opacity = 1.0;
+    	int weight = 1;
+    	
+        PolyStyleOptions style = PolyStyleOptions.newInstance(color, weight,
+            opacity);
+
+        final Polyline poly = new Polyline(new LatLng[0]);
+        map.addOverlay(poly);
+        poly.setDrawingEnabled();
+        poly.setStrokeStyle(style);
+//        poly.addPolylineLineUpdatedHandler(new PolylineLineUpdatedHandler() {
+//
+//          public void onUpdate(PolylineLineUpdatedEvent event) {
+//         }
+//        });
+
+//        poly.addPolylineCancelLineHandler(new PolylineCancelLineHandler() {
+//
+//          public void onCancel(PolylineCancelLineEvent event) {
+//            message2.setText(message2.getText() + " : Line Canceled");
+//          }
+//        });
+
+        poly.addPolylineEndLineHandler(new PolylineEndLineHandler() {
+
+          public void onEnd(PolylineEndLineEvent event) {
+        	  System.out.println("POLILINEA CREADA");
+        	  	newArea(event.getSender());
+        	  	button.setEnabled(true);
+  				map.addMapClickHandler(This);
+          }
+        });
+      }
+
+
+    
 	public void onClick(MapClickEvent event) {
-		if (event.getLatLng() == null){
-			return;
-		}
 		if (button.isEnabled()){
+			if (event.getLatLng() == null){
+				return;
+			}
 			showStreet(event.getLatLng());
 			return;
 		}
-		if (first == null){
-			first = event.getLatLng();
-		}
-		else{
-			second = event.getLatLng();
-			map.removeMapClickHandler(this);
-			
-			LatLng left = first;
-			LatLng right = second;
-			if (second.getLongitude() < first.getLongitude()){
-				left = second;
-				right = first;
-			}
-
-			LatLng topRight;
-			LatLng bottomLeft;
-			LatLng topLeft;
-			LatLng bottomRight;
-			
-			if (left.getLatitude() < right.getLatitude()){
-				topRight = right;
-				bottomLeft = left;
-				topLeft = LatLng.newInstance(topRight.getLatitude(), bottomLeft.getLongitude());
-				bottomRight = LatLng.newInstance(bottomLeft.getLatitude(), topRight.getLongitude());
-			}
-			else{
-				bottomRight = right;
-				topLeft = left;
-				topRight = LatLng.newInstance(topLeft.getLatitude(), bottomRight.getLongitude());
-				bottomLeft = LatLng.newInstance(bottomRight.getLatitude(), topLeft.getLongitude());
-			}
-			
-			newArea(topRight, bottomRight, bottomLeft, topLeft);
-			button.setEnabled(true);
-			map.addMapClickHandler(this);
+		if (event.getLatLng() == null){
+			return;
 		}
 	}
 
 	public void onClick(ClickEvent event) {
 		if (event.getSource() == button){
 			button.setEnabled(false);
-			first = null;
-			second = null;
+			map.removeMapClickHandler(this);
+			createPolyline();
 		}
 	}
 	
-	private void newArea(final LatLng topRight, final LatLng bottomRight, final LatLng bottomLeft, final LatLng topLeft){
+	private void newArea(Polyline pline){
 		final RdfTest This = this;
+		
+	  	LatLng[] coord = new LatLng[pline.getVertexCount()];
+	  	for (int i = 0; i < pline.getVertexCount(); i++){
+	  		coord[i] = pline.getVertex(i);
+	  	}
+	  	final Polygon p = new Polygon(coord, "#f33f00", 5, 1, "#ff0000", 0.2);
+	  	
 		try {
 			greetingService.getStreets(
-					new LatLong(topRight),
-					new LatLong(bottomLeft),
+					new LatLong(p.getBounds().getNorthEast()),
+					new LatLong(p.getBounds().getSouthWest()),
 					new AsyncCallback<Street[]>() {
 						public void onFailure(Throwable caught) {
 							System.out.println("Error.");
 						}
 						public void onSuccess(Street[] result) {
-							LatLng[] coord = {topRight, bottomRight, bottomLeft, topLeft, topRight};
-							Polygon p = new Polygon(coord, "#f33f00", 5, 1, "#ff0000", 0.2);
 							//p.getBounds().get
+							
+							for (int i = 0; i < result.length; i++){
+								LatLng l = LatLng.newInstance(result[i].getCoord().getLatitude(), result[i].getCoord().getLongitude());
+								if (! p.getBounds().contains(l)){
+									System.out.println("FUERAAA");
+								}
+							}
+							
 							map.addOverlay(p);
 							p.addPolygonMouseOverHandler(This);
 							p.addPolygonMouseOutHandler(This);
