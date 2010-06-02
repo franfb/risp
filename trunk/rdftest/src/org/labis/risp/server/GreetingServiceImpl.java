@@ -14,12 +14,8 @@ import org.labis.risp.client.LatLong;
 import org.labis.risp.client.Street;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-//import org.labis.risp.shared.FieldVerifier;
-import com.google.gwt.maps.client.geom.LatLng;
+
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
-//import com.google.gwt.xml.client.Document;
-//import com.google.gwt.xml.client.Element;
-//import com.google.gwt.xml.client.XMLParser;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Property;

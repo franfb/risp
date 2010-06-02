@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.JsArray;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 
@@ -15,7 +16,9 @@ import com.google.gwt.maps.client.event.MarkerClickHandler;
 import com.google.gwt.maps.client.event.PolygonMouseOutHandler;
 import com.google.gwt.maps.client.event.PolygonMouseOverHandler;
 import com.google.gwt.maps.client.event.PolylineEndLineHandler;
-import com.google.gwt.maps.client.event.PolylineLineUpdatedHandler;
+import com.google.gwt.maps.client.geocode.Geocoder;
+import com.google.gwt.maps.client.geocode.LocationCallback;
+import com.google.gwt.maps.client.geocode.Placemark;
 import com.google.gwt.maps.client.geom.LatLng;
 import com.google.gwt.maps.client.overlay.Marker;
 import com.google.gwt.maps.client.overlay.MarkerOptions;
@@ -24,7 +27,11 @@ import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.maps.client.overlay.Polyline;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.DockPanel;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
 
 public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 		PolygonMouseOverHandler, PolygonMouseOutHandler {
@@ -33,25 +40,55 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 	private ArrayList<Area> areas;
 	private InfoWindow info;
 
-	private ArrayList<Marker> path;
+	private Geocoder geo;
+	
+	private VerticalPanel mainPanel;
+
 
 	private final GreetingServiceAsync greetingService = GWT
 			.create(GreetingService.class);
 
 	public void onModuleLoad() {
-		button = new Button("new area");
-		RootPanel.get().add(button);
+		
+		geo = new Geocoder();
+		areas = new ArrayList<Area>();
+
+		
+		mainPanel = new VerticalPanel();
+
+		
+		
+
 
 		// LatLng tenerife =
 		// LatLng.newInstance(28.4682385853027,-16.2546157836914);
 
+		//RDF con Google Maps
+		
 		map = new MapWidget();
 		map.setSize("700px", "500px");
 		map.setUIToDefault();
-		RootPanel.get("mapContainer").add(map);
+		mainPanel.add(map);
+		
+		button = new Button("new area");
+		mainPanel.add(button);
+		
 		button.addClickHandler(this);
 		map.addMapClickHandler(this);
-		areas = new ArrayList<Area>();
+		
+//		HorizontalPanel h = new HorizontalPanel();
+//		h.add(new Image("http://www.ull.es/Public/images/wull/logo.gif"));
+//		h.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/gerencia.gif"));
+//		h.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/la_laguna.gif"));
+//
+//		mainPanel.add(h);
+		
+		RootPanel.get().add(mainPanel);
+
+		
+		
+		
+		
 	}
 
 	private Marker createMarker(final Street street) {
@@ -177,9 +214,6 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 						}
 
 						public void onSuccess(Street[] result) {
-							// p.getBounds().get
-
-							
 							int count = 0;
 							for (int i = 0; i < result.length; i++) {
 								LatLng l = LatLng.newInstance(result[i]
@@ -187,12 +221,11 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 										.getCoord().getLongitude());
 								if (contains(p, l)) {
 									count++;
-									//System.out.println("FUERAAA");
 								}
 							}
 
-							Street[] contained = new Street[count];
-							
+							final Street[] contained = new Street[count];
+
 							int index = 0;
 							for (int i = 0; i < result.length; i++) {
 								LatLng l = LatLng.newInstance(result[i]
@@ -200,10 +233,37 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 										.getCoord().getLongitude());
 								if (contains(p, l)) {
 									contained[index++] = result[i];
-									//System.out.println("FUERAAA");
+
+									final int j = index - 1;
+
+									geo.getLocations(l, new LocationCallback() {
+										public void onFailure(int statusCode) {
+											contained[j].setName(".....");
+											map.addOverlay(createMarker(contained[j]));
+										}
+
+										public void onSuccess(
+												JsArray<Placemark> locations) {
+											for (int i = 0; i < locations
+													.length(); i++) {
+												if (locations.get(i)
+														.getStreet() != null) {
+													contained[j]
+															.setName(locations
+																	.get(i)
+																	.getStreet());
+													map.addOverlay(createMarker(contained[j]));
+													return;
+												}
+											}
+											contained[j].setName(".....");
+											map.addOverlay(createMarker(contained[j]));
+										}
+									});
+
 								}
 							}
-							
+
 							map.addOverlay(p);
 							p.addPolygonMouseOverHandler(This);
 							p.addPolygonMouseOutHandler(This);
@@ -227,14 +287,42 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 							System.out.println("Error.");
 						}
 
-						public void onSuccess(Street result) {
-							InfoWindow info = map.getInfoWindow();
-							info.open(point, new InfoWindowContent("<b>"
-									+ result.getName() + "</b>" + "<br>Code: "
-									+ result.getCode() + "<br>Population: "
-									+ result.getPopulation()
-									+ "<br>Registers: " + result.getRegisters()
-									+ "<br>Type: " + result.getKind()));
+						public void onSuccess(final Street result) {
+							LatLng p = LatLng.newInstance(result.getCoord()
+									.getLatitude(), result.getCoord()
+									.getLongitude());
+
+							geo.getLocations(p, new LocationCallback() {
+								public void onFailure(int statusCode) {
+									showInfo(".....");
+								}
+
+								public void onSuccess(
+										JsArray<Placemark> locations) {
+									for (int i = 0; i < locations.length(); i++) {
+										if (locations.get(i).getStreet() != null) {
+											showInfo(locations.get(i)
+													.getStreet());
+											return;
+										}
+									}
+									showInfo(".....");
+								}
+
+								public void showInfo(String street) {
+									InfoWindow info = map.getInfoWindow();
+									info.open(point, new InfoWindowContent(
+											"<b>" + street + "</b>"
+													+ "<br>Code: "
+													+ result.getCode()
+													+ "<br>Population: "
+													+ result.getPopulation()
+													+ "<br>Registers: "
+													+ result.getRegisters()
+													+ "<br>Type: "
+													+ result.getKind()));
+								}
+							});
 						}
 					});
 		} catch (Exception e) {
@@ -246,9 +334,16 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 		for (Area area : areas) {
 			if (area.getPoly() == event.getSource()) {
 				info = map.getInfoWindow();
+				double sizeArea = area.getPoly().getArea();
+				String unit = "m";
+//				if (sizeArea > 1000000){
+//					sizeArea /= 1000000;
+//					unit = "km";
+//				}
+
 				info.open(area.getPoly().getBounds().getCenter(),
-						new InfoWindowContent("<br>Area: "
-								+ area.getPoly().getArea() + " m^2"
+						new InfoWindowContent("Area: "
+								+ (int)sizeArea + " " + unit + "<sup>2</sup>"
 								+ "<br>Population: " + area.getPopulation()
 								+ "<br>Registers: " + area.getRegisters()));
 			}
