@@ -13,11 +13,11 @@ public class Street implements Serializable{
 	private int population;
 	private int registers;
 	private char kind;
-	private int code;
+	private long code;
 	private String name;
 	
 
-	public Street(int code, LatLong coord, int population, int registers, char kind){
+	public Street(long code, LatLong coord, int population, int registers, char kind){
 		this.code = code;
 		this.coord = coord;
 		this.population = population;
@@ -26,7 +26,7 @@ public class Street implements Serializable{
 		this.setName(null);
 	}
 	
-	public Street(int code, LatLong coord, int population, int registers, char kind, String name){
+	public Street(long code, LatLong coord, int population, int registers, char kind, String name){
 		this.code = code;
 		this.coord = coord;
 		this.population = population;
@@ -67,7 +67,7 @@ public class Street implements Serializable{
 		this.kind = kind;
 	}
 
-	public int getCode() {
+	public long getCode() {
 		return code;
 	}
 

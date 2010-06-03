@@ -50,6 +50,22 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 
 	public void onModuleLoad() {
 		
+		greetingService.initialize(new AsyncCallback<Boolean>(){
+
+			public void onFailure(Throwable caught) {
+			}
+
+			public void onSuccess(Boolean result) {
+				if (!result){
+					System.out.println("No se pudo cargar el modelo RDF");
+				}
+				else{
+					System.out.println("Modelo RDF cargado correctamente");
+				}
+			}
+			
+		});
+		
 		geo = new Geocoder();
 		areas = new ArrayList<Area>();
 
@@ -208,16 +224,16 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 			greetingService.getStreets(
 					new LatLong(p.getBounds().getNorthEast()), new LatLong(p
 							.getBounds().getSouthWest()),
-					new AsyncCallback<Street[]>() {
+					new AsyncCallback<ArrayList<Street>>() {
 						public void onFailure(Throwable caught) {
 							System.out.println("Error.");
 						}
 
-						public void onSuccess(Street[] result) {
+						public void onSuccess(ArrayList<Street> result) {
 							int count = 0;
-							for (int i = 0; i < result.length; i++) {
-								LatLng l = LatLng.newInstance(result[i]
-										.getCoord().getLatitude(), result[i]
+							for (int i = 0; i < result.size(); i++) {
+								LatLng l = LatLng.newInstance(result.get(i)
+										.getCoord().getLatitude(), result.get(i)
 										.getCoord().getLongitude());
 								if (contains(p, l)) {
 									count++;
@@ -227,12 +243,12 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 							final Street[] contained = new Street[count];
 
 							int index = 0;
-							for (int i = 0; i < result.length; i++) {
-								LatLng l = LatLng.newInstance(result[i]
-										.getCoord().getLatitude(), result[i]
+							for (int i = 0; i < result.size(); i++) {
+								LatLng l = LatLng.newInstance(result.get(i)
+										.getCoord().getLatitude(), result.get(i)
 										.getCoord().getLongitude());
 								if (contains(p, l)) {
-									contained[index++] = result[i];
+									contained[index++] = result.get(i);
 
 									final int j = index - 1;
 
