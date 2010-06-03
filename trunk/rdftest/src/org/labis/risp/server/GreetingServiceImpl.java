@@ -1,6 +1,11 @@
 package org.labis.risp.server;
 
 import java.io.StringWriter;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Result;
@@ -167,8 +172,79 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		return m;
 	}
 
+	public double[] converter(double x, double y) {
+		double  e = 0.08199189;  //excentricidad
+		double e2 = 0.08226889; //segunda excentricidad
+		double e22 = e2 * e2; //segunda exentricidad al cuadrado
+		double c = 6399936.608; //radio polar de curvatura
+		int m = -15; //meridiano central correspondiente a canarias
+		
+		double fi = y / (6366197.724 * 0.9996);
+		double cos2fi = Math.cos(fi) * Math.cos(fi);
+		double ni = (c * 0.9996) / Math.pow((1 + e22 * cos2fi), 0.5);
+		double a = (x - 500000)/ni;
+		double a1 = Math.sin(2*fi);
+		double a2 = a1 * cos2fi;
+		double j2 = fi + (a1/2);
+		double j4 = (3 * j2 + a2) / 4;
+		double j6 = (5 * j4 + a2 * cos2fi) / 3;
+		double alfa = 3 * e22 / 4;
+		double beta = 5 * (alfa*alfa) / 3;
+		double gamma = 35 * (alfa*alfa*alfa) / 27;
+		double bfi = 0.9996 * c * (fi - (alfa*j2) + (beta*j4) - (gamma*j6));
+		double b = (y - bfi) / ni;
+		double zeta = ((e22 * (a*a)) / 2) * cos2fi;
+		double xi = a * (1 - (zeta / 3));
+		double eta = b * (1 - zeta) + fi;
+		double senhxi = (Math.exp(xi) - Math.exp(-xi)) / 2;
+		double deltalambda = Math.atan(senhxi / Math.cos(eta));
+		double tau = Math.atan(Math.cos(deltalambda) * Math.tan(eta));
+		double firad = fi + (1 + e22 * cos2fi - 1.5 * e22 * Math.sin(fi) * Math.cos(fi)
+				* (tau - fi)) * (tau - fi);
+		System.out.println(firad);
+		
+		double[] geos = new double[2];
+		geos[0] = (firad / Math.PI) * 180;
+		geos[1] = (deltalambda / Math.PI) * 180 + m;
+		return geos;
+	}
+	
 	
 	public Street[] getStreets(LatLong topRight, LatLong BottonLeft) {
+		
+		String url = "jdbc:mysql://localhost/risp";
+		String user = "root";
+		String passw = "labis";
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+			Connection cnt = DriverManager.getConnection(url, user, passw);
+			java.sql.Statement stm = cnt.createStatement();
+			ResultSet rs = stm.executeQuery("SELECT CODIGO, COORDX, COORDY FROM HOJA1");
+			while (rs.next()){
+				//System.out.println("CODIGO: " + rs.getLong("CODIGO") + "  LONGITUD: " + rs.getInt("LATITUD"));
+				double x = Double.valueOf(rs.getString("COORDX").replace(',', '.')).doubleValue();
+				double y = Double.valueOf(rs.getString("COORDY").replace(',', '.')).doubleValue();
+				double latlong[] = converter(x, y);
+				String sql = "UPDATE HOJA1 SET LATITUD = ?, LONGITUD = ?, X = ?, Y = ? WHERE CODIGO = ?";
+				PreparedStatement s = cnt.prepareStatement(sql);
+				s.setDouble(1, latlong[0]);
+				s.setDouble(2, latlong[1]);
+				s.setDouble(3, x);
+				s.setDouble(4, y);
+				s.setLong(5, rs.getLong("CODIGO"));
+				s.executeUpdate();
+			}
+			
+			
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+		
+		
 		int n = 30;
 		int pMax = 400;
 		Street[] streets = new Street[n];
