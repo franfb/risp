@@ -12,8 +12,6 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
  */
 @RemoteServiceRelativePath("greet")
 public interface GreetingService extends RemoteService {
-	boolean initialize();
-	
 	ArrayList<Street> getStreets(LatLong topRight, LatLong BottonLeft);
 	Street getStreet(LatLong place);
 }

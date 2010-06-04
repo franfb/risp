@@ -27,9 +27,6 @@ import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.maps.client.overlay.Polyline;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.DockPanel;
-import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
@@ -49,22 +46,6 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 			.create(GreetingService.class);
 
 	public void onModuleLoad() {
-		
-		greetingService.initialize(new AsyncCallback<Boolean>(){
-
-			public void onFailure(Throwable caught) {
-			}
-
-			public void onSuccess(Boolean result) {
-				if (!result){
-					System.out.println("No se pudo cargar el modelo RDF");
-				}
-				else{
-					System.out.println("Modelo RDF cargado correctamente");
-				}
-			}
-			
-		});
 		
 		geo = new Geocoder();
 		areas = new ArrayList<Area>();

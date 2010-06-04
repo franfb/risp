@@ -13,11 +13,8 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  */
 public interface GreetingServiceAsync {
 	
-	
 	void getStreets(LatLong topRight, LatLong BottonLeft,
 			AsyncCallback<ArrayList<Street>> callback);
 
 	void getStreet(LatLong place, AsyncCallback<Street> callback);
-
-	void initialize(AsyncCallback<Boolean> callback);
 }
