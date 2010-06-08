@@ -118,8 +118,8 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 			public void onClick(MarkerClickEvent event) {
 				InfoWindow info = map.getInfoWindow();
 				info.open(marker, new InfoWindowContent("<b>"
-						+ "sin nombre de calle" + "</b>" + "<br>Número de portal: "
-						+ portal.getNumero() + "<br>Habitantes: "
+						+ portal.getVia().getNombre() + ", " + portal.getNumero() + "</b>"
+						+ "<br>Habitantes: "
 						+ portal.getHabitantes() + "<br>Hojas padronales: "
 						+ portal.getHojas()));
 			}

@@ -39,7 +39,7 @@ public class Zona {
 		hojas = 0;
 		for (int i = 0; i < portales.length; i++){
 			habitantes += portales[i].getHabitantes();
-			hojas += portales[i].getHabitantes();
+			hojas += portales[i].getHojas();
 		}
 	}
 	

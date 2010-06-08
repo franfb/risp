@@ -6,6 +6,8 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public interface GreetingServiceAsync {
 	
+	
+	
 	void getVia(LatLong place, AsyncCallback<Via> callback);
 
 	void getPortal(LatLong place, AsyncCallback<Portal> callback);

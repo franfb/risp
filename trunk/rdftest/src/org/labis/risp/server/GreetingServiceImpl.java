@@ -16,32 +16,53 @@ import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.Resource;
 
 @SuppressWarnings("serial")
 public class GreetingServiceImpl extends RemoteServiceServlet implements GreetingService {
 
-	private Model model = null;
-	Property portalHabitantes;
-	Property portalPadronales;
-	Property portalLatitud;
-	Property portalLongitud;
-	Property portalNumero;
-	Property portalVia;
-	Property portalTipo;
-	Property portalLabel;
+	private Property portalHabitantes;
+	private Property portalPadronales;
+	private Property portalLatitud;
+	private Property portalLongitud;
+	private Property portalNumero;
+	private Property portalVia;
+	private Property portalTipo;
+	private Property portalLabel;
+	private Property viaCodigo;
+	private Property viaEtiqueta;
+	private Property viaHabitantes;
+	private Property viaLongitud;
+	private Property viaNombre;
+	private Property viaTipo;
+	private Property viaTipo2;
+	private Property viaLabel;
+	private String vocab = "http://localhost:2020/vocab/resource/";
+	private String rdfs = "http://www.w3.org/2000/01/rdf-schema#";
+	private String sparql = "http://localhost:2020/sparql";
+	private Model model = getModel();
+
 
 	public Model getModel(){
-		if (model == null){
 			model = ModelFactory.createDefaultModel();
-			portalHabitantes = model.createProperty("http://localhost:2020/vocab/resource/", "portal_habitantes");
-			portalPadronales = model.createProperty("http://localhost:2020/vocab/resource/", "portal_padronales");
-			portalLatitud = model.createProperty("http://localhost:2020/vocab/resource/", "portal_latitud");
-			portalLongitud = model.createProperty("http://localhost:2020/vocab/resource/", "portal_longitud");
-			portalNumero = model.createProperty("http://localhost:2020/vocab/resource/", "portal_numero");
-			portalVia = model.createProperty("http://localhost:2020/vocab/resource/", "portal_via");
-			portalTipo = model.createProperty("http://localhost:2020/vocab/resource/", "portal_tipo");
-			portalLabel = model.createProperty("http://localhost:2020/vocab/resource/", "portal_label");
-		}
+			portalHabitantes = model.createProperty(vocab, "portal_habitantes");
+			portalPadronales = model.createProperty(vocab, "portal_padronales");
+			portalLatitud = model.createProperty(vocab, "portal_latitud");
+			portalLongitud = model.createProperty(vocab, "portal_longitud");
+			portalNumero = model.createProperty(vocab, "portal_numero");
+			portalVia = model.createProperty(vocab, "portal_via");
+			portalTipo = model.createProperty(vocab, "portal_tipo");
+			portalLabel = model.createProperty(rdfs, "label");
+			
+			viaCodigo = model.createProperty(vocab, "via_codigo");
+			viaEtiqueta = model.createProperty(vocab, "via_etiqueta");
+			viaHabitantes = model.createProperty(vocab, "via_habitantes");
+			viaLongitud = model.createProperty(vocab, "via_longitud");
+			viaNombre = model.createProperty(vocab, "via_nombre");
+			viaTipo = model.createProperty(vocab, "via_tipo");
+			viaTipo2 = model.createProperty(vocab, "via_tipo2");
+			viaLabel = model.createProperty(rdfs, "label");
+			
 		return model;
 	}
 
@@ -52,73 +73,52 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 	}
 	
 	public ArrayList<Portal> getPortales(LatLong topRight, LatLong BottomLeft) {
-//		String query = 	
-//			"PREFIX vocab: <http://localhost:2020/vocab/resource/> " +
-//			"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
-//			"SELECT  ?lat ?lng ?hab ?pad ?tip ?cod ?num WHERE   { " +
-//			"?pob vocab:portal_latitud ?lat . " +
-//			"FILTER (?lat < " + topRight.getLatitude() + ") " +
-//			"FILTER (?lat > " + BottomLeft.getLatitude() + ") " +
-//			"?pob vocab:portal_longitud ?lng . " +
-//			"FILTER (?lng < " + topRight.getLongitude() + ") " +
-//			"FILTER (?lng > " + BottomLeft.getLongitude() + ") " +
-//			"?pob vocab:portal_habitantes ?hab . " +
-//			"?pob vocab:portal_padronales ?pad . " +
-//			"?pob vocab:portal_tipo ?tip . " +
-//			"?pob vocab:portal_numero ?num . " +
-//			"?pob rdfs:label ?cod . }";
-//		
-//		String url = "http://localhost:2020/sparql";
-//			
-//		QueryExecution q = QueryExecutionFactory.sparqlService(url, query);
-//		ResultSet res = q.execSelect();
-//		
-//		ArrayList<Portal> portales = new ArrayList<Portal>();
-//		while (res.hasNext()){
-//			QuerySolution sol = res.next();
-//			
-//			portales.add(new Portal(
-//					new LatLong(sol.getLiteral("lat").getDouble(), sol.getLiteral("lng").getDouble()),
-//					sol.getLiteral("num").getInt(),		
-//					sol.getLiteral("hab").getInt(),		
-//					sol.getLiteral("pad").getInt(),
-//					sol.getLiteral("tip").getString(),
-//					sol.getLiteral("cod").getString(), null));
-//		}
 		String query = 	
 			"PREFIX vocab: <http://localhost:2020/vocab/resource/> " +
-			"SELECT  ?pob WHERE   { " +
-			"?pob vocab:portal_latitud ?lat . " +
+			"SELECT  ?por WHERE   { " +
+			"?por vocab:portal_latitud ?lat . " +
 			"FILTER (?lat < " + topRight.getLatitude() + ") " +
 			"FILTER (?lat > " + BottomLeft.getLatitude() + ") " +
-			"?pob vocab:portal_longitud ?lng . " +
+			"?por vocab:portal_longitud ?lng . " +
 			"FILTER (?lng < " + topRight.getLongitude() + ") " +
 			"FILTER (?lng > " + BottomLeft.getLongitude() + ") . }";
 		
-		String url = "http://localhost:2020/sparql";
-			
-		QueryExecution q = QueryExecutionFactory.sparqlService(url, query);
+		QueryExecution q = QueryExecutionFactory.sparqlService(sparql, query);
 		ResultSet res = q.execSelect();
 		
 		ArrayList<Portal> portales = new ArrayList<Portal>();
-		
-		
-
-		
 		while (res.hasNext()){
 			QuerySolution sol = res.next();
+
+			Resource portal = model.getResource(sol.getResource("por").getURI());
+			if (!portal.hasProperty(portalLabel)){
+				model.read(portal.getURI());
+				portal = model.getResource(portal.getURI());
+			}
+			Resource via = portal.getRequiredProperty(portalVia).getResource();
+			
+			if (!via.hasProperty(viaLabel)){
+				model.read(via.getURI());
+				via = model.getResource(via.getURI());
+			}
 			
 			portales.add(new Portal(
 				new LatLong(
-					sol.getResource("pob").getRequiredProperty(portalLatitud).getDouble(),
-					sol.getResource("pob").getRequiredProperty(portalLongitud).getDouble()
+					portal.getRequiredProperty(portalLatitud).getLiteral().getDouble(),
+					portal.getRequiredProperty(portalLongitud).getLiteral().getDouble()
 				),
-				sol.getResource("pob").getRequiredProperty(portalNumero).getInt(),		
-				sol.getLiteral("hab").getInt(),		
-				sol.getLiteral("pad").getInt(),
-				sol.getLiteral("tip").getString(),
-				sol.getLiteral("cod").getString(), null)
-			);
+				portal.getRequiredProperty(portalNumero).getLiteral().getInt(),		
+				portal.getRequiredProperty(portalHabitantes).getLiteral().getInt(),		
+				portal.getRequiredProperty(portalPadronales).getLiteral().getInt(),
+				portal.getRequiredProperty(portalTipo).getLiteral().getString(),
+				portal.getRequiredProperty(portalLabel).getLiteral().getString(),
+				new Via(null,
+					via.getRequiredProperty(viaHabitantes).getLiteral().getInt(),
+					via.getRequiredProperty(viaLongitud).getLiteral().getDouble(),
+					via.getRequiredProperty(viaNombre).getLiteral().getString(),
+					via.getRequiredProperty(viaTipo).getLiteral().getString()
+				)
+			));
 		}
 		return portales;
 	}
