@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.JsArray;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 
@@ -16,9 +15,6 @@ import com.google.gwt.maps.client.event.MarkerClickHandler;
 import com.google.gwt.maps.client.event.PolygonMouseOutHandler;
 import com.google.gwt.maps.client.event.PolygonMouseOverHandler;
 import com.google.gwt.maps.client.event.PolylineEndLineHandler;
-import com.google.gwt.maps.client.geocode.Geocoder;
-import com.google.gwt.maps.client.geocode.LocationCallback;
-import com.google.gwt.maps.client.geocode.Placemark;
 import com.google.gwt.maps.client.geom.LatLng;
 import com.google.gwt.maps.client.overlay.Marker;
 import com.google.gwt.maps.client.overlay.MarkerOptions;
@@ -33,12 +29,12 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 		PolygonMouseOverHandler, PolygonMouseOutHandler {
 	private MapWidget map;
-	private Button button;
-	private ArrayList<Area> areas;
+	private Button zonaButton;
+	private Button viaButton;
+	private Button portalButton;
+	private ArrayList<Zona> areas;
 	private InfoWindow info;
 
-	private Geocoder geo;
-	
 	private VerticalPanel mainPanel;
 
 
@@ -47,30 +43,55 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 
 	public void onModuleLoad() {
 		
-		geo = new Geocoder();
-		areas = new ArrayList<Area>();
-
+		areas = new ArrayList<Zona>();
 		
 		mainPanel = new VerticalPanel();
 
-		
-		
-
-
-		// LatLng tenerife =
-		// LatLng.newInstance(28.4682385853027,-16.2546157836914);
 
 		//RDF con Google Maps
 		
 		map = new MapWidget();
 		map.setSize("700px", "500px");
 		map.setUIToDefault();
+		LatLng tenerife = LatLng.newInstance(28.4860,-16.3161);
+		map.setCenter(tenerife);
+		map.setZoomLevel(13);
+		
 		mainPanel.add(map);
 		
-		button = new Button("new area");
-		mainPanel.add(button);
+		zonaButton = new Button("nueva zona");
+		mainPanel.add(zonaButton);
+		zonaButton.addClickHandler(new ClickHandler(){
+			public void onClick(ClickEvent event) {
+				zonaButton.setEnabled(false);
+				viaButton.setEnabled(false);
+				portalButton.setEnabled(false);
+				createPolyline();
+			}
+		});
+
+		viaButton = new Button("nueva via");
+		mainPanel.add(viaButton);
+		viaButton.addClickHandler(new ClickHandler(){
+			public void onClick(ClickEvent event) {
+				zonaButton.setEnabled(false);
+				viaButton.setEnabled(false);
+				portalButton.setEnabled(false);
+				createPolyline();
+			}
+		});
 		
-		button.addClickHandler(this);
+		portalButton = new Button("nuevo portal");
+		mainPanel.add(portalButton);
+		portalButton.addClickHandler(new ClickHandler(){
+			public void onClick(ClickEvent event) {
+				zonaButton.setEnabled(false);
+				viaButton.setEnabled(false);
+				portalButton.setEnabled(false);
+				createPolyline();
+			}
+		});
+		
 		map.addMapClickHandler(this);
 		
 //		HorizontalPanel h = new HorizontalPanel();
@@ -88,27 +109,25 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 		
 	}
 
-	private Marker createMarker(final Street street) {
+	private Marker createMarker(final Portal portal) {
 		MarkerOptions markerOpt = MarkerOptions.newInstance();
 		markerOpt.setClickable(true);
-		final Marker marker = new Marker(LatLng.newInstance(street.getCoord()
-				.getLatitude(), street.getCoord().getLongitude()));
+		final Marker marker = new Marker(LatLng.newInstance(portal.getCoordenadas()
+				.getLatitude(), portal.getCoordenadas().getLongitude()));
 		marker.addMarkerClickHandler(new MarkerClickHandler() {
 			public void onClick(MarkerClickEvent event) {
 				InfoWindow info = map.getInfoWindow();
 				info.open(marker, new InfoWindowContent("<b>"
-						+ street.getName() + "</b>" + "<br>Code: "
-						+ street.getCode() + "<br>Population: "
-						+ street.getPopulation() + "<br>Registers: "
-						+ street.getRegisters() + "<br>Type: "
-						+ street.getKind()));
+						+ "sin nombre de calle" + "</b>" + "<br>Número de portal: "
+						+ portal.getNumero() + "<br>Habitantes: "
+						+ portal.getHabitantes() + "<br>Hojas padronales: "
+						+ portal.getHojas()));
 			}
 		});
 		return marker;
 	}
 
 	private void createPolyline() {
-		final RdfTest This = this;
 		String color = "#FF0000";
 		double opacity = 1.0;
 		int weight = 1;
@@ -120,32 +139,20 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 		map.addOverlay(poly);
 		poly.setDrawingEnabled();
 		poly.setStrokeStyle(style);
-		// poly.addPolylineLineUpdatedHandler(new PolylineLineUpdatedHandler() {
-		//
-		// public void onUpdate(PolylineLineUpdatedEvent event) {
-		// }
-		// });
-
-		// poly.addPolylineCancelLineHandler(new PolylineCancelLineHandler() {
-		//
-		// public void onCancel(PolylineCancelLineEvent event) {
-		// message2.setText(message2.getText() + " : Line Canceled");
-		// }
-		// });
 
 		poly.addPolylineEndLineHandler(new PolylineEndLineHandler() {
 
 			public void onEnd(PolylineEndLineEvent event) {
-				System.out.println("POLILINEA CREADA");
-				newArea(event.getSender());
-				button.setEnabled(true);
-				map.addMapClickHandler(This);
+				nuevaZona(event.getSender());
+				zonaButton.setEnabled(true);
+				viaButton.setEnabled(true);
+				portalButton.setEnabled(true);
 			}
 		});
 	}
 
 	public void onClick(MapClickEvent event) {
-		if (button.isEnabled()) {
+		if (zonaButton.isEnabled()) {
 			if (event.getLatLng() == null) {
 				return;
 			}
@@ -158,8 +165,8 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 	}
 
 	public void onClick(ClickEvent event) {
-		if (event.getSource() == button) {
-			button.setEnabled(false);
+		if (event.getSource() == zonaButton) {
+			zonaButton.setEnabled(false);
 			map.removeMapClickHandler(this);
 			createPolyline();
 		}
@@ -192,7 +199,7 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 		return oddNodes;
 	}
 
-	private void newArea(Polyline pline) {
+	private void nuevaZona(Polyline pline) {
 		final RdfTest This = this;
 
 		LatLng[] coord = new LatLng[pline.getVertexCount()];
@@ -201,70 +208,45 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 		}
 		final Polygon p = new Polygon(coord, "#f33f00", 5, 1, "#ff0000", 0.2);
 
+		System.out.println("LLAMADA A GETPORTALES");
+		
 		try {
-			greetingService.getStreets(
+			greetingService.getPortales(
 					new LatLong(p.getBounds().getNorthEast()), new LatLong(p
 							.getBounds().getSouthWest()),
-					new AsyncCallback<ArrayList<Street>>() {
+					new AsyncCallback<ArrayList<Portal>>() {
 						public void onFailure(Throwable caught) {
 							System.out.println("Error.");
 						}
 
-						public void onSuccess(ArrayList<Street> result) {
+						public void onSuccess(ArrayList<Portal> result) {
 							int count = 0;
 							for (int i = 0; i < result.size(); i++) {
+								
 								LatLng l = LatLng.newInstance(result.get(i)
-										.getCoord().getLatitude(), result.get(i)
-										.getCoord().getLongitude());
+										.getCoordenadas().getLatitude(), result.get(i)
+										.getCoordenadas().getLongitude());
 								if (contains(p, l)) {
 									count++;
 								}
 							}
 
-							final Street[] contained = new Street[count];
+							final Portal[] contained = new Portal[count];
 
 							int index = 0;
 							for (int i = 0; i < result.size(); i++) {
 								LatLng l = LatLng.newInstance(result.get(i)
-										.getCoord().getLatitude(), result.get(i)
-										.getCoord().getLongitude());
+										.getCoordenadas().getLatitude(), result.get(i)
+										.getCoordenadas().getLongitude());
 								if (contains(p, l)) {
 									contained[index++] = result.get(i);
-
-									final int j = index - 1;
-
-									geo.getLocations(l, new LocationCallback() {
-										public void onFailure(int statusCode) {
-											contained[j].setName(".....");
-											map.addOverlay(createMarker(contained[j]));
-										}
-
-										public void onSuccess(
-												JsArray<Placemark> locations) {
-											for (int i = 0; i < locations
-													.length(); i++) {
-												if (locations.get(i)
-														.getStreet() != null) {
-													contained[j]
-															.setName(locations
-																	.get(i)
-																	.getStreet());
-													map.addOverlay(createMarker(contained[j]));
-													return;
-												}
-											}
-											contained[j].setName(".....");
-											map.addOverlay(createMarker(contained[j]));
-										}
-									});
-
+									map.addOverlay(createMarker(contained[index - 1]));
 								}
 							}
-
 							map.addOverlay(p);
 							p.addPolygonMouseOverHandler(This);
 							p.addPolygonMouseOutHandler(This);
-							areas.add(new Area(p, contained));
+							areas.add(new Zona(p, contained));
 							for (int i = 0; i < contained.length; i++) {
 								map.addOverlay(createMarker(contained[i]));
 							}
@@ -277,58 +259,58 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 	}
 
 	private void showStreet(final LatLng point) {
-		try {
-			greetingService.getStreet(new LatLong(point),
-					new AsyncCallback<Street>() {
-						public void onFailure(Throwable caught) {
-							System.out.println("Error.");
-						}
-
-						public void onSuccess(final Street result) {
-							LatLng p = LatLng.newInstance(result.getCoord()
-									.getLatitude(), result.getCoord()
-									.getLongitude());
-
-							geo.getLocations(p, new LocationCallback() {
-								public void onFailure(int statusCode) {
-									showInfo(".....");
-								}
-
-								public void onSuccess(
-										JsArray<Placemark> locations) {
-									for (int i = 0; i < locations.length(); i++) {
-										if (locations.get(i).getStreet() != null) {
-											showInfo(locations.get(i)
-													.getStreet());
-											return;
-										}
-									}
-									showInfo(".....");
-								}
-
-								public void showInfo(String street) {
-									InfoWindow info = map.getInfoWindow();
-									info.open(point, new InfoWindowContent(
-											"<b>" + street + "</b>"
-													+ "<br>Code: "
-													+ result.getCode()
-													+ "<br>Population: "
-													+ result.getPopulation()
-													+ "<br>Registers: "
-													+ result.getRegisters()
-													+ "<br>Type: "
-													+ result.getKind()));
-								}
-							});
-						}
-					});
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+//		try {
+//			greetingService.getStreet(new LatLong(point),
+//					new AsyncCallback<Street>() {
+//						public void onFailure(Throwable caught) {
+//							System.out.println("Error.");
+//						}
+//
+//						public void onSuccess(final Street result) {
+//							LatLng p = LatLng.newInstance(result.getCoord()
+//									.getLatitude(), result.getCoord()
+//									.getLongitude());
+//
+//							geo.getLocations(p, new LocationCallback() {
+//								public void onFailure(int statusCode) {
+//									showInfo(".....");
+//								}
+//
+//								public void onSuccess(
+//										JsArray<Placemark> locations) {
+//									for (int i = 0; i < locations.length(); i++) {
+//										if (locations.get(i).getStreet() != null) {
+//											showInfo(locations.get(i)
+//													.getStreet());
+//											return;
+//										}
+//									}
+//									showInfo(".....");
+//								}
+//
+//								public void showInfo(String street) {
+//									InfoWindow info = map.getInfoWindow();
+//									info.open(point, new InfoWindowContent(
+//											"<b>" + street + "</b>"
+//													+ "<br>Code: "
+//													+ result.getCode()
+//													+ "<br>Population: "
+//													+ result.getPopulation()
+//													+ "<br>Registers: "
+//													+ result.getRegisters()
+//													+ "<br>Type: "
+//													+ result.getKind()));
+//								}
+//							});
+//						}
+//					});
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
 	}
 
 	public void onMouseOver(PolygonMouseOverEvent event) {
-		for (Area area : areas) {
+		for (Zona area : areas) {
 			if (area.getPoly() == event.getSource()) {
 				info = map.getInfoWindow();
 				double sizeArea = area.getPoly().getArea();
@@ -341,8 +323,8 @@ public class RdfTest implements EntryPoint, MapClickHandler, ClickHandler,
 				info.open(area.getPoly().getBounds().getCenter(),
 						new InfoWindowContent("Area: "
 								+ (int)sizeArea + " " + unit + "<sup>2</sup>"
-								+ "<br>Population: " + area.getPopulation()
-								+ "<br>Registers: " + area.getRegisters()));
+								+ "<br>Population: " + area.getHabitantes()
+								+ "<br>Registers: " + area.getHojas()));
 			}
 		}
 	}
