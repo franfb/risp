@@ -2,6 +2,8 @@ package org.labis.risp.client;
 
 import java.io.Serializable;
 
+import com.hp.hpl.jena.rdf.model.Resource;
+
 public class Portal implements Serializable{
 
 	private static final long serialVersionUID = 1L;
@@ -23,7 +25,7 @@ public class Portal implements Serializable{
 		this.codigo = codigo;
 		this.via = via;
 	}
-
+	
 	public Portal(){}
 	
 	public LatLong getCoordenadas() {

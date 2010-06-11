@@ -1,17 +1,18 @@
 package org.labis.risp.client;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class Via implements Serializable{
 
 	private static final long serialVersionUID = 1L;
-	private Portal[] portales;
+	private ArrayList<Portal> portales;
 	private int habitantes;
 	private double longitud;
 	private String nombre;
 	private String tipo;
 
-	public Via(Portal[] portales, int habitantes, double longitud,
+	public Via(ArrayList<Portal> portales, int habitantes, double longitud,
 			String nombre, String tipo) {
 		this.portales = portales;
 		this.habitantes = habitantes;
@@ -23,11 +24,11 @@ public class Via implements Serializable{
 	public Via() {
 	}
 
-	public Portal[] getPortales() {
+	public ArrayList<Portal> getPortales() {
 		return portales;
 	}
 
-	public void setPortales(Portal[] portales) {
+	public void setPortales(ArrayList<Portal> portales) {
 		this.portales = portales;
 	}
 
