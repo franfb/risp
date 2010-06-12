@@ -295,7 +295,7 @@ public class RdfTest implements EntryPoint{
 						public void onSuccess(final Portal portal) {
 							if (portal == null){
 								InfoWindow info = map.getInfoWindow();
-								info.open(point, new InfoWindowContent("no hay ningún edificio poblado en las cercanías"));
+								info.open(point, new InfoWindowContent("no hay ningÃºn edificio poblado en las cercanÃ­as"));
 							}
 							else{
 								map.addOverlay(createMarkerPortal(portal));
@@ -319,7 +319,7 @@ public class RdfTest implements EntryPoint{
 						public void onSuccess(final Via via) {
 							if (via == null){
 								InfoWindow info = map.getInfoWindow();
-								info.open(point, new InfoWindowContent("no hay ninguna vía en las cercanías"));
+								info.open(point, new InfoWindowContent("no hay ninguna vÃ­a en las cercanÃ­as"));
 							}
 							else{
 								for (Portal portal: via.getPortales()){

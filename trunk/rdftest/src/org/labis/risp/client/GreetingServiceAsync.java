@@ -8,10 +8,13 @@ public interface GreetingServiceAsync {
 	
 	
 	
-	void getVia(LatLong place, AsyncCallback<Via> callback);
+	void getVia(LatLong point, AsyncCallback<Via> callback);
 
-	void getPortal(LatLong place, AsyncCallback<Portal> callback);
+	void getPortal(LatLong point, AsyncCallback<Portal> callback);
 
 	void getPortales(LatLong topRight, LatLong BottomLeft,
 			AsyncCallback<ArrayList<Portal>> callback);
+	
+	void getVias(LatLong topRight, LatLong BottomLeft,
+			AsyncCallback<ArrayList<Via>> callback);
 }

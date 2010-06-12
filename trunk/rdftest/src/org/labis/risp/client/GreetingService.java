@@ -7,7 +7,8 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 
 @RemoteServiceRelativePath("greet")
 public interface GreetingService extends RemoteService {
-	Portal getPortal(LatLong place);
-	Via getVia(LatLong place);
+	Portal getPortal(LatLong point);
+	Via getVia(LatLong point);
 	ArrayList<Portal> getPortales(LatLong topRight, LatLong BottomLeft);
+	ArrayList<Via> getVias(LatLong topRight, LatLong BottomLeft);
 }

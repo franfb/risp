@@ -20,6 +20,7 @@ import com.hp.hpl.jena.query.Syntax;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Property;
+import com.hp.hpl.jena.rdf.model.ResIterator;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 
@@ -51,6 +52,8 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 
 	private double min = 0.002;
 	private double max = 0.02;
+	
+	private int count = 0;
 
 	public Model getModel(){
 			System.out.println("CREANDO EL MODELO DESDE CERO");
@@ -94,9 +97,10 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 			if (res.hasNext()){
 				break;
 			}
+			res = null;
 			distance *= 2;
 		}
-		if (!res.hasNext()){
+		if (res == null){
 			return null;
 		}
 		
@@ -137,6 +141,82 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 	public Via getVia(LatLong point) {
 		double distance = min;
 		ResultSet res = null;
+		
+		System.out.println("CONTADOR: " + count++);
+		
+		System.out.println("CHECKPOINT 1");
+
+		while (distance <= max){
+			LatLong topRight = new LatLong(point.getLatitude() + distance, point.getLongitude() + distance);
+			LatLong bottomLeft = new LatLong(point.getLatitude() - distance, point.getLongitude() - distance);
+			res = portalesLatLng(topRight, bottomLeft);
+			if (res.hasNext()){
+				break;
+			}
+			res = null;
+			distance *= 2;
+			System.out.println("CHECKPOINT 1.1");
+		}
+		
+		System.out.println("CHECKPOINT 2");
+		if (res == null){
+			return null;
+		}
+		
+		Resource masCercano = null;
+		distance = 999999.9;
+		
+		while (res.hasNext()){
+			QuerySolution sol = res.next();
+			Resource portal = sol.getResource("por");
+
+			portal.addLiteral(portalLatitud, sol.getLiteral("lat").getDouble());
+			portal.addLiteral(portalLongitud, sol.getLiteral("lng").getDouble());
+			portal.addProperty(portalVia, sol.getResource("via"));
+			
+			double d = distancia(portal, point);
+			if ((masCercano == null || d < distance)){
+				masCercano = portal;
+				distance = d;
+			}
+			//System.out.println("CHECKPOINT 2.1");
+		}
+		
+		System.out.println("CHECKPOINT 3");
+
+		
+		Resource via = masCercano.getProperty(portalVia).getResource();
+		if (!via.hasProperty(viaLabel)){
+			model.read(via.getURI());
+			via = model.getResource(via.getURI());
+		}
+		
+		Via v = newVia(via);
+		
+		ResIterator r = portales(masCercano.getProperty(portalVia).getResource());
+		System.out.println("CHECKPOINT 4");
+		ArrayList<Portal> list = new ArrayList<Portal>();
+		int i = 0;
+		while (r.hasNext()){
+			Resource portal = r.next();
+			if (!portal.hasProperty(portalLabel)){
+				i++;
+				model.read(portal.getURI());
+				portal = model.getResource(portal.getURI());
+			}
+			list.add(newPortal(portal, v));
+		}
+		System.out.println("POR EL SPARQL: " + list.size() + " y " + i);
+		v.setPortales(list);
+		return v;
+	}
+	
+	public Via getViaOriginal(LatLong point) {
+		double distance = min;
+		ResultSet res = null;
+		
+		System.out.println("CHECKPOINT 1");
+
 		while (distance <= max){
 			LatLong topRight = new LatLong(point.getLatitude() + distance, point.getLongitude() + distance);
 			LatLong bottomLeft = new LatLong(point.getLatitude() - distance, point.getLongitude() - distance);
@@ -144,9 +224,13 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 			if (res.hasNext()){
 				break;
 			}
+			res = null;
 			distance *= 2;
+			System.out.println("CHECKPOINT 1.1");
 		}
-		if (!res.hasNext()){
+		
+		System.out.println("CHECKPOINT 2");
+		if (res == null){
 			return null;
 		}
 		
@@ -160,44 +244,43 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 				model.read(portal.getURI());
 				portal = model.getResource(portal.getURI());
 			}
-			Resource via = null;
-			if (portal.getProperty(portalVia) != null){
-				via = portal.getProperty(portalVia).getResource();
-				if (!via.hasProperty(viaLabel)){
-					model.read(via.getURI());
-				}
-			}
 			double d = distancia(portal, point);
-			
 			if ((masCercano == null || d < distance) && portal.getProperty(portalVia) != null){
 				masCercano = portal;
 				distance = d;
 			}
+			//System.out.println("CHECKPOINT 2.1");
 		}
+		System.out.println("CHECKPOINT 3");
 		
 		if (masCercano == null){
 			return null;
 		}
 		
+		Resource via = masCercano.getProperty(portalVia).getResource();
+		if (!via.hasProperty(viaLabel)){
+			model.read(via.getURI());
+		}
+		
 		Via v = newVia(masCercano.getProperty(portalVia).getResource());
 		
-		res = portales(masCercano.getProperty(portalVia).getResource());
-		
+		ResIterator r = portales(masCercano.getProperty(portalVia).getResource());
+		System.out.println("CHECKPOINT 4");
 		ArrayList<Portal> list = new ArrayList<Portal>();
-		while (res.hasNext()){
-			QuerySolution sol = res.next();
-			Resource portal = model.getResource(sol.getResource("por").getURI());
+		int i = 0;
+		while (r.hasNext()){
+			Resource portal = r.next();
 			if (!portal.hasProperty(portalLabel)){
+				i++;
 				model.read(portal.getURI());
 				portal = model.getResource(portal.getURI());
 			}
 			list.add(newPortal(portal, v));
 		}
+		System.out.println("POR EL SPARQL: " + list.size() + " y " + i);
 		v.setPortales(list);
 		return v;
 	}
-	
-	
 	
 	
 	private ResultSet portales(LatLong topRight, LatLong BottomLeft){
@@ -215,14 +298,43 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		return res;
 	}
 	
-	private ResultSet portales(Resource via){
+	private ResultSet portalesLatLng(LatLong topRight, LatLong BottomLeft){
 		String query = 	
 			"PREFIX vocab: <http://localhost:2020/vocab/resource/> " +
-			"SELECT  ?por WHERE   { " +
-			"?por vocab:portal_via <" + via.getURI() + "> . }";
+			"SELECT  ?por ?lat ?lng ?via WHERE   { " +
+			"?por vocab:portal_via ?via . " +
+			"?por vocab:portal_latitud ?lat . " +
+			"FILTER (?lat < " + topRight.getLatitude() + ") " +
+			"FILTER (?lat > " + BottomLeft.getLatitude() + ") " +
+			"?por vocab:portal_longitud ?lng . " +
+			"FILTER (?lng < " + topRight.getLongitude() + ") " +
+			"FILTER (?lng > " + BottomLeft.getLongitude() + ") . }";
 		QueryExecution q = QueryExecutionFactory.sparqlService(sparql, query);
 		ResultSet res = q.execSelect();
 		return res;
+	}
+	
+	private ResIterator portales(Resource via){
+		return model.listSubjectsWithProperty(portalVia, via);
+
+//		ResIterator r = model.listSubjectsWithProperty(portalVia, via);
+//		int i = 0;
+//		while (r.hasNext()){
+//			r.next();
+//			i++;
+//			//System.out.println("VIA DE LA CALLE: " + r.next().getURI());
+//		}
+//		System.out.println("POR EL MODEL: " + i);
+//		
+//		
+//		
+//		String query = 	
+//			"PREFIX vocab: <http://localhost:2020/vocab/resource/> " +
+//			"SELECT  ?por WHERE   { " +
+//			"?por vocab:portal_via <" + via.getURI() + "> . }";
+//		QueryExecution q = QueryExecutionFactory.sparqlService(sparql, query);
+//		ResultSet res = q.execSelect();
+//		return res;
 	}
 	
 	private Portal newPortal(Resource portal, Via v){
@@ -240,7 +352,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		);
 	}
 	
-	private Via newVia(Resource via){
+	private Via newVia(Resource via){		
 		return new Via(null,
 			via.getRequiredProperty(viaHabitantes).getLiteral().getInt(),
 			via.getRequiredProperty(viaLongitud).getLiteral().getDouble(),
@@ -274,6 +386,12 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 			portales.add(newPortal(portal, v));
 		}
 		return portales;
+	}
+
+	@Override
+	public ArrayList<Via> getVias(LatLong topRight, LatLong BottomLeft) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
