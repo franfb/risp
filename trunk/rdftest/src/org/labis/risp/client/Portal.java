@@ -2,8 +2,6 @@ package org.labis.risp.client;
 
 import java.io.Serializable;
 
-import com.hp.hpl.jena.rdf.model.Resource;
-
 public class Portal implements Serializable{
 
 	private static final long serialVersionUID = 1L;
@@ -13,10 +11,10 @@ public class Portal implements Serializable{
 	private int hojas;
 	private String tipo;
 	private String codigo;
-	private Via via;
+	private String via;
 	
 	public Portal(LatLong coordenadas, int numero, int habitantes, int hojas,
-			String tipo, String codigo, Via via) {
+			String tipo, String codigo, String via) {
 		this.coordenadas = coordenadas;
 		this.numero = numero;
 		this.habitantes = habitantes;
@@ -32,11 +30,11 @@ public class Portal implements Serializable{
 		return coordenadas;
 	}
 	
-	public Via getVia() {
+	public String getVia() {
 		return via;
 	}
 
-	public void setVia(Via via) {
+	public void setVia(String via) {
 		this.via = via;
 	}
 

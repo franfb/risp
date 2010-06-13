@@ -145,7 +145,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 				model.read(via.getURI());
 				via = model.getResource(via.getURI());
 			}
-			return newPortal(masCercano, newVia(via));
+			return newPortal(masCercano, via);
 		}
 		return newPortal(masCercano, null);
 	}
@@ -171,7 +171,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 				model.read(portal.getURI());
 				portal = model.getResource(portal.getURI());
 			}
-			list.add(newPortal(portal, v));
+			list.add(newPortal(portal, via));
 		}
 		v.setPortales(list);
 		return v;
@@ -243,7 +243,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		return model.listSubjectsWithProperty(portalVia, via);
 	}
 	
-	private Portal newPortal(Resource portal, Via v){
+	private Portal newPortal(Resource portal, Resource via){
 		return new Portal(
 			new LatLong(
 				portal.getRequiredProperty(portalLatitud).getLiteral().getDouble(),
@@ -254,7 +254,22 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 			portal.getRequiredProperty(portalPadronales).getLiteral().getInt(),
 			portal.getRequiredProperty(portalTipo).getLiteral().getString(),
 			portal.getRequiredProperty(portalLabel).getLiteral().getString(),
-			v
+			via.getRequiredProperty(viaTipo2) + " " + via.getRequiredProperty(viaNombre)
+		);
+	}
+	
+	private Portal newPortal(Resource portal){
+		return new Portal(
+			new LatLong(
+				portal.getRequiredProperty(portalLatitud).getLiteral().getDouble(),
+				portal.getRequiredProperty(portalLongitud).getLiteral().getDouble()
+			),
+			portal.getRequiredProperty(portalNumero).getLiteral().getInt(),		
+			portal.getRequiredProperty(portalHabitantes).getLiteral().getInt(),		
+			portal.getRequiredProperty(portalPadronales).getLiteral().getInt(),
+			portal.getRequiredProperty(portalTipo).getLiteral().getString(),
+			portal.getRequiredProperty(portalLabel).getLiteral().getString(),
+			null
 		);
 	}
 	
@@ -280,16 +295,17 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 				portal = model.getResource(portal.getURI());
 			}
 			
-			Via v = null;
 			if (portal.getProperty(portalVia) != null){
 				Resource via = portal.getRequiredProperty(portalVia).getResource();
 				if (!via.hasProperty(viaLabel)){
 					model.read(via.getURI());
 					via = model.getResource(via.getURI());
 				}
-				v = newVia(via);
+				portales.add(newPortal(portal, via));
 			}
-			portales.add(newPortal(portal, v));
+			else{
+				portales.add(newPortal(portal));
+			}
 		}
 		return portales;
 	}

@@ -133,9 +133,7 @@ public class RdfTest implements EntryPoint{
 				String nombreCalle = "Desconocido";
 				if (portal.getVia() != null){
 					nombreCalle = "<b>" +
-					portal.getVia().getTipo() +
-					" " + 
-					portal.getVia().getNombre() + 
+					portal.getVia() + 
 					", " + 
 					portal.getNumero() + 
 					"</b>";
