@@ -1,35 +1,28 @@
 package org.labis.risp.client;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 
 public class Via implements Serializable{
 
 	private static final long serialVersionUID = 1L;
-	private ArrayList<Portal> portales;
+	private MyLatLng coordenadas;
 	private int habitantes;
 	private double longitud;
 	private String nombre;
 	private String tipo;
+	private String codigo;
 
-	public Via(ArrayList<Portal> portales, int habitantes, double longitud,
-			String nombre, String tipo) {
-		this.portales = portales;
+	public Via(MyLatLng coordenadas, int habitantes, double longitud,
+			String nombre, String tipo, String codigo) {
+		this.coordenadas = coordenadas;
 		this.habitantes = habitantes;
 		this.longitud = longitud;
 		this.nombre = nombre;
 		this.tipo = tipo;
+		this.codigo = codigo;
 	}
 
 	public Via() {
-	}
-
-	public ArrayList<Portal> getPortales() {
-		return portales;
-	}
-
-	public void setPortales(ArrayList<Portal> portales) {
-		this.portales = portales;
 	}
 
 	public int getHabitantes() {
@@ -62,5 +55,21 @@ public class Via implements Serializable{
 
 	public void setTipo(String tipo) {
 		this.tipo = tipo;
+	}
+
+	public void setCoordenadas(MyLatLng coordenadas) {
+		this.coordenadas = coordenadas;
+	}
+
+	public MyLatLng getCoordenadas() {
+		return coordenadas;
+	}
+
+	public void setCodigo(String codigo) {
+		this.codigo = codigo;
+	}
+
+	public String getCodigo() {
+		return codigo;
 	}
 }

@@ -1,18 +1,20 @@
 package org.labis.risp.client;
 
+import java.util.ArrayList;
+
 import com.google.gwt.maps.client.overlay.Polygon;
 
 public class Zona {
 	private Polygon poly;
-	private Portal[] portales;
+	private ArrayList<Portal> portales;
 	private int habitantes;
 	private int hojas;
 	
-	public Portal[] getPortales() {
+	public ArrayList<Portal> getPortales() {
 		return portales;
 	}
 
-	public void setPortales(Portal[] portales) {
+	public void setPortales(ArrayList<Portal> portales) {
 		this.portales = portales;
 	}
 
@@ -32,14 +34,14 @@ public class Zona {
 		this.hojas = hojas;
 	}
 
-	public Zona(Polygon polys, Portal[] portales) {
+	public Zona(Polygon polys, ArrayList<Portal> portales) {
 		this.poly = polys;
 		this.portales = portales;
 		habitantes = 0;
 		hojas = 0;
-		for (int i = 0; i < portales.length; i++){
-			habitantes += portales[i].getHabitantes();
-			hojas += portales[i].getHojas();
+		for (int i = 0; i < portales.size(); i++){
+			habitantes += portales.get(i).getHabitantes();
+			hojas += portales.get(i).getHojas();
 		}
 	}
 	

@@ -5,7 +5,7 @@ import java.io.Serializable;
 public class Portal implements Serializable{
 
 	private static final long serialVersionUID = 1L;
-	private LatLong coordenadas;
+	private MyLatLng coordenadas;
 	private int numero;
 	private int habitantes;
 	private int hojas;
@@ -13,7 +13,7 @@ public class Portal implements Serializable{
 	private String codigo;
 	private String via;
 	
-	public Portal(LatLong coordenadas, int numero, int habitantes, int hojas,
+	public Portal(MyLatLng coordenadas, int numero, int habitantes, int hojas,
 			String tipo, String codigo, String via) {
 		this.coordenadas = coordenadas;
 		this.numero = numero;
@@ -26,7 +26,7 @@ public class Portal implements Serializable{
 	
 	public Portal(){}
 	
-	public LatLong getCoordenadas() {
+	public MyLatLng getCoordenadas() {
 		return coordenadas;
 	}
 	
@@ -46,7 +46,7 @@ public class Portal implements Serializable{
 		this.tipo = tipo;
 	}
 
-	public void setCoordenadas(LatLong coordenadas) {
+	public void setCoordenadas(MyLatLng coordenadas) {
 		this.coordenadas = coordenadas;
 	}
 	
