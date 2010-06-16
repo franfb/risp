@@ -1,10 +1,5 @@
 package org.labis.risp.server;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -87,47 +82,6 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		return Math.sqrt(Math.pow(lat - point.getLatitude(), 2) + Math.pow(lng - point.getLongitude(), 2));
 	}
 	
-
-
-	
-	
-	public double[] converter(double x, double y) {
-        double  e = 0.08199189;  //excentricidad
-        double e2 = 0.08226889; //segunda excentricidad
-        double e22 = e2 * e2; //segunda exentricidad al cuadrado
-        double c = 6399936.608; //radio polar de curvatura
-        int m = -15; //meridiano central correspondiente a canarias
-        
-        double fi = y / (6366197.724 * 0.9996);
-        double cos2fi = Math.cos(fi) * Math.cos(fi);
-        double ni = (c * 0.9996) / Math.pow((1 + e22 * cos2fi), 0.5);
-        double a = (x - 500000)/ni;
-        double a1 = Math.sin(2*fi);
-        double a2 = a1 * cos2fi;
-        double j2 = fi + (a1/2);
-        double j4 = (3 * j2 + a2) / 4;
-        double j6 = (5 * j4 + a2 * cos2fi) / 3;
-        double alfa = 3 * e22 / 4;
-        double beta = 5 * (alfa*alfa) / 3;
-        double gamma = 35 * (alfa*alfa*alfa) / 27;
-        double bfi = 0.9996 * c * (fi - (alfa*j2) + (beta*j4) - (gamma*j6));
-        double b = (y - bfi) / ni;
-        double zeta = ((e22 * (a*a)) / 2) * cos2fi;
-        double xi = a * (1 - (zeta / 3));
-        double eta = b * (1 - zeta) + fi;
-        double senhxi = (Math.exp(xi) - Math.exp(-xi)) / 2;
-        double deltalambda = Math.atan(senhxi / Math.cos(eta));
-        double tau = Math.atan(Math.cos(deltalambda) * Math.tan(eta));
-        double firad = fi + (1 + e22 * cos2fi - 1.5 * e22 * Math.sin(fi) * Math.cos(fi)
-                        * (tau - fi)) * (tau - fi);
-        System.out.println(firad);
-        
-        double[] geos = new double[2];
-        geos[0] = (firad / Math.PI) * 180;
-        geos[1] = (deltalambda / Math.PI) * 180 + m;
-        return geos;
-}
-
 	
 	private Resource portalMasCercano(MyLatLng point, boolean conVia){
 		double distance = min;
@@ -244,46 +198,13 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 	}
 	
 	public ArrayList<Portal> getPortales(MyPolygon poly, MyLatLng topRight, MyLatLng bottomLeft) {
-		String url = "jdbc:mysql://localhost/risp";
-        String user = "root";
-        String passw = "labis";
-        try {
-			Class.forName("com.mysql.jdbc.Driver");
-			Connection cnt = DriverManager.getConnection(url, user, passw);
-	        java.sql.Statement stm = cnt.createStatement();
-	        ResultSet rs = stm.executeQuery("SELECT CODIGO, COORDX, COORDY FROM PORTAL");
-	        while (rs.next()){
-	                //System.out.println("CODIGO: " + rs.getLong("CODIGO") + "  LONGITUD: " + rs.getInt("LATITUD"));
-	            	double x = rs.getDouble("COORDX");
-	            	double y = rs.getDouble("COORDY");
-	            	MyLatLng latLng = Coordinates.UTM2LatLng(x, y, 28, false);
-	                //double latlong[] = converter(x, y);
-	                String sql = "UPDATE PORTAL SET LATITUD = ?, LONGITUD = ? WHERE CODIGO = ?";
-	                PreparedStatement s = cnt.prepareStatement(sql);
-	                s.setDouble(1, latLng.getLatitude());
-	                s.setDouble(2, latLng.getLongitude());
-	                s.setString(3, rs.getString("CODIGO"));
-	                s.executeUpdate();
-	        }
-		} catch (ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		ResIterator res = getPortal(poly, topRight, bottomLeft, false);
+		ArrayList<Portal> portales = new ArrayList<Portal>();
+		while (res.hasNext()){
+			Resource portal = res.next();
+			portales.add(newPortal(portal));
 		}
-        
-		
-		
-		
-//		ResIterator res = getPortal(poly, topRight, bottomLeft, false);
-//		ArrayList<Portal> portales = new ArrayList<Portal>();
-//		while (res.hasNext()){
-//			Resource portal = res.next();
-//			portales.add(newPortal(portal));
-//		}
-//		return portales;
-                return null;
+		return portales;
 	}
 
 	public ArrayList<Via> getVias(MyPolygon poly, MyLatLng topRight, MyLatLng bottomLeft) {

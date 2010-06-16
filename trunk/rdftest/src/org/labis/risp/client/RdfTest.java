@@ -12,10 +12,13 @@ import com.google.gwt.maps.client.InfoWindowContent;
 import com.google.gwt.maps.client.MapWidget;
 import com.google.gwt.maps.client.event.MapClickHandler;
 import com.google.gwt.maps.client.event.MarkerClickHandler;
+import com.google.gwt.maps.client.event.MarkerMouseOutHandler;
+import com.google.gwt.maps.client.event.MarkerMouseOverHandler;
 import com.google.gwt.maps.client.event.PolygonMouseOutHandler;
 import com.google.gwt.maps.client.event.PolygonMouseOverHandler;
 import com.google.gwt.maps.client.event.PolylineEndLineHandler;
 import com.google.gwt.maps.client.geom.LatLng;
+import com.google.gwt.maps.client.overlay.Icon;
 import com.google.gwt.maps.client.overlay.Marker;
 import com.google.gwt.maps.client.overlay.MarkerOptions;
 import com.google.gwt.maps.client.overlay.PolyStyleOptions;
@@ -166,11 +169,12 @@ public class RdfTest implements EntryPoint{
 	
 	private Marker createMarkerVia(final Via via) {
 		MarkerOptions markerOpt = MarkerOptions.newInstance();
-		markerOpt.setClickable(true);
+		markerOpt.setIcon(Icon.newInstance("http://google-maps-icons.googlecode.com/files/home.png"));
+		
 		final Marker marker = new Marker(LatLng.newInstance(via.getCoordenadas()
-				.getLatitude(), via.getCoordenadas().getLongitude()));
-		marker.addMarkerClickHandler(new MarkerClickHandler() {
-			public void onClick(MarkerClickEvent event) {
+				.getLatitude(), via.getCoordenadas().getLongitude()), markerOpt);
+		marker.addMarkerMouseOverHandler(new MarkerMouseOverHandler(){
+			public void onMouseOver(MarkerMouseOverEvent event) {
 				InfoWindow info = map.getInfoWindow();
 				String nombreCalle = "<b>" +
 					via.getTipo() + 
@@ -183,7 +187,30 @@ public class RdfTest implements EntryPoint{
 						+ "<br>Código de vía: "
 						+ via.getCodigo()));
 			}
+			
 		});
+		marker.addMarkerMouseOutHandler(new MarkerMouseOutHandler(){
+			public void onMouseOut(MarkerMouseOutEvent event) {
+				InfoWindow info = map.getInfoWindow();
+				info.close();
+			}
+			
+		});
+//		marker.addMarkerClickHandler(new MarkerClickHandler() {
+//			public void onClick(MarkerClickEvent event) {
+//				InfoWindow info = map.getInfoWindow();
+//				String nombreCalle = "<b>" +
+//					via.getTipo() + 
+//					" " + 
+//					via.getNombre() + 
+//					"</b>";
+//				info.open(marker, new InfoWindowContent(nombreCalle
+//						+ "<br>Habitantes: "
+//						+ via.getHabitantes()
+//						+ "<br>Código de vía: "
+//						+ via.getCodigo()));
+//			}
+//		});
 		return marker;
 	}
 
@@ -311,9 +338,9 @@ public class RdfTest implements EntryPoint{
 								}
 							});
 							areas.add(new Zona(p, result));
-//							for (int i = 0; i < contained.length; i++) {
-//								map.addOverlay(createMarkerPortal(contained[i]));
-//							}
+							for (int i = 0; i < result.size(); i++) {
+								map.addOverlay(createMarkerPortal(result.get(i)));
+							}
 
 						}
 					});
