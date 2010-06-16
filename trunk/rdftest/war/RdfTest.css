@@ -10,6 +10,10 @@ h1 {
   text-align: center;
 }
 
+.columna {
+	background-image: url("http://mispicaderos.net/fondo.png");
+}
+
 .sendButton {
   display: block;
   font-size: 16pt;
