@@ -202,27 +202,34 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		ArrayList<Portal> portales = new ArrayList<Portal>();
 		while (res.hasNext()){
 			Resource portal = res.next();
-			portales.add(newPortal(portal));
+			if (contains(poly, new MyLatLng(
+					portal.getRequiredProperty(portalLatitud).getLiteral().getDouble(),
+					portal.getRequiredProperty(portalLongitud).getLiteral().getDouble()
+				))){
+				portales.add(newPortal(portal));
+			}
 		}
 		return portales;
 	}
 
 	public ArrayList<Via> getVias(MyPolygon poly, MyLatLng topRight, MyLatLng bottomLeft) {
-		System.out.println("111");
 		ResIterator res = getPortal(poly, topRight, bottomLeft, true);
-		System.out.println("222");
 		ArrayList<Via> vias = new ArrayList<Via>();
 		HashSet<Integer> set = new HashSet<Integer>();
 		while (res.hasNext()){
 			Resource portal = res.next();
-			Resource via = getVia(portal);
-			int codigoVia = Integer.parseInt(via.getRequiredProperty(viaCodigo).getLiteral().getString());
-			if (!set.contains(codigoVia)){
-				set.add(codigoVia);
-				vias.add(newVia(via, newPortal(portal).getCoordenadas()));
+			if (contains(poly, new MyLatLng(
+					portal.getRequiredProperty(portalLatitud).getLiteral().getDouble(),
+					portal.getRequiredProperty(portalLongitud).getLiteral().getDouble()
+				))){
+				Resource via = getVia(portal);
+				int codigoVia = Integer.parseInt(via.getRequiredProperty(viaCodigo).getLiteral().getString());
+				if (!set.contains(codigoVia)){
+					set.add(codigoVia);
+					vias.add(newVia(via, newPortal(portal).getCoordenadas()));
+				}
 			}
 		}
-		System.out.println("333");
 		return vias;
 	}
 	

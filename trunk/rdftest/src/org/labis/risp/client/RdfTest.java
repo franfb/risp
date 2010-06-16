@@ -18,6 +18,8 @@ import com.google.gwt.maps.client.event.PolygonMouseOutHandler;
 import com.google.gwt.maps.client.event.PolygonMouseOverHandler;
 import com.google.gwt.maps.client.event.PolylineEndLineHandler;
 import com.google.gwt.maps.client.geom.LatLng;
+import com.google.gwt.maps.client.geom.Point;
+import com.google.gwt.maps.client.geom.Size;
 import com.google.gwt.maps.client.overlay.Icon;
 import com.google.gwt.maps.client.overlay.Marker;
 import com.google.gwt.maps.client.overlay.MarkerOptions;
@@ -42,6 +44,9 @@ public class RdfTest implements EntryPoint{
 	
 	private final GreetingServiceAsync greetingService = GWT
 			.create(GreetingService.class);
+	
+	MarkerOptions portalIcon;
+	MarkerOptions viaIcon;
 
 	public void onModuleLoad() {
 		
@@ -49,17 +54,46 @@ public class RdfTest implements EntryPoint{
 		
 		mainPanel = new VerticalPanel();
 
+		
+		//map.add
+		
+		Icon icon = Icon.newInstance();
+		//icon.setShadowURL("http://maps.google.com/mapfiles/kml/pal3/icon56s.png");
+		//icon.setIconSize(Size.newInstance(20, 34));
+		//icon.setShadowSize(Size.newInstance(37, 34));
+		//icon.setShadowSize(Size.newInstance(55, 51));
+		icon.setIconAnchor(Point.newInstance(16, 16));
+		icon.setInfoWindowAnchor(Point.newInstance(32, 0));
+		icon.setImageURL("http://maps.google.com/mapfiles/kml/pal3/icon56.png");
+		portalIcon = MarkerOptions.newInstance();
+		portalIcon.setIcon(icon);
+	
+		
+		icon = Icon.newInstance();
+		//icon.setShadowURL("http://maps.google.com/mapfiles/kml/pal2/icon16s.png");
+		//icon.setIconSize(Size.newInstance(20, 34));
+		//icon.setShadowSize(Size.newInstance(37, 34));
+		//icon.setShadowSize(Size.newInstance(55, 51));
+		icon.setIconAnchor(Point.newInstance(16, 16));
+		icon.setInfoWindowAnchor(Point.newInstance(32, 0));
+		icon.setImageURL("http://maps.google.com/mapfiles/kml/pal2/icon16.png");
+		viaIcon = MarkerOptions.newInstance();
+		viaIcon.setIcon(icon);
+		
 
 		//RDF con Google Maps
 		
-		map = new MapWidget();
-		map.setSize("700px", "500px");
+		//map = new MapWidget;
+	
+		//map.setSize("700px", "500px");
 		map.setUIToDefault();
 		LatLng tenerife = LatLng.newInstance(28.4860,-16.3161);
 		map.setCenter(tenerife);
 		map.setZoomLevel(13);
 		
 		mainPanel.add(map);
+		
+		map.on
 		
 		zonaButton = new Button("nueva zona");
 		mainPanel.add(zonaButton);
@@ -133,8 +167,7 @@ public class RdfTest implements EntryPoint{
 //		h.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/la_laguna.gif"));
 //
 //		mainPanel.add(h);
-		
-		RootPanel.get().add(mainPanel);
+		RootPanel.get("map").add(map);
 
 		
 		
@@ -146,7 +179,7 @@ public class RdfTest implements EntryPoint{
 		MarkerOptions markerOpt = MarkerOptions.newInstance();
 		markerOpt.setClickable(true);
 		final Marker marker = new Marker(LatLng.newInstance(portal.getCoordenadas()
-				.getLatitude(), portal.getCoordenadas().getLongitude()));
+				.getLatitude(), portal.getCoordenadas().getLongitude()), portalIcon);
 		marker.addMarkerClickHandler(new MarkerClickHandler() {
 			public void onClick(MarkerClickEvent event) {
 				InfoWindow info = map.getInfoWindow();
@@ -168,11 +201,8 @@ public class RdfTest implements EntryPoint{
 	}
 	
 	private Marker createMarkerVia(final Via via) {
-		MarkerOptions markerOpt = MarkerOptions.newInstance();
-		markerOpt.setIcon(Icon.newInstance("http://google-maps-icons.googlecode.com/files/home.png"));
-		
 		final Marker marker = new Marker(LatLng.newInstance(via.getCoordenadas()
-				.getLatitude(), via.getCoordenadas().getLongitude()), markerOpt);
+				.getLatitude(), via.getCoordenadas().getLongitude()), viaIcon);
 		marker.addMarkerMouseOverHandler(new MarkerMouseOverHandler(){
 			public void onMouseOver(MarkerMouseOverEvent event) {
 				InfoWindow info = map.getInfoWindow();
@@ -435,6 +465,8 @@ public class RdfTest implements EntryPoint{
 	}
 	
 	private void nuevaVia(final LatLng point) {
+		//map.setSize("800px", "600px");
+
 		try {
 			greetingService.getVia(new MyLatLng(point),
 					new AsyncCallback<Via>() {
