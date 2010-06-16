@@ -6,6 +6,8 @@ import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.logical.shared.ResizeEvent;
+import com.google.gwt.event.logical.shared.ResizeHandler;
 
 import com.google.gwt.maps.client.InfoWindow;
 import com.google.gwt.maps.client.InfoWindowContent;
@@ -26,6 +28,7 @@ import com.google.gwt.maps.client.overlay.MarkerOptions;
 import com.google.gwt.maps.client.overlay.PolyStyleOptions;
 import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.maps.client.overlay.Polyline;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -52,7 +55,7 @@ public class RdfTest implements EntryPoint{
 		
 		areas = new ArrayList<Zona>();
 		
-		mainPanel = new VerticalPanel();
+		//mainPanel = new VerticalPanel();
 
 		
 		//map.add
@@ -83,7 +86,7 @@ public class RdfTest implements EntryPoint{
 
 		//RDF con Google Maps
 		
-		//map = new MapWidget;
+		map = new MapWidget();
 	
 		//map.setSize("700px", "500px");
 		map.setUIToDefault();
@@ -91,76 +94,81 @@ public class RdfTest implements EntryPoint{
 		map.setCenter(tenerife);
 		map.setZoomLevel(13);
 		
-		mainPanel.add(map);
+		//mainPanel.add(map);
 		
-		map.on
+	
 		
-		zonaButton = new Button("nueva zona");
-		mainPanel.add(zonaButton);
-		zonaButton.addClickHandler(new ClickHandler(){
-			public void onClick(ClickEvent event) {
-				zonaButton.setEnabled(false);
-				zonaViasButton.setEnabled(false);
-				viaButton.setEnabled(false);
-				portalButton.setEnabled(false);
-				createPolyline();
+//		zonaButton = new Button("nueva zona");
+//		mainPanel.add(zonaButton);
+//		zonaButton.addClickHandler(new ClickHandler(){
+//			public void onClick(ClickEvent event) {
+//				zonaButton.setEnabled(false);
+//				zonaViasButton.setEnabled(false);
+//				viaButton.setEnabled(false);
+//				portalButton.setEnabled(false);
+//				createPolyline();
+//			}
+//		});
+//
+//		zonaViasButton = new Button("nueva zona vias");
+//		mainPanel.add(zonaViasButton);
+//		zonaViasButton.addClickHandler(new ClickHandler(){
+//			public void onClick(ClickEvent event) {
+//				zonaButton.setEnabled(false);
+//				zonaViasButton.setEnabled(false);
+//				viaButton.setEnabled(false);
+//				portalButton.setEnabled(false);
+//				createPolyline2();
+//			}
+//		});
+//		
+//		viaButton = new Button("nueva via");
+//		mainPanel.add(viaButton);
+//		viaButton.addClickHandler(new ClickHandler(){
+//			public void onClick(ClickEvent event) {
+//				zonaButton.setEnabled(false);
+//				zonaViasButton.setEnabled(false);
+//				viaButton.setEnabled(false);
+//				portalButton.setEnabled(false);
+//				map.addMapClickHandler(new MapClickHandler(){
+//					public void onClick(MapClickEvent event) {
+//						map.removeMapClickHandler(this);
+//						nuevaVia(event.getLatLng());
+//						zonaButton.setEnabled(true);
+//						zonaViasButton.setEnabled(true);
+//						viaButton.setEnabled(true);
+//						portalButton.setEnabled(true);
+//					}
+//				});
+//			}
+//		});
+//		
+//		portalButton = new Button("nuevo portal");
+//		mainPanel.add(portalButton);
+//		portalButton.addClickHandler(new ClickHandler(){
+//			public void onClick(ClickEvent event) {
+//				zonaButton.setEnabled(false);
+//				zonaViasButton.setEnabled(false);
+//				viaButton.setEnabled(false);
+//				portalButton.setEnabled(false);
+//				map.addMapClickHandler(new MapClickHandler(){
+//					public void onClick(MapClickEvent event) {
+//						map.removeMapClickHandler(this);
+//						nuevoPortal(event.getLatLng());
+//						zonaButton.setEnabled(true);
+//						zonaViasButton.setEnabled(true);
+//						viaButton.setEnabled(true);
+//						portalButton.setEnabled(true);
+//					}
+//				});
+//			}
+//		});
+		Window.addResizeHandler(new ResizeHandler() {
+			public void onResize(ResizeEvent event) {
+				map.onResize();
+				
 			}
 		});
-
-		zonaViasButton = new Button("nueva zona vias");
-		mainPanel.add(zonaViasButton);
-		zonaViasButton.addClickHandler(new ClickHandler(){
-			public void onClick(ClickEvent event) {
-				zonaButton.setEnabled(false);
-				zonaViasButton.setEnabled(false);
-				viaButton.setEnabled(false);
-				portalButton.setEnabled(false);
-				createPolyline2();
-			}
-		});
-		
-		viaButton = new Button("nueva via");
-		mainPanel.add(viaButton);
-		viaButton.addClickHandler(new ClickHandler(){
-			public void onClick(ClickEvent event) {
-				zonaButton.setEnabled(false);
-				zonaViasButton.setEnabled(false);
-				viaButton.setEnabled(false);
-				portalButton.setEnabled(false);
-				map.addMapClickHandler(new MapClickHandler(){
-					public void onClick(MapClickEvent event) {
-						map.removeMapClickHandler(this);
-						nuevaVia(event.getLatLng());
-						zonaButton.setEnabled(true);
-						zonaViasButton.setEnabled(true);
-						viaButton.setEnabled(true);
-						portalButton.setEnabled(true);
-					}
-				});
-			}
-		});
-		
-		portalButton = new Button("nuevo portal");
-		mainPanel.add(portalButton);
-		portalButton.addClickHandler(new ClickHandler(){
-			public void onClick(ClickEvent event) {
-				zonaButton.setEnabled(false);
-				zonaViasButton.setEnabled(false);
-				viaButton.setEnabled(false);
-				portalButton.setEnabled(false);
-				map.addMapClickHandler(new MapClickHandler(){
-					public void onClick(MapClickEvent event) {
-						map.removeMapClickHandler(this);
-						nuevoPortal(event.getLatLng());
-						zonaButton.setEnabled(true);
-						zonaViasButton.setEnabled(true);
-						viaButton.setEnabled(true);
-						portalButton.setEnabled(true);
-					}
-				});
-			}
-		});
-		
 //		HorizontalPanel h = new HorizontalPanel();
 //		h.add(new Image("http://www.ull.es/Public/images/wull/logo.gif"));
 //		h.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/gerencia.gif"));
