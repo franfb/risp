@@ -143,16 +143,16 @@ public class Coordinates {
 	        
 	        MyLatLng latLng = new MyLatLng();
 	        /* Calculate latitude */
-	        latLng.setLatitude(phif + x2frac * x2poly * (x * x)
+	        latLng.setLatitude(RadToDeg(phif + x2frac * x2poly * (x * x)
 	        	+ x4frac * x4poly * Math.pow (x, 4.0)
 	        	+ x6frac * x6poly * Math.pow (x, 6.0)
-	        	+ x8frac * x8poly * Math.pow (x, 8.0));
+	        	+ x8frac * x8poly * Math.pow (x, 8.0)));
 	        	
 	        /* Calculate longitude */
-	        latLng.setLongitude(lambda0 + x1frac * x
+	        latLng.setLongitude(RadToDeg(lambda0 + x1frac * x
 	        	+ x3frac * x3poly * Math.pow (x, 3.0)
 	        	+ x5frac * x5poly * Math.pow (x, 5.0)
-	        	+ x7frac * x7poly * Math.pow (x, 7.0));
+	        	+ x7frac * x7poly * Math.pow (x, 7.0)));
 	        	
 	        return latLng;
 	}
@@ -173,7 +173,10 @@ public class Coordinates {
         return (deg / 180.0) * 3.14159265358979;
     }
 
-	 
+	 static double RadToDeg (double rad){
+	        return (rad / 3.14159265358979 * 180.0);
+	        }
+
 	
 	
 }
