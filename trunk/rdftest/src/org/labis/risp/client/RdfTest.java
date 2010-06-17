@@ -42,16 +42,21 @@ import com.google.gwt.user.client.ui.DisclosurePanel;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.HorizontalSplitPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment.HorizontalAlignmentConstant;
 
 public class RdfTest implements EntryPoint{
 	private MapWidget map;
-	private Button zonaButton;
-	private Button zonaViasButton;
-	private Button viaButton;
 	private Button portalButton;
+	private Button portalButtonZona;
+	private Button viaButtonZona;
+	private Button viaButton;
+	private Button zonaButton;
+	
 	private ArrayList<Zona> areas;
 	private InfoWindow info;
 
@@ -62,6 +67,23 @@ public class RdfTest implements EntryPoint{
 	MarkerOptions viaIcon;
 	MarkerOptions viaIconGrande;
 
+	
+	private void disableButtons(){
+		portalButtonZona.setEnabled(false);
+		viaButtonZona.setEnabled(false);
+		viaButton.setEnabled(false);
+		portalButton.setEnabled(false);
+		zonaButton.setEnabled(false);
+	}
+	
+	private void enableButtons(){
+		portalButtonZona.setEnabled(true);
+		viaButtonZona.setEnabled(true);
+		viaButton.setEnabled(true);
+		portalButton.setEnabled(true);
+		zonaButton.setEnabled(true);
+	}
+	
 	public void onModuleLoad() {
 		buildUi();
 		
@@ -69,40 +91,35 @@ public class RdfTest implements EntryPoint{
 		
 		
 		
-		zonaButton.addClickHandler(new ClickHandler(){
+		portalButtonZona.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
-				zonaButton.setEnabled(false);
-				zonaViasButton.setEnabled(false);
-				viaButton.setEnabled(false);
-				portalButton.setEnabled(false);
+				disableButtons();
 				createPolyline();
 			}
 		});
 
-		zonaViasButton.addClickHandler(new ClickHandler(){
+		viaButtonZona.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
-				zonaButton.setEnabled(false);
-				zonaViasButton.setEnabled(false);
-				viaButton.setEnabled(false);
-				portalButton.setEnabled(false);
+				disableButtons();
+				createPolyline2();
+			}
+		});
+		
+		zonaButton.addClickHandler(new ClickHandler(){
+			public void onClick(ClickEvent event) {
+				disableButtons();
 				createPolyline2();
 			}
 		});
 		
 		viaButton.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
-				zonaButton.setEnabled(false);
-				zonaViasButton.setEnabled(false);
-				viaButton.setEnabled(false);
-				portalButton.setEnabled(false);
+				disableButtons();
 				map.addMapClickHandler(new MapClickHandler(){
 					public void onClick(MapClickEvent event) {
 						map.removeMapClickHandler(this);
 						nuevaVia(event.getLatLng());
-						zonaButton.setEnabled(true);
-						zonaViasButton.setEnabled(true);
-						viaButton.setEnabled(true);
-						portalButton.setEnabled(true);
+						enableButtons();
 					}
 				});
 			}
@@ -110,18 +127,12 @@ public class RdfTest implements EntryPoint{
 
 		portalButton.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
-				zonaButton.setEnabled(false);
-				zonaViasButton.setEnabled(false);
-				viaButton.setEnabled(false);
-				portalButton.setEnabled(false);
+				disableButtons();
 				map.addMapClickHandler(new MapClickHandler(){
 					public void onClick(MapClickEvent event) {
 						map.removeMapClickHandler(this);
 						nuevoPortal(event.getLatLng());
-						zonaButton.setEnabled(true);
-						zonaViasButton.setEnabled(true);
-						viaButton.setEnabled(true);
-						portalButton.setEnabled(true);
+						enableButtons();
 					}
 				});
 			}
@@ -167,43 +178,43 @@ public class RdfTest implements EntryPoint{
         RootPanel.get().add(panel);
         
         
-        portalButton = new Button("nueva portal");
-        viaButton = new Button("nueva via");
-        zonaButton = new Button("nueva zona");
-        zonaViasButton = new Button("nueva zona vias");
+        portalButton = new Button("simple");
+        viaButton = new Button("simple");
+        portalButtonZona = new Button("múltiple");
+        viaButtonZona = new Button("múltiple");
+        zonaButton = new Button("continuar");
         
         HTML titulo1 = new HTML("<h1>Información padronal<br>San Cristóbal de La Laguna</h1>");
-        HTML titulo2 = new HTML("<h1>San Cristóbal de La Laguna</h1>");
         
         HTML bienvenida = new HTML("<br><b>Bienvenido/a la aplicacion de ejemplo del proyecto RISP!</b>");
         
         HTML texto1 = new HTML("<br>Esta aplicación consiste en " +
         		"la reutilización de la información padronal de las bases de datos de la " +
-        		"Gerencia de Urbanismo de San Cristóbal de La Laguna, y que ha sido publicada gracias a el trabajo " +
-        		"realizado por los mismos alumnos que han desarrollado este portal.");
-
-        HTML texto2 = new HTML("<br>Aquí, usted puede obtener diversa información relacionada con el registro " +
-        		"del padrón que se realiza en el municipio.");
+        		"Gerencia de Urbanismo de San Cristóbal de La Laguna, y que ha sido publicada gracias al trabajo " +
+        		"realizado por los mismos alumnos que han desarrollado este portal. Aquí, usted puede obtener diversa información relacionada con el registro " +
+        		"del padrón que se realiza en el municipio. A continuación se presenta la lista de cosas que se pueden " +
+        		"hacer:");
+        
         
         bienvenida.setStyleName("texto");
         texto1.setStyleName("texto");
         
         
         AbsolutePanel titulo = new AbsolutePanel();
-        titulo.setSize("293px", "30%");
-        titulo.setStyleName("uno");
+        titulo.setSize("293px", "20%");
+        //titulo.setStyleName("uno");
         
         AbsolutePanel intro = new AbsolutePanel();
-        intro.setSize("293px", "20%");
-        intro.setStyleName("dos");
+        intro.setSize("293px", "30%");
+        //intro.setStyleName("dos");
         
         AbsolutePanel funciones = new AbsolutePanel();
-        funciones.setSize("293px", "25%");
-        funciones.setStyleName("tres");
+        funciones.setSize("293px", "30%");
+        //funciones.setStyleName("tres");
         
         AbsolutePanel logos = new AbsolutePanel();
-        logos.setSize("293px", "25%");
-        logos.setStyleName("cuatro");
+        logos.setSize("293px", "20%");
+        //logos.setStyleName("cuatro");
         
         titulo.add(titulo1);
         //titulo.add(titulo2);
@@ -215,30 +226,138 @@ public class RdfTest implements EntryPoint{
         intro.add(texto1);
         //vpanel.add(intro);
         
-        final DisclosurePanel dis = new DisclosurePanel(
-		"Abrir aqui para mostrar la info mas preciosa");
-
-        dis.addOpenHandler(new OpenHandler<DisclosurePanel>() {
+        
+        
+        
+        
+        
+        AbsolutePanel portalPanel = new AbsolutePanel();
+        HTML portalText = new HTML("Se muestra el registro padronal asociado a un edificio que contenga " +
+        		"alguno. También puede obtener la información de todos los edificios que se encuentren dentro de una misma zona. " +
+        		"<br><br>Seleccione el tipo de búsqueda que desea e interactúe con el mapa:");
+        portalText.setStyleName("texto");
+        portalPanel.add(portalText);
+        HorizontalPanel portalBotones = new HorizontalPanel();
+        portalBotones.setSpacing(10);
+        portalBotones.add(portalButton);
+        portalBotones.add(portalButtonZona);
+        portalPanel.add(portalBotones);
+        
+        final DisclosurePanel portalDisclosure = new DisclosurePanel(
+		"Mostrar información padronal de un portal");
+        portalDisclosure.addOpenHandler(new OpenHandler<DisclosurePanel>() {
         	public void onOpen(OpenEvent<DisclosurePanel> event) {
         		//dis.setHeader(new HTML("PULSA PARA ABRIR MI NIÑO"));
-        		dis.setTitle("Abrir aqui para mostrar la info mas preciosa");
+        		//dis.setTitle("Abrir aqui para mostrar la info mas preciosa");
         	}
         });
-        dis.addCloseHandler(new CloseHandler<DisclosurePanel>() {
+        portalDisclosure.addCloseHandler(new CloseHandler<DisclosurePanel>() {
         	public void onClose(CloseEvent<DisclosurePanel> event) {
         		//dis.setHeader(new HTML("PULSA PARA CERRAR MI NIÑO"));
-        		dis.setTitle("cierra la info mas preciosa");
+        		//dis.setTitle("cierra la info mas preciosa");
         	}
         });
+        portalDisclosure.add(portalPanel);
+        portalDisclosure.setStyleName("texto");
+		funciones.add(portalDisclosure);
+		
 
-        dis.add(portalButton);
-        dis.setStyleName("texto");
-		funciones.add(dis);
+		
+		
+		
+		
+		AbsolutePanel viaPanel = new AbsolutePanel();
+        HTML viaText = new HTML("Se muestran los registros padronales asociados a una vía del municipio." +
+        		" También puede obtener la información de todas las vías que se encuentren dentro de una misma zona. " +
+        		"<br><br>Seleccione el tipo de búsqueda que desea e interactúe con el mapa:");
+        viaText.setStyleName("texto");
+        viaPanel.add(viaText);
+        HorizontalPanel viaBotones = new HorizontalPanel();
+        viaBotones.setSpacing(10);
+        viaBotones.add(viaButton);
+        viaBotones.add(viaButtonZona);
+        viaPanel.add(viaBotones);
+        
+        final DisclosurePanel viaDisclosure = new DisclosurePanel(
+        "Mostrar información padronal de una vía");
+        viaDisclosure.addOpenHandler(new OpenHandler<DisclosurePanel>() {
+        	public void onOpen(OpenEvent<DisclosurePanel> event) {
+        		//dis.setHeader(new HTML("PULSA PARA ABRIR MI NIÑO"));
+        		//dis.setTitle("Abrir aqui para mostrar la info mas preciosa");
+        	}
+        });
+        viaDisclosure.addCloseHandler(new CloseHandler<DisclosurePanel>() {
+        	public void onClose(CloseEvent<DisclosurePanel> event) {
+        		//dis.setHeader(new HTML("PULSA PARA CERRAR MI NIÑO"));
+        		//dis.setTitle("cierra la info mas preciosa");
+        	}
+        });
+        viaDisclosure.add(viaPanel);
+        viaDisclosure.setStyleName("texto");
+		funciones.add(viaDisclosure);
+		
+		
+		
+		
+		
+		
+		AbsolutePanel zonaPanel = new AbsolutePanel();
+        HTML zonaText = new HTML("Se muestra la información de empadronamiento asociada a una zona del municipio que usted elija. " +
+        		"<br><br>Pulse el botón de continuar e interactúe con el mapa para personalizar la zona de interés mediante una polilínea:");
+        zonaText.setStyleName("texto");
+        zonaPanel.add(zonaText);
+        HorizontalPanel zonaBotones = new HorizontalPanel();
+        zonaBotones.setSpacing(10);
+        zonaBotones.add(zonaButton);
+        zonaPanel.add(zonaBotones);
+        
+        final DisclosurePanel zonaDisclosure = new DisclosurePanel(
+		"Mostrar información padronal de una zona");
+        portalDisclosure.addOpenHandler(new OpenHandler<DisclosurePanel>() {
+        	public void onOpen(OpenEvent<DisclosurePanel> event) {
+        		//dis.setHeader(new HTML("PULSA PARA ABRIR MI NIÑO"));
+        		//dis.setTitle("Abrir aqui para mostrar la info mas preciosa");
+        	}
+        });
+        portalDisclosure.addCloseHandler(new CloseHandler<DisclosurePanel>() {
+        	public void onClose(CloseEvent<DisclosurePanel> event) {
+        		//dis.setHeader(new HTML("PULSA PARA CERRAR MI NIÑO"));
+        		//dis.setTitle("cierra la info mas preciosa");
+        	}
+        });
+        zonaDisclosure.add(zonaPanel);
+        zonaDisclosure.setStyleName("texto");
+		funciones.add(zonaDisclosure);
+		
+		
+		
+		
 		//vpanel.add(funciones);
         
-        logos.add(new Image("http://www.ull.es/Public/images/wull/logo.gif"));
-        logos.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/gerencia.gif"));
-        logos.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/la_laguna.gif"));
+		HorizontalPanel gerencia = new HorizontalPanel();
+		
+		gerencia.setSpacing(5);
+		
+        //logos.setStyleName("texto11");
+
+//        HTML proyecto = new HTML("Alumnos encargados:<br><ul><li>Cristina Delgado </li><li>" +
+//        		"Daniel Pérez </li><li>Erika Martín </li><li>Francisco Fumero </li><li>Marta Álvarez </li></ul>" +
+//        		"<br><a href=\"http://code.google.com/p/risp/\">Página web del proyecto RISP</a>");
+//		proyecto.setStyleName("texto11");
+        
+		
+		HTML proyecto = new HTML("<a href=\"http://code.google.com/p/risp/\" target=\"_blank\">Página web del proyecto RISP </a>");
+		proyecto.setStyleName("texto");
+		
+		
+//		logos.add(new HTML("<a href=\"http://code.google.com/p/risp/\">Página web del proyecto RISP</a>"));
+//		logos.add(new HTML("Alumnos encargados:<br><ul><li>Cristina Delgado </li><li>Daniel Pérez </li><li>Erika Martín </li><li>Francisco Fumero </li><li>Marta Álvarez </li></ul>"));
+        logos.add(proyecto);
+		logos.add(new Image("http://www.ull.es/Public/images/wull/logo.gif"));
+        gerencia.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/gerencia.gif"));
+        gerencia.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/la_laguna.gif"));
+        logos.add(gerencia);
+
         
         //vpanel.add(logos);
         
@@ -413,10 +532,7 @@ public class RdfTest implements EntryPoint{
 
 			public void onEnd(PolylineEndLineEvent event) {
 				nuevaZona(event.getSender());
-				zonaButton.setEnabled(true);
-				zonaViasButton.setEnabled(true);
-				viaButton.setEnabled(true);
-				portalButton.setEnabled(true);
+				enableButtons();
 			}
 		});
 	}
@@ -438,10 +554,7 @@ public class RdfTest implements EntryPoint{
 
 			public void onEnd(PolylineEndLineEvent event) {
 				nuevaZonaVias(event.getSender());
-				zonaButton.setEnabled(true);
-				zonaViasButton.setEnabled(true);
-				viaButton.setEnabled(true);
-				portalButton.setEnabled(true);
+				enableButtons();
 			}
 		});
 	}
