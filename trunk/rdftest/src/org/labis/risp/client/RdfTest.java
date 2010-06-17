@@ -4,21 +4,27 @@ import java.util.ArrayList;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dev.js.SizeBreakdown;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.logical.shared.ResizeEvent;
-import com.google.gwt.event.logical.shared.ResizeHandler;
+import com.google.gwt.event.logical.shared.CloseEvent;
+import com.google.gwt.event.logical.shared.CloseHandler;
+import com.google.gwt.event.logical.shared.OpenEvent;
+import com.google.gwt.event.logical.shared.OpenHandler;
 
 import com.google.gwt.maps.client.InfoWindow;
 import com.google.gwt.maps.client.InfoWindowContent;
 import com.google.gwt.maps.client.MapWidget;
 import com.google.gwt.maps.client.event.MapClickHandler;
 import com.google.gwt.maps.client.event.MarkerClickHandler;
+import com.google.gwt.maps.client.event.MarkerInfoWindowCloseHandler;
 import com.google.gwt.maps.client.event.MarkerMouseOutHandler;
 import com.google.gwt.maps.client.event.MarkerMouseOverHandler;
 import com.google.gwt.maps.client.event.PolygonMouseOutHandler;
 import com.google.gwt.maps.client.event.PolygonMouseOverHandler;
 import com.google.gwt.maps.client.event.PolylineEndLineHandler;
+import com.google.gwt.maps.client.event.MarkerClickHandler.MarkerClickEvent;
+import com.google.gwt.maps.client.event.MarkerInfoWindowCloseHandler.MarkerInfoWindowCloseEvent;
 import com.google.gwt.maps.client.geom.LatLng;
 import com.google.gwt.maps.client.geom.Point;
 import com.google.gwt.maps.client.geom.Size;
@@ -28,9 +34,15 @@ import com.google.gwt.maps.client.overlay.MarkerOptions;
 import com.google.gwt.maps.client.overlay.PolyStyleOptions;
 import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.maps.client.overlay.Polyline;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.AbsolutePanel;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.DisclosureHandler;
+import com.google.gwt.user.client.ui.DisclosurePanel;
+import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.Grid;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
@@ -43,215 +55,347 @@ public class RdfTest implements EntryPoint{
 	private ArrayList<Zona> areas;
 	private InfoWindow info;
 
-	private VerticalPanel mainPanel;
-	
 	private final GreetingServiceAsync greetingService = GWT
 			.create(GreetingService.class);
 	
 	MarkerOptions portalIcon;
 	MarkerOptions viaIcon;
+	MarkerOptions viaIconGrande;
 
 	public void onModuleLoad() {
+		buildUi();
 		
 		areas = new ArrayList<Zona>();
 		
-		//mainPanel = new VerticalPanel();
+		
+		
+		zonaButton.addClickHandler(new ClickHandler(){
+			public void onClick(ClickEvent event) {
+				zonaButton.setEnabled(false);
+				zonaViasButton.setEnabled(false);
+				viaButton.setEnabled(false);
+				portalButton.setEnabled(false);
+				createPolyline();
+			}
+		});
 
+		zonaViasButton.addClickHandler(new ClickHandler(){
+			public void onClick(ClickEvent event) {
+				zonaButton.setEnabled(false);
+				zonaViasButton.setEnabled(false);
+				viaButton.setEnabled(false);
+				portalButton.setEnabled(false);
+				createPolyline2();
+			}
+		});
 		
-		//map.add
-		
-		Icon icon = Icon.newInstance();
-		//icon.setShadowURL("http://maps.google.com/mapfiles/kml/pal3/icon56s.png");
-		//icon.setIconSize(Size.newInstance(20, 34));
-		//icon.setShadowSize(Size.newInstance(37, 34));
-		//icon.setShadowSize(Size.newInstance(55, 51));
+		viaButton.addClickHandler(new ClickHandler(){
+			public void onClick(ClickEvent event) {
+				zonaButton.setEnabled(false);
+				zonaViasButton.setEnabled(false);
+				viaButton.setEnabled(false);
+				portalButton.setEnabled(false);
+				map.addMapClickHandler(new MapClickHandler(){
+					public void onClick(MapClickEvent event) {
+						map.removeMapClickHandler(this);
+						nuevaVia(event.getLatLng());
+						zonaButton.setEnabled(true);
+						zonaViasButton.setEnabled(true);
+						viaButton.setEnabled(true);
+						portalButton.setEnabled(true);
+					}
+				});
+			}
+		});
+
+		portalButton.addClickHandler(new ClickHandler(){
+			public void onClick(ClickEvent event) {
+				zonaButton.setEnabled(false);
+				zonaViasButton.setEnabled(false);
+				viaButton.setEnabled(false);
+				portalButton.setEnabled(false);
+				map.addMapClickHandler(new MapClickHandler(){
+					public void onClick(MapClickEvent event) {
+						map.removeMapClickHandler(this);
+						nuevoPortal(event.getLatLng());
+						zonaButton.setEnabled(true);
+						zonaViasButton.setEnabled(true);
+						viaButton.setEnabled(true);
+						portalButton.setEnabled(true);
+					}
+				});
+			}
+		});
+	}
+
+	
+	
+	private void buildUi() {
+        map = new MapWidget();
+        LatLng tenerife = LatLng.newInstance(28.4860,-16.3161);
+        //map.setSize("500px", "400px");
+        map.setSize("100%", "100%");
+        map.setCenter(tenerife, 13);
+        map.setUIToDefault();
+        
+        AbsolutePanel panel = new AbsolutePanel();
+        //HTML texto = new HTML("<div id=\"col\" style=\"width: 300px; height: 100%; background-color: rgb(255, 255, 255);\"></div>");
+        VerticalPanel vpanel = new VerticalPanel();
+        
+        AbsolutePanel columna = new AbsolutePanel();
+        
+
+//        FlexTable flex = new FlexTable();
+//        flex.setSize("293px", "100%");
+        
+        
+        
+        vpanel.setSize("293px", "100%");
+        vpanel.setStyleName("vpanel");
+        columna.setSize("370px", "100%");
+        columna.setStyleName("columna");
+        
+        
+        panel.setSize("100%", "100%");
+        panel.add(map, 0, 0);
+        panel.add(columna, 50, 0);
+        
+        
+   
+        
+        
+        RootPanel.get().add(panel);
+        
+        
+        portalButton = new Button("nueva portal");
+        viaButton = new Button("nueva via");
+        zonaButton = new Button("nueva zona");
+        zonaViasButton = new Button("nueva zona vias");
+        
+        HTML titulo1 = new HTML("<h1>Información padronal<br>San Cristóbal de La Laguna</h1>");
+        HTML titulo2 = new HTML("<h1>San Cristóbal de La Laguna</h1>");
+        
+        HTML bienvenida = new HTML("<br><b>Bienvenido/a la aplicacion de ejemplo del proyecto RISP!</b>");
+        
+        HTML texto1 = new HTML("<br>Esta aplicación consiste en " +
+        		"la reutilización de la información padronal de las bases de datos de la " +
+        		"Gerencia de Urbanismo de San Cristóbal de La Laguna, y que ha sido publicada gracias a el trabajo " +
+        		"realizado por los mismos alumnos que han desarrollado este portal.");
+
+        HTML texto2 = new HTML("<br>Aquí, usted puede obtener diversa información relacionada con el registro " +
+        		"del padrón que se realiza en el municipio.");
+        
+        bienvenida.setStyleName("texto");
+        texto1.setStyleName("texto");
+        
+        
+        AbsolutePanel titulo = new AbsolutePanel();
+        titulo.setSize("293px", "30%");
+        titulo.setStyleName("uno");
+        
+        AbsolutePanel intro = new AbsolutePanel();
+        intro.setSize("293px", "20%");
+        intro.setStyleName("dos");
+        
+        AbsolutePanel funciones = new AbsolutePanel();
+        funciones.setSize("293px", "25%");
+        funciones.setStyleName("tres");
+        
+        AbsolutePanel logos = new AbsolutePanel();
+        logos.setSize("293px", "25%");
+        logos.setStyleName("cuatro");
+        
+        titulo.add(titulo1);
+        //titulo.add(titulo2);
+        
+        
+        //vpanel.add(titulo);
+
+        intro.add(bienvenida);
+        intro.add(texto1);
+        //vpanel.add(intro);
+        
+        final DisclosurePanel dis = new DisclosurePanel(
+		"Abrir aqui para mostrar la info mas preciosa");
+
+        dis.addOpenHandler(new OpenHandler<DisclosurePanel>() {
+        	public void onOpen(OpenEvent<DisclosurePanel> event) {
+        		//dis.setHeader(new HTML("PULSA PARA ABRIR MI NIÑO"));
+        		dis.setTitle("Abrir aqui para mostrar la info mas preciosa");
+        	}
+        });
+        dis.addCloseHandler(new CloseHandler<DisclosurePanel>() {
+        	public void onClose(CloseEvent<DisclosurePanel> event) {
+        		//dis.setHeader(new HTML("PULSA PARA CERRAR MI NIÑO"));
+        		dis.setTitle("cierra la info mas preciosa");
+        	}
+        });
+
+        dis.add(portalButton);
+        dis.setStyleName("texto");
+		funciones.add(dis);
+		//vpanel.add(funciones);
+        
+        logos.add(new Image("http://www.ull.es/Public/images/wull/logo.gif"));
+        logos.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/gerencia.gif"));
+        logos.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/la_laguna.gif"));
+        
+        //vpanel.add(logos);
+        
+        //columna.add(vpanel, 40, 0);
+        
+        columna.add(titulo, 40, 0);
+        columna.add(intro, 40, titulo.getOffsetHeight());
+        columna.add(funciones, 40, titulo.getOffsetHeight() + intro.getOffsetHeight());
+        columna.add(logos, 40, titulo.getOffsetHeight() + intro.getOffsetHeight() + funciones.getOffsetHeight());
+        
+        
+        
+        
+        Icon icon = Icon.newInstance();
 		icon.setIconAnchor(Point.newInstance(16, 16));
 		icon.setInfoWindowAnchor(Point.newInstance(32, 0));
 		icon.setImageURL("http://maps.google.com/mapfiles/kml/pal3/icon56.png");
 		portalIcon = MarkerOptions.newInstance();
 		portalIcon.setIcon(icon);
-	
 		
 		icon = Icon.newInstance();
-		//icon.setShadowURL("http://maps.google.com/mapfiles/kml/pal2/icon16s.png");
-		//icon.setIconSize(Size.newInstance(20, 34));
-		//icon.setShadowSize(Size.newInstance(37, 34));
-		//icon.setShadowSize(Size.newInstance(55, 51));
 		icon.setIconAnchor(Point.newInstance(16, 16));
 		icon.setInfoWindowAnchor(Point.newInstance(32, 0));
 		icon.setImageURL("http://maps.google.com/mapfiles/kml/pal2/icon16.png");
 		viaIcon = MarkerOptions.newInstance();
 		viaIcon.setIcon(icon);
 		
-
-		//RDF con Google Maps
-		
-		map = new MapWidget();
-	
-		//map.setSize("700px", "500px");
-		map.setUIToDefault();
-		LatLng tenerife = LatLng.newInstance(28.4860,-16.3161);
-		map.setCenter(tenerife);
-		map.setZoomLevel(13);
-		
-		//mainPanel.add(map);
-		
-	
-		
-//		zonaButton = new Button("nueva zona");
-//		mainPanel.add(zonaButton);
-//		zonaButton.addClickHandler(new ClickHandler(){
-//			public void onClick(ClickEvent event) {
-//				zonaButton.setEnabled(false);
-//				zonaViasButton.setEnabled(false);
-//				viaButton.setEnabled(false);
-//				portalButton.setEnabled(false);
-//				createPolyline();
-//			}
-//		});
-//
-//		zonaViasButton = new Button("nueva zona vias");
-//		mainPanel.add(zonaViasButton);
-//		zonaViasButton.addClickHandler(new ClickHandler(){
-//			public void onClick(ClickEvent event) {
-//				zonaButton.setEnabled(false);
-//				zonaViasButton.setEnabled(false);
-//				viaButton.setEnabled(false);
-//				portalButton.setEnabled(false);
-//				createPolyline2();
-//			}
-//		});
-//		
-//		viaButton = new Button("nueva via");
-//		mainPanel.add(viaButton);
-//		viaButton.addClickHandler(new ClickHandler(){
-//			public void onClick(ClickEvent event) {
-//				zonaButton.setEnabled(false);
-//				zonaViasButton.setEnabled(false);
-//				viaButton.setEnabled(false);
-//				portalButton.setEnabled(false);
-//				map.addMapClickHandler(new MapClickHandler(){
-//					public void onClick(MapClickEvent event) {
-//						map.removeMapClickHandler(this);
-//						nuevaVia(event.getLatLng());
-//						zonaButton.setEnabled(true);
-//						zonaViasButton.setEnabled(true);
-//						viaButton.setEnabled(true);
-//						portalButton.setEnabled(true);
-//					}
-//				});
-//			}
-//		});
-//		
-//		portalButton = new Button("nuevo portal");
-//		mainPanel.add(portalButton);
-//		portalButton.addClickHandler(new ClickHandler(){
-//			public void onClick(ClickEvent event) {
-//				zonaButton.setEnabled(false);
-//				zonaViasButton.setEnabled(false);
-//				viaButton.setEnabled(false);
-//				portalButton.setEnabled(false);
-//				map.addMapClickHandler(new MapClickHandler(){
-//					public void onClick(MapClickEvent event) {
-//						map.removeMapClickHandler(this);
-//						nuevoPortal(event.getLatLng());
-//						zonaButton.setEnabled(true);
-//						zonaViasButton.setEnabled(true);
-//						viaButton.setEnabled(true);
-//						portalButton.setEnabled(true);
-//					}
-//				});
-//			}
-//		});
-		Window.addResizeHandler(new ResizeHandler() {
-			public void onResize(ResizeEvent event) {
-				map.onResize();
-				
-			}
-		});
-//		HorizontalPanel h = new HorizontalPanel();
-//		h.add(new Image("http://www.ull.es/Public/images/wull/logo.gif"));
-//		h.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/gerencia.gif"));
-//		h.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/la_laguna.gif"));
-//
-//		mainPanel.add(h);
-		RootPanel.get("map").add(map);
-
+		icon = Icon.newInstance();
+		icon.setIconAnchor(Point.newInstance(16, 16));
+		icon.setInfoWindowAnchor(Point.newInstance(32, 0));
+		icon.setImageURL("http://maps.google.com/mapfiles/kml/pal2/icon16.png");
+		icon.setIconSize(Size.newInstance(40, 40));
+		viaIconGrande = MarkerOptions.newInstance();
+		viaIconGrande.setIcon(icon);
 		
 		
 		
-		
+		    
 	}
 
+//		final DisclosurePanelImages images = (DisclosurePanelImages)
+//				GWT.create(DisclosurePanelImages.class);
+//		class DisclosurePanelHeader extends HorizontalPanel
+//		{
+//		    public DisclosurePanelHeader(boolean isOpen, String html)
+//		    {
+//		        add(isOpen ? images.disclosurePanelOpen().createImage()
+//		              : images.disclosurePanelClosed().createImage());
+//		        add(new HTML(html));
+//		    }
+//		}
+
+		
+    
+	
+	
+	
+
+	
+	private void infoWindowPortal(Marker marker, Portal portal){
+		InfoWindow info = map.getInfoWindow();
+		String nombreCalle = "Desconocido";
+		if (portal.getVia() != null){
+			nombreCalle = "<b>" +
+			portal.getVia() + 
+			", " + 
+			portal.getNumero() + 
+			"</b>";
+		}
+		info.open(marker, new InfoWindowContent(nombreCalle
+				+ "<br>Habitantes: "
+				+ portal.getHabitantes() + "<br>Hojas padronales: "
+				+ portal.getHojas()));
+	}
+	
+	
+	private void infoWindowVia(Marker marker, Via via){
+		InfoWindow info = map.getInfoWindow();
+		String nombreCalle = "<b>" +
+			via.getTipo() + 
+			" " + 
+			via.getNombre() + 
+			"</b>";
+		info.open(marker, new InfoWindowContent(nombreCalle
+				+ "<br>Habitantes: "
+				+ via.getHabitantes()
+				+ "<br>Longitud de la vía: "
+				+ via.getLongitud()
+				+ "<br>Código de vía: "
+				+ via.getCodigo()));
+	}
+	
+	
 	private Marker createMarkerPortal(final Portal portal) {
 		MarkerOptions markerOpt = MarkerOptions.newInstance();
 		markerOpt.setClickable(true);
 		final Marker marker = new Marker(LatLng.newInstance(portal.getCoordenadas()
 				.getLatitude(), portal.getCoordenadas().getLongitude()), portalIcon);
+		final MarkerMouseOutHandler out = new MarkerMouseOutHandler(){
+			public void onMouseOut(MarkerMouseOutEvent event) {
+				InfoWindow info = map.getInfoWindow();
+				info.close();
+			}
+		};
+		
+		marker.addMarkerMouseOverHandler(new MarkerMouseOverHandler() {
+			public void onMouseOver(MarkerMouseOverEvent event) {
+				infoWindowPortal(marker, portal);
+			}
+		});
+		marker.addMarkerMouseOutHandler(out);
 		marker.addMarkerClickHandler(new MarkerClickHandler() {
 			public void onClick(MarkerClickEvent event) {
-				InfoWindow info = map.getInfoWindow();
-				String nombreCalle = "Desconocido";
-				if (portal.getVia() != null){
-					nombreCalle = "<b>" +
-					portal.getVia() + 
-					", " + 
-					portal.getNumero() + 
-					"</b>";
-				}
-				info.open(marker, new InfoWindowContent(nombreCalle
-						+ "<br>Habitantes: "
-						+ portal.getHabitantes() + "<br>Hojas padronales: "
-						+ portal.getHojas()));
+				marker.removeMarkerMouseOutHandler(out);
+				//infoWindowPortal(marker, portal);
+			}
+		});
+		marker.addMarkerInfoWindowCloseHandler(new MarkerInfoWindowCloseHandler() {
+			public void onInfoWindowClose(MarkerInfoWindowCloseEvent event) {
+				marker.addMarkerMouseOutHandler(out);
 			}
 		});
 		return marker;
 	}
 	
-	private Marker createMarkerVia(final Via via) {
+	private Marker createMarkerVia(final Via via, MarkerOptions icon) {
 		final Marker marker = new Marker(LatLng.newInstance(via.getCoordenadas()
-				.getLatitude(), via.getCoordenadas().getLongitude()), viaIcon);
-		marker.addMarkerMouseOverHandler(new MarkerMouseOverHandler(){
-			public void onMouseOver(MarkerMouseOverEvent event) {
-				InfoWindow info = map.getInfoWindow();
-				String nombreCalle = "<b>" +
-					via.getTipo() + 
-					" " + 
-					via.getNombre() + 
-					"</b>";
-				info.open(marker, new InfoWindowContent(nombreCalle
-						+ "<br>Habitantes: "
-						+ via.getHabitantes()
-						+ "<br>Código de vía: "
-						+ via.getCodigo()));
-			}
-			
-		});
-		marker.addMarkerMouseOutHandler(new MarkerMouseOutHandler(){
+				.getLatitude(), via.getCoordenadas().getLongitude()), icon);
+		final MarkerMouseOutHandler out = new MarkerMouseOutHandler(){
 			public void onMouseOut(MarkerMouseOutEvent event) {
 				InfoWindow info = map.getInfoWindow();
 				info.close();
 			}
+		};
+		
+		marker.addMarkerMouseOverHandler(new MarkerMouseOverHandler(){
+			public void onMouseOver(MarkerMouseOverEvent event) {
+				infoWindowVia(marker, via);
+			}
 			
 		});
-//		marker.addMarkerClickHandler(new MarkerClickHandler() {
-//			public void onClick(MarkerClickEvent event) {
-//				InfoWindow info = map.getInfoWindow();
-//				String nombreCalle = "<b>" +
-//					via.getTipo() + 
-//					" " + 
-//					via.getNombre() + 
-//					"</b>";
-//				info.open(marker, new InfoWindowContent(nombreCalle
-//						+ "<br>Habitantes: "
-//						+ via.getHabitantes()
-//						+ "<br>Código de vía: "
-//						+ via.getCodigo()));
-//			}
-//		});
+		marker.addMarkerMouseOutHandler(out);
+		marker.addMarkerClickHandler(new MarkerClickHandler() {
+			public void onClick(MarkerClickEvent event) {
+				marker.removeMarkerMouseOutHandler(out);
+				//infoWindowVia(marker, via);
+			}
+		});
+		marker.addMarkerInfoWindowCloseHandler(new MarkerInfoWindowCloseHandler() {
+			public void onInfoWindowClose(MarkerInfoWindowCloseEvent event) {
+				marker.addMarkerMouseOutHandler(out);
+			}
+		});
 		return marker;
 	}
-
+	
+	
 	private void createPolyline() {
 		String color = "#FF0000";
 		double opacity = 1.0;
@@ -437,7 +581,7 @@ public class RdfTest implements EntryPoint{
 //							});
 //							areas.add(new Zona(p, result));
 							for (int i = 0; i < result.size(); i++) {
-								map.addOverlay(createMarkerVia(result.get(i)));
+								map.addOverlay(createMarkerVia(result.get(i), viaIcon));
 							}
 
 						}
@@ -491,6 +635,7 @@ public class RdfTest implements EntryPoint{
 										for (Portal portal: result){
 											map.addOverlay(createMarkerPortal(portal));
 										}
+										map.addOverlay(createMarkerVia(via, viaIconGrande));
 									}
 								});
 							}

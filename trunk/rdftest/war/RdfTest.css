@@ -14,6 +14,11 @@ h1 {
 	background-image: url("http://mispicaderos.net/fondo.png");
 }
 
+.texto {
+	font-family:"Century Gothic",Verdana,Tahoma;
+	font-size:13px;
+}
+
 .sendButton {
   display: block;
   font-size: 16pt;
@@ -22,6 +27,27 @@ h1 {
 /** Most GWT widgets already have a style name defined */
 .gwt-DialogBox {
   width: 400px;
+}
+
+
+.uno{
+	background-color: red;	
+}
+
+.dos{
+	background-color: blue;	
+}
+
+.tres{
+	background-color: red;	
+}
+
+.cuatro{
+	background-color: blue;	
+}
+
+.cinco{
+	background-color: red;	
 }
 
 .dialogVPanel {
