@@ -150,7 +150,7 @@ public class RdfTest implements EntryPoint{
 	
 	private void buildUi() {
         map = new MapWidget();
-        LatLng tenerife = LatLng.newInstance(28.4860,-16.3161);
+        LatLng tenerife = LatLng.newInstance(28.5160,-16.3761);
         //map.setSize("500px", "400px");
         map.setSize("100%", "100%");
         map.setCenter(tenerife, 13);
@@ -239,8 +239,8 @@ public class RdfTest implements EntryPoint{
         
         
         AbsolutePanel portalPanel = new AbsolutePanel();
-        HTML portalText = new HTML("Se muestra la información de empadronamiento asociada a un edificio del municipio. " +
-        		"También se puede obtener la información de todos los edificios que se encuentren dentro de una misma zona. " +
+        HTML portalText = new HTML("Información de empadronamiento asociada a un edificio del municipio. " +
+        		"También se puede obtener la información de todos los edificios que se encuentren dentro de una zona que usted elija. " +
         		"<br><br>Seleccione el tipo de búsqueda que desea e interactúe con el mapa:");
         portalText.setStyleName("texto");
         portalPanel.add(portalText);
@@ -271,8 +271,8 @@ public class RdfTest implements EntryPoint{
 		
 		
 		AbsolutePanel viaPanel = new AbsolutePanel();
-        HTML viaText = new HTML("Se muestra la información de empadronamiento asociada a una vía del municipio." +
-        		" También puede obtener la información de todas las vías que se encuentren dentro de una misma zona. " +
+        HTML viaText = new HTML("Información de empadronamiento asociada a una vía del municipio." +
+        		" También puede obtener la información de todas las vías que se encuentren dentro de una zona que usted elija. " +
         		"<br><br>Seleccione el tipo de búsqueda que desea e interactúe con el mapa:");
         viaText.setStyleName("texto");
         viaPanel.add(viaText);
@@ -431,7 +431,7 @@ public class RdfTest implements EntryPoint{
 			"</b>";
 		}
 		info.open(marker, new InfoWindowContent(nombreCalle
-				+ "<br>Habitantes: "
+				+ "<br>Personas empadronadas: "
 				+ portal.getHabitantes() + "<br>Hojas padronales: "
 				+ portal.getHojas()));
 	}
@@ -445,10 +445,10 @@ public class RdfTest implements EntryPoint{
 			via.getNombre() + 
 			"</b>";
 		info.open(marker, new InfoWindowContent(nombreCalle
-				+ "<br>Habitantes: "
+				+ "<br>Personas empadronadas: "
 				+ via.getHabitantes()
 				+ "<br>Longitud de la vía: "
-				+ via.getLongitud()
+				+ via.getLongitud() + " m"
 				+ "<br>Código de vía: "
 				+ via.getCodigo()));
 	}
@@ -673,7 +673,7 @@ public class RdfTest implements EntryPoint{
 											info.open(area.getPoly().getBounds().getCenter(),
 													new InfoWindowContent("Área de la zona: "
 															+ (int)sizeArea + " " + unit + "<sup>2</sup>"
-															+ "<br>Habitantes empadronados: " + area.getHabitantes()
+															+ "<br>Personas empadronadas: " + area.getHabitantes()
 															+ "<br>Hojas padronales: " + area.getHojas()));
 										}
 									}
