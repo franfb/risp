@@ -57,6 +57,13 @@ public class RdfTest implements EntryPoint{
 	private Button viaButton;
 	private Button zonaButton;
 	
+	final DisclosurePanel viaDisclosure = new DisclosurePanel(
+    "Mostrar información padronal de una vía");
+	final DisclosurePanel portalDisclosure = new DisclosurePanel(
+	"Mostrar información padronal de un portal");
+	final DisclosurePanel zonaDisclosure = new DisclosurePanel(
+	"Mostrar información padronal de una zona");
+	
 	private ArrayList<Zona> areas;
 	private InfoWindow info;
 
@@ -94,21 +101,21 @@ public class RdfTest implements EntryPoint{
 		portalButtonZona.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
 				disableButtons();
-				createPolyline();
+				createPolylinePortal();
 			}
 		});
 
 		viaButtonZona.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
 				disableButtons();
-				createPolyline2();
+				createPolylineVia();
 			}
 		});
 		
 		zonaButton.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
 				disableButtons();
-				createPolyline2();
+				createPolylineZona();
 			}
 		});
 		
@@ -232,8 +239,8 @@ public class RdfTest implements EntryPoint{
         
         
         AbsolutePanel portalPanel = new AbsolutePanel();
-        HTML portalText = new HTML("Se muestra el registro padronal asociado a un edificio que contenga " +
-        		"alguno. También puede obtener la información de todos los edificios que se encuentren dentro de una misma zona. " +
+        HTML portalText = new HTML("Se muestra la información de empadronamiento asociada a un edificio del municipio. " +
+        		"También se puede obtener la información de todos los edificios que se encuentren dentro de una misma zona. " +
         		"<br><br>Seleccione el tipo de búsqueda que desea e interactúe con el mapa:");
         portalText.setStyleName("texto");
         portalPanel.add(portalText);
@@ -243,18 +250,15 @@ public class RdfTest implements EntryPoint{
         portalBotones.add(portalButtonZona);
         portalPanel.add(portalBotones);
         
-        final DisclosurePanel portalDisclosure = new DisclosurePanel(
-		"Mostrar información padronal de un portal");
+        
         portalDisclosure.addOpenHandler(new OpenHandler<DisclosurePanel>() {
         	public void onOpen(OpenEvent<DisclosurePanel> event) {
-        		//dis.setHeader(new HTML("PULSA PARA ABRIR MI NIÑO"));
-        		//dis.setTitle("Abrir aqui para mostrar la info mas preciosa");
-        	}
-        });
-        portalDisclosure.addCloseHandler(new CloseHandler<DisclosurePanel>() {
-        	public void onClose(CloseEvent<DisclosurePanel> event) {
-        		//dis.setHeader(new HTML("PULSA PARA CERRAR MI NIÑO"));
-        		//dis.setTitle("cierra la info mas preciosa");
+        		if (viaDisclosure.isOpen()){
+        			viaDisclosure.setOpen(false);
+        		}
+        		if (zonaDisclosure.isOpen()){
+        			zonaDisclosure.setOpen(false);
+        		}
         	}
         });
         portalDisclosure.add(portalPanel);
@@ -267,7 +271,7 @@ public class RdfTest implements EntryPoint{
 		
 		
 		AbsolutePanel viaPanel = new AbsolutePanel();
-        HTML viaText = new HTML("Se muestran los registros padronales asociados a una vía del municipio." +
+        HTML viaText = new HTML("Se muestra la información de empadronamiento asociada a una vía del municipio." +
         		" También puede obtener la información de todas las vías que se encuentren dentro de una misma zona. " +
         		"<br><br>Seleccione el tipo de búsqueda que desea e interactúe con el mapa:");
         viaText.setStyleName("texto");
@@ -278,18 +282,18 @@ public class RdfTest implements EntryPoint{
         viaBotones.add(viaButtonZona);
         viaPanel.add(viaBotones);
         
-        final DisclosurePanel viaDisclosure = new DisclosurePanel(
-        "Mostrar información padronal de una vía");
+
+
+        
+        
         viaDisclosure.addOpenHandler(new OpenHandler<DisclosurePanel>() {
         	public void onOpen(OpenEvent<DisclosurePanel> event) {
-        		//dis.setHeader(new HTML("PULSA PARA ABRIR MI NIÑO"));
-        		//dis.setTitle("Abrir aqui para mostrar la info mas preciosa");
-        	}
-        });
-        viaDisclosure.addCloseHandler(new CloseHandler<DisclosurePanel>() {
-        	public void onClose(CloseEvent<DisclosurePanel> event) {
-        		//dis.setHeader(new HTML("PULSA PARA CERRAR MI NIÑO"));
-        		//dis.setTitle("cierra la info mas preciosa");
+        		if (portalDisclosure.isOpen()){
+        			portalDisclosure.setOpen(false);
+        		}
+        		if (zonaDisclosure.isOpen()){
+        			zonaDisclosure.setOpen(false);
+        		}
         	}
         });
         viaDisclosure.add(viaPanel);
@@ -311,18 +315,17 @@ public class RdfTest implements EntryPoint{
         zonaBotones.add(zonaButton);
         zonaPanel.add(zonaBotones);
         
-        final DisclosurePanel zonaDisclosure = new DisclosurePanel(
-		"Mostrar información padronal de una zona");
-        portalDisclosure.addOpenHandler(new OpenHandler<DisclosurePanel>() {
+        
+        zonaDisclosure.addOpenHandler(new OpenHandler<DisclosurePanel>() {
         	public void onOpen(OpenEvent<DisclosurePanel> event) {
+        		if (portalDisclosure.isOpen()){
+        			portalDisclosure.setOpen(false);
+        		}
+        		if (viaDisclosure.isOpen()){
+        			viaDisclosure.setOpen(false);
+        		}
         		//dis.setHeader(new HTML("PULSA PARA ABRIR MI NIÑO"));
         		//dis.setTitle("Abrir aqui para mostrar la info mas preciosa");
-        	}
-        });
-        portalDisclosure.addCloseHandler(new CloseHandler<DisclosurePanel>() {
-        	public void onClose(CloseEvent<DisclosurePanel> event) {
-        		//dis.setHeader(new HTML("PULSA PARA CERRAR MI NIÑO"));
-        		//dis.setTitle("cierra la info mas preciosa");
         	}
         });
         zonaDisclosure.add(zonaPanel);
@@ -515,7 +518,30 @@ public class RdfTest implements EntryPoint{
 	}
 	
 	
-	private void createPolyline() {
+	private void createPolylinePortal() {
+		String color = "#FF0000";
+		double opacity = 1.0;
+		int weight = 1;
+
+		PolyStyleOptions style = PolyStyleOptions.newInstance(color, weight,
+				opacity);
+
+		final Polyline poly = new Polyline(new LatLng[0]);
+		map.addOverlay(poly);
+		poly.setDrawingEnabled();
+		poly.setStrokeStyle(style);
+
+		poly.addPolylineEndLineHandler(new PolylineEndLineHandler() {
+
+			public void onEnd(PolylineEndLineEvent event) {
+				nuevaZonaPortal(event.getSender());
+				enableButtons();
+			}
+		});
+	}
+
+	
+	private void createPolylineZona() {
 		String color = "#FF0000";
 		double opacity = 1.0;
 		int weight = 1;
@@ -536,8 +562,9 @@ public class RdfTest implements EntryPoint{
 			}
 		});
 	}
-
-	private void createPolyline2() {
+	
+	
+	private void createPolylineVia() {
 		String color = "#FF0000";
 		double opacity = 1.0;
 		int weight = 1;
@@ -586,6 +613,37 @@ public class RdfTest implements EntryPoint{
 		return oddNodes;
 	}
 
+	private void nuevaZonaPortal(Polyline pline) {
+		LatLng[] coord = new LatLng[pline.getVertexCount()];
+		for (int i = 0; i < pline.getVertexCount(); i++) {
+			coord[i] = pline.getVertex(i);
+		}
+		final Polygon p = new Polygon(coord, "#f33f00", 5, 1, "#ff0000", 0.2);
+
+		try {
+			greetingService.getPortales(new MyPolygon(p),
+					new MyLatLng(p.getBounds().getNorthEast()), new MyLatLng(p
+							.getBounds().getSouthWest()),
+					new AsyncCallback<ArrayList<Portal>>() {
+						public void onFailure(Throwable caught) {
+							System.out.println("Error.");
+						}
+
+						public void onSuccess(ArrayList<Portal> result) {
+							map.addOverlay(p);
+							areas.add(new Zona(p, result));
+							for (int i = 0; i < result.size(); i++) {
+								map.addOverlay(createMarkerPortal(result.get(i)));
+							}
+
+						}
+					});
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
 	private void nuevaZona(Polyline pline) {
 		LatLng[] coord = new LatLng[pline.getVertexCount()];
 		for (int i = 0; i < pline.getVertexCount(); i++) {
@@ -604,6 +662,7 @@ public class RdfTest implements EntryPoint{
 
 						public void onSuccess(ArrayList<Portal> result) {
 							map.addOverlay(p);
+							areas.add(new Zona(p, result));
 							p.addPolygonMouseOverHandler(new PolygonMouseOverHandler(){
 								public void onMouseOver(PolygonMouseOverEvent event) {
 									for (Zona area : areas) {
@@ -611,15 +670,11 @@ public class RdfTest implements EntryPoint{
 											info = map.getInfoWindow();
 											double sizeArea = area.getPoly().getArea();
 											String unit = "m";
-//											if (sizeArea > 1000000){
-//												sizeArea /= 1000000;
-//												unit = "km";
-//											}
 											info.open(area.getPoly().getBounds().getCenter(),
-													new InfoWindowContent("Area: "
+													new InfoWindowContent("Área de la zona: "
 															+ (int)sizeArea + " " + unit + "<sup>2</sup>"
-															+ "<br>Population: " + area.getHabitantes()
-															+ "<br>Registers: " + area.getHojas()));
+															+ "<br>Habitantes empadronados: " + area.getHabitantes()
+															+ "<br>Hojas padronales: " + area.getHojas()));
 										}
 									}
 								}
@@ -632,11 +687,6 @@ public class RdfTest implements EntryPoint{
 									}
 								}
 							});
-							areas.add(new Zona(p, result));
-							for (int i = 0; i < result.size(); i++) {
-								map.addOverlay(createMarkerPortal(result.get(i)));
-							}
-
 						}
 					});
 		} catch (Exception e) {
@@ -662,37 +712,7 @@ public class RdfTest implements EntryPoint{
 						}
 
 						public void onSuccess(ArrayList<Via> result) {
-							System.out.println("444b");
 							map.addOverlay(p);
-//							p.addPolygonMouseOverHandler(new PolygonMouseOverHandler(){
-//								public void onMouseOver(PolygonMouseOverEvent event) {
-//									for (Zona area : areas) {
-//										if (area.getPoly() == event.getSource()) {
-//											info = map.getInfoWindow();
-//											double sizeArea = area.getPoly().getArea();
-//											String unit = "m";
-////											if (sizeArea > 1000000){
-////												sizeArea /= 1000000;
-////												unit = "km";
-////											}
-//											info.open(area.getPoly().getBounds().getCenter(),
-//													new InfoWindowContent("Area: "
-//															+ (int)sizeArea + " " + unit + "<sup>2</sup>"
-//															+ "<br>Population: " + area.getHabitantes()
-//															+ "<br>Registers: " + area.getHojas()));
-//										}
-//									}
-//								}
-//
-//							});
-//							p.addPolygonMouseOutHandler(new PolygonMouseOutHandler(){
-//								public void onMouseOut(PolygonMouseOutEvent event) {
-//									if (info != null) {
-//										info.close();
-//									}
-//								}
-//							});
-//							areas.add(new Zona(p, result));
 							for (int i = 0; i < result.size(); i++) {
 								map.addOverlay(createMarkerVia(result.get(i), viaIcon));
 							}
