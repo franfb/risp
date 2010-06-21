@@ -1,18 +1,23 @@
 package org.labis.risp.server;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
 import org.labis.risp.client.GreetingService;
 import org.labis.risp.client.MyLatLng;
 import org.labis.risp.client.MyPolygon;
 import org.labis.risp.client.Portal;
 import org.labis.risp.client.Via;
+import org.labis.risp.client.Zona;
 
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.QuerySolution;
+import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.query.Syntax;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Property;
@@ -89,7 +94,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		while (distance <= max){
 			MyLatLng topRight = new MyLatLng(point.getLatitude() + distance, point.getLongitude() + distance);
 			MyLatLng bottomLeft = new MyLatLng(point.getLatitude() - distance, point.getLongitude() - distance);
-			res = getPortal(null, topRight, bottomLeft, conVia);
+			res = getPortales(topRight, bottomLeft, conVia);
 			if (res.hasNext()){
 				Resource masCercano = null;
 				distance = 999999.9;
@@ -135,7 +140,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		return via;
 	}
 	
-	private ResIterator getPortal(MyPolygon poly, MyLatLng topRight, MyLatLng BottomLeft, boolean conVia){
+	private ResIterator getPortales(MyLatLng topRight, MyLatLng BottomLeft, boolean conVia){
 		String query = 	
 			"PREFIX vocab: <http://localhost:2020/vocab/resource/> " +
 			"DESCRIBE  ?por WHERE { " +
@@ -148,24 +153,81 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		QueryExecution q = QueryExecutionFactory.sparqlService(sparql, query);
 		Model m = q.execDescribe();
 		model.add(m);
-//		if (poly != null){
-//			ResIterator res = m.listSubjects();
-//			while (res.hasNext()){
-//				Resource portal = res.next();
-//				if (! contains(poly, new MyLatLng(
-//					portal.getRequiredProperty(portalLatitud).getLiteral().getDouble(),
-//					portal.getRequiredProperty(portalLongitud).getLiteral().getDouble()
-//				))){
-//					m.removeAll(portal, null, null);
-//					//res.remove();
-//				}
-//			}
-//		}
 		if (conVia){
 			return m.listSubjectsWithProperty(portalVia);
 		}
 		return m.listSubjects();
 	}
+	
+	
+	public Zona getZona(MyPolygon poly){
+		//	fAB = (y-y0) * (x1-x0) - (x-x0) * (y1-y0);
+		//  fCA = (y-y2) * (x0-x2) - (x-x2) * (y0-y2);
+		//  fBC = (y-y1) * (x2-x1) - (x-x1) * (y2-y1);
+		//	if (fAB * fBC > 0 && fBC * fCA > 0)
+		
+		Zona zona = new Zona();
+		zona.setPoly(poly);
+		zona.setHabitantes(0);
+		zona.setHojas(0);
+		
+		for (int i = 0; i < poly.getTriangles(); i++){
+			double y0 = poly.getTriangle(i)[0].getLatitude(); 
+			double y1 = poly.getTriangle(i)[1].getLatitude(); 
+			double y2 = poly.getTriangle(i)[2].getLatitude(); 
+			
+			double x0 = poly.getTriangle(i)[0].getLongitude();
+			double x1 = poly.getTriangle(i)[1].getLongitude();
+			double x2 = poly.getTriangle(i)[2].getLongitude();
+			
+			double x1x0 = x1 - x0;  
+			double y1y0 = y1 - y0;
+			
+			double x0x2 = x0 - x2; 
+			double y0y2 = y0 - y2;
+			
+			double x2x1 = x2 - x1; 
+			double y2y1 = y2 - y1;
+			
+			String queryString = 	
+			"PREFIX vocab: <http://localhost:2020/vocab/resource/> " +
+			"SELECT (sum(?hab) as ?habitantes) (sum(?pad) as ?hojas) WHERE { " +
+			"?por vocab:portal_latitud ?lat . " +
+			"?por vocab:portal_longitud ?lng . " +
+			"?por vocab:portal_habitantes ?hab . " +
+			"?por vocab:portal_padronales ?pad . " +
+
+			"FILTER (0 < " +
+			"((?lat - " + y0 + ") * " + x1x0 + " - (?lng - " + x0 + ") * " + y1y0 + ") "  + // fAB
+			" * " + 
+			"((?lat - " + y1 + ") * " + x2x1 + " - (?lng - " + x1 + ") * " + y2y1 + ") "  + // fBC
+			") " + 
+			
+			"FILTER (0 < " +
+			"((?lat - " + y2 + ") * " + x0x2 + " - (?lng - " + x2 + ") * " + y0y2 + ") "  + // fCA
+			" * " + 
+			"((?lat - " + y1 + ") * " + x2x1 + " - (?lng - " + x1 + ") * " + y2y1 + ") "  + // fBC
+			") " + 
+			". }";
+		
+			Query query = QueryFactory.create(queryString, Syntax.syntaxARQ); 
+			QueryExecution q = QueryExecutionFactory.sparqlService(sparql, query);
+//			System.out.println("A EJECUTAR:");
+			ResultSet set = q.execSelect();
+			QuerySolution sol = set.nextSolution();
+//			System.out.println("HABITANTES: " + sol.getLiteral("habitantes").getInt());
+//			System.out.println("PADRONALES: " + sol.getLiteral("hojas").getInt());
+			zona.setHabitantes(zona.getHabitantes() + sol.getLiteral("habitantes").getInt());
+			zona.setHojas(zona.getHojas() + sol.getLiteral("hojas").getInt());
+		}
+		return zona;
+	}
+	
+
+
+
+	
+	
 	
 	private Portal newPortal(Resource portal){
 		String via = "Sin vía asociada";
@@ -197,68 +259,70 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		);
 	}
 	
-	public ArrayList<Portal> getPortales(MyPolygon poly, MyLatLng topRight, MyLatLng bottomLeft) {
-		ResIterator res = getPortal(poly, topRight, bottomLeft, false);
-		ArrayList<Portal> portales = new ArrayList<Portal>();
-		while (res.hasNext()){
-			Resource portal = res.next();
-			if (contains(poly, new MyLatLng(
-					portal.getRequiredProperty(portalLatitud).getLiteral().getDouble(),
-					portal.getRequiredProperty(portalLongitud).getLiteral().getDouble()
-				))){
-				portales.add(newPortal(portal));
-			}
-		}
-		return portales;
+	public ArrayList<Portal> getPortales(MyPolygon poly) {
+//		ResIterator res = getPortal(poly.getTopRight(), poly.getBottomLeft(), false);
+//		ArrayList<Portal> portales = new ArrayList<Portal>();
+//		while (res.hasNext()){
+//			Resource portal = res.next();
+//			if (contains(poly, new MyLatLng(
+//					portal.getRequiredProperty(portalLatitud).getLiteral().getDouble(),
+//					portal.getRequiredProperty(portalLongitud).getLiteral().getDouble()
+//				))){
+//				portales.add(newPortal(portal));
+//			}
+//		}
+//		return portales;
+		return null;
 	}
 
-	public ArrayList<Via> getVias(MyPolygon poly, MyLatLng topRight, MyLatLng bottomLeft) {
-		ResIterator res = getPortal(poly, topRight, bottomLeft, true);
-		ArrayList<Via> vias = new ArrayList<Via>();
-		HashSet<Integer> set = new HashSet<Integer>();
-		while (res.hasNext()){
-			Resource portal = res.next();
-			if (contains(poly, new MyLatLng(
-					portal.getRequiredProperty(portalLatitud).getLiteral().getDouble(),
-					portal.getRequiredProperty(portalLongitud).getLiteral().getDouble()
-				))){
-				Resource via = getVia(portal);
-				int codigoVia = Integer.parseInt(via.getRequiredProperty(viaCodigo).getLiteral().getString());
-				if (!set.contains(codigoVia)){
-					set.add(codigoVia);
-					vias.add(newVia(via, newPortal(portal).getCoordenadas()));
-				}
-			}
-		}
-		return vias;
+	public ArrayList<Via> getVias(MyPolygon poly) {
+//		ResIterator res = getPortal(poly.getTopRight(), poly.getBottomLeft(), true);
+//		ArrayList<Via> vias = new ArrayList<Via>();
+//		HashSet<Integer> set = new HashSet<Integer>();
+//		while (res.hasNext()){
+//			Resource portal = res.next();
+//			if (contains(poly, new MyLatLng(
+//					portal.getRequiredProperty(portalLatitud).getLiteral().getDouble(),
+//					portal.getRequiredProperty(portalLongitud).getLiteral().getDouble()
+//				))){
+//				Resource via = getVia(portal);
+//				int codigoVia = Integer.parseInt(via.getRequiredProperty(viaCodigo).getLiteral().getString());
+//				if (!set.contains(codigoVia)){
+//					set.add(codigoVia);
+//					vias.add(newVia(via, newPortal(portal).getCoordenadas()));
+//				}
+//			}
+//		}
+//		return vias;
+		return null;
 	}
 	
-	public boolean contains(MyPolygon p, MyLatLng latLng) {
-		int j = 0;
-		boolean oddNodes = false;
-		double x = latLng.getLongitude();
-		double y = latLng.getLatitude();
-		for (int i = 0; i < p.getVertexCount(); i++) {
-			j++;
-			if (j == p.getVertexCount()) {
-				j = 0;
-			}
-			if (((p.getVertex(i).getLatitude() < y) && (p.getVertex(j)
-					.getLatitude() >= y))
-					|| ((p.getVertex(j).getLatitude() < y) && (p.getVertex(i)
-							.getLatitude() >= y))) {
-				if (p.getVertex(i).getLongitude()
-						+ (y - p.getVertex(i).getLatitude())
-						/ (p.getVertex(j).getLatitude() - p.getVertex(i)
-								.getLatitude())
-						* (p.getVertex(j).getLongitude() - p.getVertex(i)
-								.getLongitude()) < x) {
-					oddNodes = !oddNodes;
-				}
-			}
-		}
-		return oddNodes;
-	}
+//	public boolean contains(MyPolygon p, MyLatLng latLng) {
+//		int j = 0;
+//		boolean oddNodes = false;
+//		double x = latLng.getLongitude();
+//		double y = latLng.getLatitude();
+//		for (int i = 0; i < p.getVertexCount(); i++) {
+//			j++;
+//			if (j == p.getVertexCount()) {
+//				j = 0;
+//			}
+//			if (((p.getVertex(i).getLatitude() < y) && (p.getVertex(j)
+//					.getLatitude() >= y))
+//					|| ((p.getVertex(j).getLatitude() < y) && (p.getVertex(i)
+//							.getLatitude() >= y))) {
+//				if (p.getVertex(i).getLongitude()
+//						+ (y - p.getVertex(i).getLatitude())
+//						/ (p.getVertex(j).getLatitude() - p.getVertex(i)
+//								.getLatitude())
+//						* (p.getVertex(j).getLongitude() - p.getVertex(i)
+//								.getLongitude()) < x) {
+//					oddNodes = !oddNodes;
+//				}
+//			}
+//		}
+//		return oddNodes;
+//	}
 
 	public ArrayList<Portal> getPortales(Via via) {
 		ResIterator it = model.listSubjectsWithProperty(viaCodigo, via.getCodigo());
@@ -278,5 +342,4 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements Greetin
 		}
 		return list;
 	}
-
 }

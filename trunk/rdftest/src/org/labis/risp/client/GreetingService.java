@@ -9,7 +9,8 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 public interface GreetingService extends RemoteService {
 	Portal getPortal(MyLatLng point);
 	Via getVia(MyLatLng point);
-	ArrayList<Portal> getPortales(MyPolygon poly, MyLatLng topRight, MyLatLng BottomLeft);
 	ArrayList<Portal> getPortales(Via via);
-	ArrayList<Via> getVias(MyPolygon poly, MyLatLng topRight, MyLatLng BottomLeft);
+	ArrayList<Portal> getPortales(MyPolygon poly);
+	ArrayList<Via> getVias(MyPolygon poly);
+	Zona getZona(MyPolygon poly);
 }

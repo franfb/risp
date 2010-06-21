@@ -586,33 +586,6 @@ public class RdfTest implements EntryPoint{
 		});
 	}
 	
-	public boolean contains(Polygon p, LatLng latLng) {
-		int j = 0;
-		boolean oddNodes = false;
-		double x = latLng.getLongitude();
-		double y = latLng.getLatitude();
-		for (int i = 0; i < p.getVertexCount(); i++) {
-			j++;
-			if (j == p.getVertexCount()) {
-				j = 0;
-			}
-			if (((p.getVertex(i).getLatitude() < y) && (p.getVertex(j)
-					.getLatitude() >= y))
-					|| ((p.getVertex(j).getLatitude() < y) && (p.getVertex(i)
-							.getLatitude() >= y))) {
-				if (p.getVertex(i).getLongitude()
-						+ (y - p.getVertex(i).getLatitude())
-						/ (p.getVertex(j).getLatitude() - p.getVertex(i)
-								.getLatitude())
-						* (p.getVertex(j).getLongitude() - p.getVertex(i)
-								.getLongitude()) < x) {
-					oddNodes = !oddNodes;
-				}
-			}
-		}
-		return oddNodes;
-	}
-
 	private void nuevaZonaPortal(Polyline pline) {
 		LatLng[] coord = new LatLng[pline.getVertexCount()];
 		for (int i = 0; i < pline.getVertexCount(); i++) {
@@ -622,8 +595,6 @@ public class RdfTest implements EntryPoint{
 
 		try {
 			greetingService.getPortales(new MyPolygon(p),
-					new MyLatLng(p.getBounds().getNorthEast()), new MyLatLng(p
-							.getBounds().getSouthWest()),
 					new AsyncCallback<ArrayList<Portal>>() {
 						public void onFailure(Throwable caught) {
 							System.out.println("Error.");
@@ -631,7 +602,7 @@ public class RdfTest implements EntryPoint{
 
 						public void onSuccess(ArrayList<Portal> result) {
 							map.addOverlay(p);
-							areas.add(new Zona(p, result));
+							//areas.add(new Zona(p, result));
 							for (int i = 0; i < result.size(); i++) {
 								map.addOverlay(createMarkerPortal(result.get(i)));
 							}
@@ -650,48 +621,46 @@ public class RdfTest implements EntryPoint{
 			coord[i] = pline.getVertex(i);
 		}
 		final Polygon p = new Polygon(coord, "#f33f00", 5, 1, "#ff0000", 0.2);
-
+		p.setVisible(false);
+		map.addOverlay(p);
 		try {
-			greetingService.getPortales(new MyPolygon(p),
-					new MyLatLng(p.getBounds().getNorthEast()), new MyLatLng(p
-							.getBounds().getSouthWest()),
-					new AsyncCallback<ArrayList<Portal>>() {
+			greetingService.getZona(new MyPolygon(p),
+					new AsyncCallback<Zona>() {
 						public void onFailure(Throwable caught) {
 							System.out.println("Error.");
 						}
-
-						public void onSuccess(ArrayList<Portal> result) {
-							map.addOverlay(p);
-							areas.add(new Zona(p, result));
-							p.addPolygonMouseOverHandler(new PolygonMouseOverHandler(){
-								public void onMouseOver(PolygonMouseOverEvent event) {
-									for (Zona area : areas) {
-										if (area.getPoly() == event.getSource()) {
-											info = map.getInfoWindow();
-											double sizeArea = area.getPoly().getArea();
-											String unit = "m";
-											info.open(area.getPoly().getBounds().getCenter(),
-													new InfoWindowContent("Área de la zona: "
-															+ (int)sizeArea + " " + unit + "<sup>2</sup>"
-															+ "<br>Personas empadronadas: " + area.getHabitantes()
-															+ "<br>Hojas padronales: " + area.getHojas()));
-										}
-									}
-								}
-
-							});
-							p.addPolygonMouseOutHandler(new PolygonMouseOutHandler(){
-								public void onMouseOut(PolygonMouseOutEvent event) {
-									if (info != null) {
-										info.close();
-									}
-								}
-							});
+						public void onSuccess(final Zona result) {
+//							map.addOverlay(p);
+//							areas.add(result);
+//							p.addPolygonMouseOverHandler(new PolygonMouseOverHandler(){
+//								public void onMouseOver(PolygonMouseOverEvent event) {
+//									info = map.getInfoWindow();
+//									double sizeArea = p.getArea();
+//									info.open(p.getBounds().getCenter(),
+//										new InfoWindowContent("Área de la zona: "
+//											+ (int)sizeArea + " m<sup>2</sup>"
+//											+ "<br>Personas empadronadas: " + result.getHabitantes()
+//											+ "<br>Hojas padronales: " + result.getHojas()));
+//								}
+//							});
+//							p.addPolygonMouseOutHandler(new PolygonMouseOutHandler(){
+//								public void onMouseOut(PolygonMouseOutEvent event) {
+//									if (info != null) {
+//										info.close();
+//									}
+//								}
+//							});
 						}
 					});
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+//		p.setVisible(false);
+//		map.addOverlay(p);
+//		Polygon[] tris = MyPolygon2.getTriangles(p);
+//		for (int i = 0; i < tris.length; i++){
+//			map.addOverlay(tris[i]);
+//		}
 	}
 	
 	
@@ -704,8 +673,6 @@ public class RdfTest implements EntryPoint{
 
 		try {
 			greetingService.getVias(new MyPolygon(p),
-					new MyLatLng(p.getBounds().getNorthEast()), new MyLatLng(p
-							.getBounds().getSouthWest()),
 					new AsyncCallback<ArrayList<Via>>() {
 						public void onFailure(Throwable caught) {
 							System.out.println("Error.");
