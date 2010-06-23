@@ -9,17 +9,15 @@ public class Portal implements Serializable{
 	private int numero;
 	private int habitantes;
 	private int hojas;
-	private String tipo;
 	private String codigo;
 	private String via;
 	
 	public Portal(MyLatLng coordenadas, int numero, int habitantes, int hojas,
-			String tipo, String codigo, String via) {
+			String codigo, String via) {
 		this.coordenadas = coordenadas;
 		this.numero = numero;
 		this.habitantes = habitantes;
 		this.hojas = hojas;
-		this.tipo = tipo;
 		this.codigo = codigo;
 		this.via = via;
 	}
@@ -36,14 +34,6 @@ public class Portal implements Serializable{
 
 	public void setVia(String via) {
 		this.via = via;
-	}
-
-	public String getTipo() {
-		return tipo;
-	}
-	
-	public void setTipo(String tipo) {
-		this.tipo = tipo;
 	}
 
 	public void setCoordenadas(MyLatLng coordenadas) {

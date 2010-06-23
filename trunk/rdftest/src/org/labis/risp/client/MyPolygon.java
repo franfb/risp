@@ -2,6 +2,7 @@ package org.labis.risp.client;
 
 import java.io.Serializable;
 
+import com.google.gwt.maps.client.MapWidget;
 import com.google.gwt.maps.client.geom.LatLng;
 import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.maps.client.overlay.Polyline;
@@ -11,10 +12,31 @@ public class MyPolygon implements Serializable{
 	private static final long serialVersionUID = 1L;
 	MyLatLng[][] triangles; 
 	
+	MyLatLng[] vertex;
+	
 	MyLatLng topRight, bottomLeft;
 	double area;
 	
-	public MyPolygon(Polygon poly){
+	
+	public static Polygon getPolygon(Polyline pline){
+		LatLng[] coord = new LatLng[pline.getVertexCount()];
+		for (int i = 0; i < pline.getVertexCount(); i++) {
+			coord[i] = pline.getVertex(i);
+		}
+		return new Polygon(coord, "#f33f00", 5, 1, "#ff0000", 0.2);
+	}
+	
+	
+	public MyPolygon(Polyline pline, MapWidget map){
+		Polygon poly = MyPolygon.getPolygon(pline);
+		poly.setVisible(false);
+		map.addOverlay(poly);
+		
+		vertex = new MyLatLng[poly.getVertexCount()];
+		for (int i = 0; i < vertex.length; i++){
+			vertex[i] = new MyLatLng(poly.getVertex(i));
+		}
+		
 		topRight = new MyLatLng(poly.getBounds().getNorthEast()); 
 		bottomLeft = new MyLatLng(poly.getBounds().getSouthWest());
 		area = poly.getArea();
@@ -35,6 +57,7 @@ public class MyPolygon implements Serializable{
 				}
 			}
 		} while (size < triangles.length);
+		map.removeOverlay(poly);
 	}		
 
 	public MyPolygon(){}
@@ -92,7 +115,40 @@ public class MyPolygon implements Serializable{
 	    return l3;
 	}
 	
+	public  boolean contains(MyLatLng latLng) {
+		int j = 0;
+		boolean oddNodes = false;
+		double x = latLng.getLongitude();
+		double y = latLng.getLatitude();
+		for (int i = 0; i < getVertexCount(); i++) {
+			j++;
+			if (j == getVertexCount()) {
+				j = 0;
+			}
+			if (((getVertex(i).getLatitude() < y) && (getVertex(j)
+					.getLatitude() >= y))
+					|| ((getVertex(j).getLatitude() < y) && (getVertex(i)
+							.getLatitude() >= y))) {
+				if (getVertex(i).getLongitude()
+						+ (y - getVertex(i).getLatitude())
+						/ (getVertex(j).getLatitude() - getVertex(i)
+								.getLatitude())
+						* (getVertex(j).getLongitude() - getVertex(i)
+								.getLongitude()) < x) {
+					oddNodes = !oddNodes;
+				}
+			}
+		}
+		return oddNodes;
+	}
 	
+	public int getVertexCount(){
+		return vertex.length;
+	}
+
+	public MyLatLng getVertex(int index){
+		return vertex[index];
+	}
 	
 	public static boolean contains(Polygon p, LatLng latLng) {
 		int j = 0;

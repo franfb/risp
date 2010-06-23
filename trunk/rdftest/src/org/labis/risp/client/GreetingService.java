@@ -11,6 +11,6 @@ public interface GreetingService extends RemoteService {
 	Via getVia(MyLatLng point);
 	ArrayList<Portal> getPortales(Via via);
 	ArrayList<Portal> getPortales(MyPolygon poly);
-	ArrayList<Via> getVias(MyPolygon poly);
+	Zona getVias(MyPolygon poly);
 	Zona getZona(MyPolygon poly);
 }

@@ -42,7 +42,7 @@
 		src="http://maps.google.com/maps?gwt=1&amp;file=api&amp;v=2&amp;sensor=false" />
 
 	<!-- Specify the app entry point class.                         -->
-	<entry-point class='org.labis.risp.client.RdfTest' />
+	<entry-point class='org.labis.risp.client.Principal' />
 
 	<!-- Specify the paths for translatable code                    -->
 	<source path='client' />

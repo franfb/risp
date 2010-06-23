@@ -1,6 +1,10 @@
 package org.labis.risp.client;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
+
+import org.apache.commons.digester.SetRootRule;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
@@ -16,10 +20,12 @@ import com.google.gwt.maps.client.InfoWindow;
 import com.google.gwt.maps.client.InfoWindowContent;
 import com.google.gwt.maps.client.MapWidget;
 import com.google.gwt.maps.client.event.MapClickHandler;
+import com.google.gwt.maps.client.event.MapMouseMoveHandler;
 import com.google.gwt.maps.client.event.MarkerClickHandler;
 import com.google.gwt.maps.client.event.MarkerInfoWindowCloseHandler;
 import com.google.gwt.maps.client.event.MarkerMouseOutHandler;
 import com.google.gwt.maps.client.event.MarkerMouseOverHandler;
+import com.google.gwt.maps.client.event.PolygonClickHandler;
 import com.google.gwt.maps.client.event.PolygonMouseOutHandler;
 import com.google.gwt.maps.client.event.PolygonMouseOverHandler;
 import com.google.gwt.maps.client.event.PolylineEndLineHandler;
@@ -34,12 +40,13 @@ import com.google.gwt.maps.client.overlay.MarkerOptions;
 import com.google.gwt.maps.client.overlay.PolyStyleOptions;
 import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.maps.client.overlay.Polyline;
+import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.AbsolutePanel;
 import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.DisclosureHandler;
 import com.google.gwt.user.client.ui.DisclosurePanel;
 import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.FocusPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -49,7 +56,7 @@ import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment.HorizontalAlignmentConstant;
 
-public class RdfTest implements EntryPoint{
+public class Principal implements EntryPoint{
 	private MapWidget map;
 	private Button portalButton;
 	private Button portalButtonZona;
@@ -64,16 +71,28 @@ public class RdfTest implements EntryPoint{
 	final DisclosurePanel zonaDisclosure = new DisclosurePanel(
 	"Mostrar información padronal de una zona");
 	
-	private ArrayList<Zona> areas;
 	private InfoWindow info;
 
 	private final GreetingServiceAsync greetingService = GWT
 			.create(GreetingService.class);
 	
-	MarkerOptions portalIcon;
-	MarkerOptions viaIcon;
-	MarkerOptions viaIconGrande;
+	
+//	MarkerOptions portalIcon;
+//	MarkerOptions viaIcon;
+//	MarkerOptions viaIconGrande;
 
+	MarkerOptions portalIcon1;
+	MarkerOptions portalIcon2;
+	MarkerOptions portalIcon3;
+	MarkerOptions viaIcon1;
+	MarkerOptions viaIcon2;
+	MarkerOptions viaIcon3;
+	
+	
+	//LinkedList<Polygon> polys = new LinkedList<Polygon>();
+	LinkedList<ZonaClient> zonas = new LinkedList<ZonaClient>();
+	ZonaClient highlighted = null;
+	
 	
 	private void disableButtons(){
 		portalButtonZona.setEnabled(false);
@@ -94,7 +113,6 @@ public class RdfTest implements EntryPoint{
 	public void onModuleLoad() {
 		buildUi();
 		
-		areas = new ArrayList<Zona>();
 		
 		
 		
@@ -125,7 +143,12 @@ public class RdfTest implements EntryPoint{
 				map.addMapClickHandler(new MapClickHandler(){
 					public void onClick(MapClickEvent event) {
 						map.removeMapClickHandler(this);
-						nuevaVia(event.getLatLng());
+						if (event.getLatLng() != null){
+							nuevaVia(event.getLatLng());
+						}
+						else{
+							nuevaVia(event.getOverlayLatLng());
+						}
 						enableButtons();
 					}
 				});
@@ -138,7 +161,12 @@ public class RdfTest implements EntryPoint{
 				map.addMapClickHandler(new MapClickHandler(){
 					public void onClick(MapClickEvent event) {
 						map.removeMapClickHandler(this);
-						nuevoPortal(event.getLatLng());
+						if (event.getLatLng() != null){
+							nuevoPortal(event.getLatLng());
+						}
+						else{
+							nuevoPortal(event.getOverlayLatLng());
+						}
 						enableButtons();
 					}
 				});
@@ -176,6 +204,8 @@ public class RdfTest implements EntryPoint{
         
         panel.setSize("100%", "100%");
         panel.add(map, 0, 0);
+        
+        
         panel.add(columna, 50, 0);
         
         
@@ -266,7 +296,6 @@ public class RdfTest implements EntryPoint{
 		funciones.add(portalDisclosure);
 		
 
-		
 		
 		
 		
@@ -374,31 +403,70 @@ public class RdfTest implements EntryPoint{
         
         
         
+//        Icon icon = Icon.newInstance();
+//		icon.setIconAnchor(Point.newInstance(16, 16));
+//		icon.setInfoWindowAnchor(Point.newInstance(32, 0));
+//		icon.setImageURL("http://maps.google.com/mapfiles/kml/pal3/icon56.png");
+//		portalIcon = MarkerOptions.newInstance();
+//		portalIcon.setIcon(icon);
+//		
+//		icon = Icon.newInstance();
+//		icon.setIconAnchor(Point.newInstance(16, 16));
+//		icon.setInfoWindowAnchor(Point.newInstance(32, 0));
+//		icon.setImageURL("http://maps.google.com/mapfiles/kml/pal2/icon16.png");
+//		viaIcon = MarkerOptions.newInstance();
+//		viaIcon.setIcon(icon);
+//		
+//		icon = Icon.newInstance();
+//		icon.setIconAnchor(Point.newInstance(16, 16));
+//		icon.setInfoWindowAnchor(Point.newInstance(32, 0));
+//		icon.setImageURL("http://maps.google.com/mapfiles/kml/pal2/icon16.png");
+//		icon.setIconSize(Size.newInstance(40, 40));
+//		viaIconGrande = MarkerOptions.newInstance();
+//		viaIconGrande.setIcon(icon);
+		
         Icon icon = Icon.newInstance();
 		icon.setIconAnchor(Point.newInstance(16, 16));
 		icon.setInfoWindowAnchor(Point.newInstance(32, 0));
-		icon.setImageURL("http://maps.google.com/mapfiles/kml/pal3/icon56.png");
-		portalIcon = MarkerOptions.newInstance();
-		portalIcon.setIcon(icon);
+		icon.setImageURL("http://www.visual-case.it/vc/pics/casetta_base.png");
+		portalIcon1 = MarkerOptions.newInstance();
+		portalIcon1.setIcon(icon);
+        
+		icon = Icon.newInstance();
+		icon.setIconAnchor(Point.newInstance(16, 16));
+		icon.setInfoWindowAnchor(Point.newInstance(32, 0));
+		icon.setImageURL("http://www.visual-case.it/vc/pics/casetta_green.png");
+		portalIcon2 = MarkerOptions.newInstance();
+		portalIcon2.setIcon(icon);
 		
 		icon = Icon.newInstance();
 		icon.setIconAnchor(Point.newInstance(16, 16));
 		icon.setInfoWindowAnchor(Point.newInstance(32, 0));
-		icon.setImageURL("http://maps.google.com/mapfiles/kml/pal2/icon16.png");
-		viaIcon = MarkerOptions.newInstance();
-		viaIcon.setIcon(icon);
+		icon.setImageURL("http://www.visual-case.it/vc/pics/casetta_red.png");
+		portalIcon3 = MarkerOptions.newInstance();
+		portalIcon3.setIcon(icon);
 		
 		icon = Icon.newInstance();
 		icon.setIconAnchor(Point.newInstance(16, 16));
 		icon.setInfoWindowAnchor(Point.newInstance(32, 0));
-		icon.setImageURL("http://maps.google.com/mapfiles/kml/pal2/icon16.png");
-		icon.setIconSize(Size.newInstance(40, 40));
-		viaIconGrande = MarkerOptions.newInstance();
-		viaIconGrande.setIcon(icon);
+		icon.setImageURL("http://maps.google.com/mapfiles/kml/pal4/icon23.png");
+		viaIcon1 = MarkerOptions.newInstance();
+		viaIcon1.setIcon(icon);
+		   
+		icon = Icon.newInstance();
+		icon.setIconAnchor(Point.newInstance(16, 16));
+		icon.setInfoWindowAnchor(Point.newInstance(32, 0));
+		icon.setImageURL("http://maps.google.com/mapfiles/kml/pal4/icon54.png");
+		viaIcon2 = MarkerOptions.newInstance();
+		viaIcon2.setIcon(icon);
 		
+		icon = Icon.newInstance();
+		icon.setIconAnchor(Point.newInstance(16, 16));
+		icon.setInfoWindowAnchor(Point.newInstance(32, 0));
+		icon.setImageURL("http://maps.google.com/mapfiles/kml/pal4/icon7.png");
+		viaIcon3 = MarkerOptions.newInstance();
+		viaIcon3.setIcon(icon);
 		
-		
-		    
 	}
 
 //		final DisclosurePanelImages images = (DisclosurePanelImages)
@@ -440,9 +508,7 @@ public class RdfTest implements EntryPoint{
 	private void infoWindowVia(Marker marker, Via via){
 		InfoWindow info = map.getInfoWindow();
 		String nombreCalle = "<b>" +
-			via.getTipo() + 
-			" " + 
-			via.getNombre() + 
+		via.getNombre() + 
 			"</b>";
 		info.open(marker, new InfoWindowContent(nombreCalle
 				+ "<br>Personas empadronadas: "
@@ -457,8 +523,15 @@ public class RdfTest implements EntryPoint{
 	private Marker createMarkerPortal(final Portal portal) {
 		MarkerOptions markerOpt = MarkerOptions.newInstance();
 		markerOpt.setClickable(true);
+		MarkerOptions opt = portalIcon1;
+		if (portal.getHabitantes() > 10){
+			opt = portalIcon2;
+		}
+		if (portal.getHabitantes() > 50){
+			opt = portalIcon3;
+		}
 		final Marker marker = new Marker(LatLng.newInstance(portal.getCoordenadas()
-				.getLatitude(), portal.getCoordenadas().getLongitude()), portalIcon);
+				.getLatitude(), portal.getCoordenadas().getLongitude()), opt);
 		final MarkerMouseOutHandler out = new MarkerMouseOutHandler(){
 			public void onMouseOut(MarkerMouseOutEvent event) {
 				InfoWindow info = map.getInfoWindow();
@@ -475,7 +548,6 @@ public class RdfTest implements EntryPoint{
 		marker.addMarkerClickHandler(new MarkerClickHandler() {
 			public void onClick(MarkerClickEvent event) {
 				marker.removeMarkerMouseOutHandler(out);
-				//infoWindowPortal(marker, portal);
 			}
 		});
 		marker.addMarkerInfoWindowCloseHandler(new MarkerInfoWindowCloseHandler() {
@@ -486,9 +558,18 @@ public class RdfTest implements EntryPoint{
 		return marker;
 	}
 	
-	private Marker createMarkerVia(final Via via, MarkerOptions icon) {
+	private Marker createMarkerVia(final Via via) {
+		
+		MarkerOptions opt = viaIcon1;
+		if (via.getHabitantes() > 100){
+			opt = viaIcon2;
+		}
+		if (via.getHabitantes() > 500){
+			opt = viaIcon3;
+		}
+		
 		final Marker marker = new Marker(LatLng.newInstance(via.getCoordenadas()
-				.getLatitude(), via.getCoordenadas().getLongitude()), icon);
+				.getLatitude(), via.getCoordenadas().getLongitude()), opt);
 		final MarkerMouseOutHandler out = new MarkerMouseOutHandler(){
 			public void onMouseOut(MarkerMouseOutEvent event) {
 				InfoWindow info = map.getInfoWindow();
@@ -506,7 +587,6 @@ public class RdfTest implements EntryPoint{
 		marker.addMarkerClickHandler(new MarkerClickHandler() {
 			public void onClick(MarkerClickEvent event) {
 				marker.removeMarkerMouseOutHandler(out);
-				//infoWindowVia(marker, via);
 			}
 		});
 		marker.addMarkerInfoWindowCloseHandler(new MarkerInfoWindowCloseHandler() {
@@ -586,26 +666,122 @@ public class RdfTest implements EntryPoint{
 		});
 	}
 	
-	private void nuevaZonaPortal(Polyline pline) {
-		LatLng[] coord = new LatLng[pline.getVertexCount()];
-		for (int i = 0; i < pline.getVertexCount(); i++) {
-			coord[i] = pline.getVertex(i);
-		}
-		final Polygon p = new Polygon(coord, "#f33f00", 5, 1, "#ff0000", 0.2);
-
+	
+	private void nuevaZona(final Polyline pline) {
 		try {
-			greetingService.getPortales(new MyPolygon(p),
+			greetingService.getZona(new MyPolygon(pline, map),
+					new AsyncCallback<Zona>() {
+						public void onFailure(Throwable caught) {
+							System.out.println("Error.");
+						}
+						public void onSuccess(final Zona result) {
+							final Polygon poly = MyPolygon.getPolygon(pline);
+							ZonaClient zona = new ZonaClient(result);
+							zona.setPoly(poly);
+							nuevaZona(zona);
+						}
+					});
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void nuevaZona(ZonaClient zona){
+		zona.getPoly().setStrokeStyle(PolyStyleOptions.newInstance(zona.calculateColor()));
+		zona.getPoly().setFillStyle(PolyStyleOptions.newInstance(zona.getColor(), 10, 0.3));
+		
+		map.addOverlay(zona.getPoly());
+		zonas.addFirst(zona);
+		if (highlighted != null){
+			highlighted.getPoly().setFillStyle(PolyStyleOptions.newInstance(highlighted.getColor(), 10, 0.1));
+		}
+		highlighted = zona;
+		setInfo(zona);
+		zona.getPoly().addPolygonClickHandler(new PolygonClickHandler(){
+		public void onClick(PolygonClickEvent event) {
+			for (ZonaClient z: zonas){
+				if (MyPolygon.contains(z.getPoly(), event.getLatLng())){
+					zonas.remove(z);
+					zonas.addLast(z);
+					if (highlighted != null && highlighted.getPoly() != z.getPoly()){
+						highlighted.getPoly().setFillStyle(PolyStyleOptions.newInstance(highlighted.getColor(), 10, 0.1));
+						z.getPoly().setFillStyle(PolyStyleOptions.newInstance(z.getColor(), 10, 0.3));
+					}
+					highlighted = z;
+					setInfo(z);
+					break;
+					}
+				}
+			}
+		});
+	}
+	
+	
+	
+	private void setInfo(ZonaClient zona){
+		info = map.getInfoWindow();
+		double sizeArea = zona.getPoly().getArea();
+		int densidad = (int) (zona.getHabitantes() / (sizeArea / 1000000));
+		info.open(zona.getPoly().getBounds().getCenter(),
+				new InfoWindowContent("<b>Área de la zona:</b> "
+						+ (int)sizeArea + " m<sup>2</sup>"
+						+ "<br><b>Personas empadronadas:</b> " + zona.getHabitantes()
+						+ "<br><b>Hojas padronales:</b> " + zona.getHojas()
+						+ "<br><b>Densidad poblacional:</b> " + densidad + " hab/km<sup>2</sup>")); 
+	}
+	
+	
+	private void nuevaZonaVias(final Polyline pline) {
+		try {
+			greetingService.getVias(new MyPolygon(pline, map),
+					new AsyncCallback<Zona>() {
+						public void onFailure(Throwable caught) {
+							System.out.println("Error.");
+						}
+
+						public void onSuccess(Zona result) {
+							ArrayList<Via> vias = result.getVias();
+							for (int i = 0; i < vias.size(); i++) {
+								map.addOverlay(createMarkerVia(vias.get(i)));
+							}
+
+							final Polygon poly = MyPolygon.getPolygon(pline);
+							ZonaClient zona = new ZonaClient();
+							zona.setPoly(poly);
+							zona.setHabitantes(result.getHabitantes());
+							zona.setHojas(result.getHojas());
+							nuevaZona(zona);
+						}
+					});
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+
+	private void nuevaZonaPortal(final Polyline pline) {
+		try {
+			greetingService.getPortales(new MyPolygon(pline, map),
 					new AsyncCallback<ArrayList<Portal>>() {
 						public void onFailure(Throwable caught) {
 							System.out.println("Error.");
 						}
 
 						public void onSuccess(ArrayList<Portal> result) {
-							map.addOverlay(p);
-							//areas.add(new Zona(p, result));
+							int habitantes = 0;
+							int hojas = 0;
+							
 							for (int i = 0; i < result.size(); i++) {
 								map.addOverlay(createMarkerPortal(result.get(i)));
-							}
+								habitantes += result.get(i).getHabitantes();
+								hojas += result.get(i).getHojas();
+							}	
+							final Polygon poly = MyPolygon.getPolygon(pline);
+							ZonaClient zona = new ZonaClient();
+							zona.setPoly(poly);
+							zona.setHabitantes(habitantes);
+							zona.setHojas(hojas);
+							nuevaZona(zona);
 
 						}
 					});
@@ -615,83 +791,7 @@ public class RdfTest implements EntryPoint{
 	}
 	
 	
-	private void nuevaZona(Polyline pline) {
-		LatLng[] coord = new LatLng[pline.getVertexCount()];
-		for (int i = 0; i < pline.getVertexCount(); i++) {
-			coord[i] = pline.getVertex(i);
-		}
-		final Polygon p = new Polygon(coord, "#f33f00", 5, 1, "#ff0000", 0.2);
-		p.setVisible(false);
-		map.addOverlay(p);
-		try {
-			greetingService.getZona(new MyPolygon(p),
-					new AsyncCallback<Zona>() {
-						public void onFailure(Throwable caught) {
-							System.out.println("Error.");
-						}
-						public void onSuccess(final Zona result) {
-//							map.addOverlay(p);
-//							areas.add(result);
-//							p.addPolygonMouseOverHandler(new PolygonMouseOverHandler(){
-//								public void onMouseOver(PolygonMouseOverEvent event) {
-//									info = map.getInfoWindow();
-//									double sizeArea = p.getArea();
-//									info.open(p.getBounds().getCenter(),
-//										new InfoWindowContent("Área de la zona: "
-//											+ (int)sizeArea + " m<sup>2</sup>"
-//											+ "<br>Personas empadronadas: " + result.getHabitantes()
-//											+ "<br>Hojas padronales: " + result.getHojas()));
-//								}
-//							});
-//							p.addPolygonMouseOutHandler(new PolygonMouseOutHandler(){
-//								public void onMouseOut(PolygonMouseOutEvent event) {
-//									if (info != null) {
-//										info.close();
-//									}
-//								}
-//							});
-						}
-					});
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-//		p.setVisible(false);
-//		map.addOverlay(p);
-//		Polygon[] tris = MyPolygon2.getTriangles(p);
-//		for (int i = 0; i < tris.length; i++){
-//			map.addOverlay(tris[i]);
-//		}
-	}
 	
-	
-	private void nuevaZonaVias(Polyline pline) {
-		LatLng[] coord = new LatLng[pline.getVertexCount()];
-		for (int i = 0; i < pline.getVertexCount(); i++) {
-			coord[i] = pline.getVertex(i);
-		}
-		final Polygon p = new Polygon(coord, "#f33f00", 5, 1, "#ff0000", 0.2);
-
-		try {
-			greetingService.getVias(new MyPolygon(p),
-					new AsyncCallback<ArrayList<Via>>() {
-						public void onFailure(Throwable caught) {
-							System.out.println("Error.");
-						}
-
-						public void onSuccess(ArrayList<Via> result) {
-							map.addOverlay(p);
-							for (int i = 0; i < result.size(); i++) {
-								map.addOverlay(createMarkerVia(result.get(i), viaIcon));
-							}
-
-						}
-					});
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
-
 	private void nuevoPortal(final LatLng point) {
 		try {
 			greetingService.getPortal(new MyLatLng(point),
@@ -717,8 +817,6 @@ public class RdfTest implements EntryPoint{
 	}
 	
 	private void nuevaVia(final LatLng point) {
-		//map.setSize("800px", "600px");
-
 		try {
 			greetingService.getVia(new MyLatLng(point),
 					new AsyncCallback<Via>() {
@@ -735,7 +833,7 @@ public class RdfTest implements EntryPoint{
 										for (Portal portal: result){
 											map.addOverlay(createMarkerPortal(portal));
 										}
-										map.addOverlay(createMarkerVia(via, viaIconGrande));
+										map.addOverlay(createMarkerVia(via));
 									}
 								});
 							}

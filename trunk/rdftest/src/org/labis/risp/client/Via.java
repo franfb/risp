@@ -9,16 +9,14 @@ public class Via implements Serializable{
 	private int habitantes;
 	private double longitud;
 	private String nombre;
-	private String tipo;
 	private String codigo;
 
 	public Via(MyLatLng coordenadas, int habitantes, double longitud,
-			String nombre, String tipo, String codigo) {
+			String nombre, String codigo) {
 		this.coordenadas = coordenadas;
 		this.habitantes = habitantes;
 		this.longitud = longitud;
 		this.nombre = nombre;
-		this.tipo = tipo;
 		this.codigo = codigo;
 	}
 
@@ -47,14 +45,6 @@ public class Via implements Serializable{
 
 	public void setNombre(String nombre) {
 		this.nombre = nombre;
-	}
-
-	public String getTipo() {
-		return tipo;
-	}
-
-	public void setTipo(String tipo) {
-		this.tipo = tipo;
 	}
 
 	public void setCoordenadas(MyLatLng coordenadas) {

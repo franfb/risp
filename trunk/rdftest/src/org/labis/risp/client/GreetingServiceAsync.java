@@ -12,7 +12,7 @@ public interface GreetingServiceAsync {
 
 	void getPortales(MyPolygon poly, AsyncCallback<ArrayList<Portal>> callback);
 	
-	void getVias(MyPolygon poly, AsyncCallback<ArrayList<Via>> callback);
+	void getVias(MyPolygon poly, AsyncCallback<Zona> callback);
 
 	void getPortales(Via via, AsyncCallback<ArrayList<Portal>> callback);
 
