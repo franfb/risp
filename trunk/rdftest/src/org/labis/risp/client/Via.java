@@ -10,6 +10,7 @@ public class Via implements Serializable{
 	private double longitud;
 	private String nombre;
 	private String codigo;
+	
 
 	public Via(MyLatLng coordenadas, int habitantes, double longitud,
 			String nombre, String codigo) {

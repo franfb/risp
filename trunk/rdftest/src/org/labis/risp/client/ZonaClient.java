@@ -5,11 +5,23 @@ import com.google.gwt.maps.client.overlay.Polygon;
 
 public class ZonaClient{
 	private Polygon poly;
+	private MyPolygon myPoly;
 	private int habitantes;
 	private int hojas;
 	private String color;
+	boolean ver;
 	
 	
+	public boolean isVer() {
+		return ver;
+	}
+
+
+	public void setVer(boolean ver) {
+		this.ver = ver;
+	}
+
+
 	public String getColor() {
 		return color;
 	}
@@ -22,10 +34,10 @@ public class ZonaClient{
 			color = "#888888";
 		}
 		if (densidad >= 50 && densidad < 1000){
-			color = "#00AA00";
+			color = "#DDDD00";
 		}
 		if (densidad >= 1000 && densidad < 5000){
-			color = "#DDDD00";
+			color = "#00AA00";
 		}
 		if (densidad >= 5000){
 			color = "#CC0000";
@@ -64,5 +76,16 @@ public class ZonaClient{
 	public void setPoly(Polygon poly) {
 		this.poly = poly;
 	}
+
+
+	public MyPolygon getMyPoly() {
+		return myPoly;
+	}
+
+
+	public void setMyPoly(MyPolygon myPoly) {
+		this.myPoly = myPoly;
+	}
+	
 	
 }

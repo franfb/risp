@@ -41,9 +41,11 @@ import com.google.gwt.maps.client.overlay.PolyStyleOptions;
 import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.maps.client.overlay.Polyline;
 import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.AbsolutePanel;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.DisclosurePanel;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FocusPanel;
@@ -51,9 +53,12 @@ import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.HorizontalSplitPanel;
+import com.google.gwt.user.client.ui.Hyperlink;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment.HorizontalAlignmentConstant;
 
 public class Principal implements EntryPoint{
@@ -88,6 +93,7 @@ public class Principal implements EntryPoint{
 	MarkerOptions viaIcon2;
 	MarkerOptions viaIcon3;
 	
+	Marker markerInfo = null;
 	
 	//LinkedList<Polygon> polys = new LinkedList<Polygon>();
 	LinkedList<ZonaClient> zonas = new LinkedList<ZonaClient>();
@@ -119,21 +125,21 @@ public class Principal implements EntryPoint{
 		portalButtonZona.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
 				disableButtons();
-				createPolylinePortal();
+				crearPolilinea(1);
 			}
 		});
 
 		viaButtonZona.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
 				disableButtons();
-				createPolylineVia();
+				crearPolilinea(2);
 			}
 		});
 		
 		zonaButton.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
 				disableButtons();
-				createPolylineZona();
+				crearPolilinea(0);
 			}
 		});
 		
@@ -175,6 +181,89 @@ public class Principal implements EntryPoint{
 	}
 
 	
+	private HorizontalPanel panelBusqueda(){
+		HorizontalPanel panel = new HorizontalPanel();
+		panel.setSpacing(10);
+		final TextBox text = new TextBox();
+		text.setWidth("30em");
+		panel.add(text);
+		Button button = new Button("Buscar vía o portal");
+		button.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				String texto = text.getText();
+				String[] resultado = texto.split(",");
+				if (resultado.length > 2 || resultado[0].isEmpty()){
+					return;
+				}
+				if (resultado.length == 1){
+					System.out.println("CALLE: " + resultado[0]);
+					
+//					try {
+//						greetingService.getVia(,
+//								new AsyncCallback<Via>() {
+//									public void onFailure(Throwable caught) {}
+//									public void onSuccess(final Via via) {
+//										if (via == null){
+//											InfoWindow info = map.getInfoWindow();
+//											info.open(point, new InfoWindowContent("no hay ninguna vía en las cercanías"));
+//										}
+//										else{
+//											greetingService.getPortales(via, new AsyncCallback<ArrayList<Portal>>(){
+//												public void onFailure(Throwable caught) {}
+//												public void onSuccess(ArrayList<Portal> result) {
+//													for (Portal portal: result){
+//														map.addOverlay(createMarkerPortal(portal, false));
+//													}
+//													map.addOverlay(createMarkerVia(via, false));
+//												}
+//											});
+//										}
+//									}
+//								});
+//							}
+//						catch (Exception e) {
+//						e.printStackTrace();
+//					}
+					return;
+				}
+				System.out.println("CALLE: " + resultado[0]);
+				System.out.println("NUMERO: " + resultado[1]);
+				String nombre = resultado[0];
+				int numero = Integer.parseInt(resultado[1].trim());
+				
+				try {
+					greetingService.getPortales(nombre, numero,
+							new AsyncCallback<ArrayList<Portal>>() {
+								public void onFailure(Throwable caught) {
+									System.out.println("Error.");
+								}
+
+								public void onSuccess(final ArrayList<Portal> portales) {
+									if (portales == null){
+										System.out.println("LAS DE ABAJO LO OYEN TODO");
+										InfoWindow info = map.getInfoWindow();
+										info.open(map.getCenter(), new InfoWindowContent("no hay ningún portal con esa dirección"));
+									}
+									else{
+										for (Portal p: portales){
+											map.addOverlay(createMarkerPortal(p, true));
+										}
+									}
+								}
+								});
+							}
+					catch (Exception e) {
+					e.printStackTrace();
+				}
+				
+
+				
+			}
+		});
+		panel.add(button);
+		return panel;
+	}
+	
 	
 	private void buildUi() {
         map = new MapWidget();
@@ -209,9 +298,14 @@ public class Principal implements EntryPoint{
         panel.add(columna, 50, 0);
         
         
+        
+        panel.add(panelBusqueda(), 425, (int) (Window.getClientHeight() * 0.92));
+        
+        
+        
+        
    
-        
-        
+
         RootPanel.get().add(panel);
         
         
@@ -452,6 +546,7 @@ public class Principal implements EntryPoint{
 		icon.setImageURL("http://maps.google.com/mapfiles/kml/pal4/icon23.png");
 		viaIcon1 = MarkerOptions.newInstance();
 		viaIcon1.setIcon(icon);
+		viaIcon1.setDraggable(true);
 		   
 		icon = Icon.newInstance();
 		icon.setIconAnchor(Point.newInstance(16, 16));
@@ -459,6 +554,7 @@ public class Principal implements EntryPoint{
 		icon.setImageURL("http://maps.google.com/mapfiles/kml/pal4/icon54.png");
 		viaIcon2 = MarkerOptions.newInstance();
 		viaIcon2.setIcon(icon);
+		viaIcon2.setDraggable(true);
 		
 		icon = Icon.newInstance();
 		icon.setIconAnchor(Point.newInstance(16, 16));
@@ -466,7 +562,8 @@ public class Principal implements EntryPoint{
 		icon.setImageURL("http://maps.google.com/mapfiles/kml/pal4/icon7.png");
 		viaIcon3 = MarkerOptions.newInstance();
 		viaIcon3.setIcon(icon);
-		
+		viaIcon3.setDraggable(true);
+
 	}
 
 //		final DisclosurePanelImages images = (DisclosurePanelImages)
@@ -488,7 +585,7 @@ public class Principal implements EntryPoint{
 	
 
 	
-	private void infoWindowPortal(Marker marker, Portal portal){
+	private void infoWindowPortal(final Marker marker, final Portal portal, boolean verTodasVias){
 		InfoWindow info = map.getInfoWindow();
 		String nombreCalle = "Desconocido";
 		if (portal.getVia() != null){
@@ -498,29 +595,105 @@ public class Principal implements EntryPoint{
 			portal.getNumero() + 
 			"</b>";
 		}
-		info.open(marker, new InfoWindowContent(nombreCalle
+
+		VerticalPanel vertical = new VerticalPanel();
+
+		
+		HTML text = new HTML(nombreCalle
 				+ "<br>Personas empadronadas: "
 				+ portal.getHabitantes() + "<br>Hojas padronales: "
-				+ portal.getHojas()));
+				+ portal.getHojas());
+		vertical.add(text);
+
+		
+		if(verTodasVias){
+			HTML link1 = new HTML();
+			link1.addStyleName("ver");
+			link1.setHTML("<br>Ver toda la vía");
+			link1.addClickHandler(new ClickHandler() {
+				public void onClick(ClickEvent event) {
+					try {
+						greetingService.getVia(portal,
+								new AsyncCallback<Via>() {
+									public void onFailure(Throwable caught) {}
+									public void onSuccess(final Via via) {
+										greetingService.getPortales(via, new AsyncCallback<ArrayList<Portal>>(){
+											public void onFailure(Throwable caught) {}
+											public void onSuccess(ArrayList<Portal> result) {
+												map.removeOverlay(marker);
+												for (Portal portal: result){
+													map.addOverlay(createMarkerPortal(portal, false));
+												}
+												map.addOverlay(createMarkerVia(via, false));
+											}
+										});
+									}
+								});
+							}
+						catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+			});
+			vertical.add(link1);
+		}
+		info.open(marker, new InfoWindowContent(vertical));
+		markerInfo = marker;
 	}
 	
 	
-	private void infoWindowVia(Marker marker, Via via){
+	private void infoWindowVia(final Marker marker, final Via via, final boolean verTodosPortales){
 		InfoWindow info = map.getInfoWindow();
 		String nombreCalle = "<b>" +
 		via.getNombre() + 
 			"</b>";
-		info.open(marker, new InfoWindowContent(nombreCalle
+		HTML text = new HTML(nombreCalle
 				+ "<br>Personas empadronadas: "
 				+ via.getHabitantes()
 				+ "<br>Longitud de la vía: "
 				+ via.getLongitud() + " m"
 				+ "<br>Código de vía: "
-				+ via.getCodigo()));
+				+ via.getCodigo());
+		markerInfo = marker;
+		
+		
+		
+		
+
+		final VerticalPanel vertical = new VerticalPanel();
+		vertical.add(text);
+		
+		if(verTodosPortales){
+			HTML link1 = new HTML();
+			link1.addStyleName("ver");
+			link1.setHTML("<br>Ver portales");
+			link1.addClickHandler(new ClickHandler() {
+				public void onClick(ClickEvent event) {
+					try {
+						greetingService.getPortales(via, new AsyncCallback<ArrayList<Portal>>(){
+							public void onFailure(Throwable caught) {}
+							public void onSuccess(ArrayList<Portal> result) {
+								//vertical.remove(link1);
+								map.removeOverlay(marker);
+								for (Portal portal: result){
+									map.addOverlay(createMarkerPortal(portal, false));
+								}
+								map.addOverlay(createMarkerVia(via, false));
+							}
+						});
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			});
+			vertical.add(link1);
+		}
+		info.open(marker, new InfoWindowContent(vertical));
 	}
 	
 	
-	private Marker createMarkerPortal(final Portal portal) {
+	private Marker createMarkerPortal(final Portal portal, final boolean verTodasVias) {
 		MarkerOptions markerOpt = MarkerOptions.newInstance();
 		markerOpt.setClickable(true);
 		MarkerOptions opt = portalIcon1;
@@ -530,35 +703,54 @@ public class Principal implements EntryPoint{
 		if (portal.getHabitantes() > 50){
 			opt = portalIcon3;
 		}
+		
+		
+		
 		final Marker marker = new Marker(LatLng.newInstance(portal.getCoordenadas()
 				.getLatitude(), portal.getCoordenadas().getLongitude()), opt);
+
+		
+		
+		
+		
+		marker.addMarkerMouseOverHandler(new MarkerMouseOverHandler() {
+			public void onMouseOver(MarkerMouseOverEvent event) {
+				if (markerInfo != null && markerInfo == marker){
+					return;
+				}
+				infoWindowPortal(marker, portal, verTodasVias);
+			}
+		});
+		
 		final MarkerMouseOutHandler out = new MarkerMouseOutHandler(){
 			public void onMouseOut(MarkerMouseOutEvent event) {
 				InfoWindow info = map.getInfoWindow();
 				info.close();
 			}
 		};
-		
-		marker.addMarkerMouseOverHandler(new MarkerMouseOverHandler() {
-			public void onMouseOver(MarkerMouseOverEvent event) {
-				infoWindowPortal(marker, portal);
-			}
-		});
 		marker.addMarkerMouseOutHandler(out);
+		
+		
 		marker.addMarkerClickHandler(new MarkerClickHandler() {
 			public void onClick(MarkerClickEvent event) {
 				marker.removeMarkerMouseOutHandler(out);
 			}
 		});
+		
 		marker.addMarkerInfoWindowCloseHandler(new MarkerInfoWindowCloseHandler() {
 			public void onInfoWindowClose(MarkerInfoWindowCloseEvent event) {
+				marker.removeMarkerMouseOutHandler(out);
 				marker.addMarkerMouseOutHandler(out);
+				if (markerInfo == marker){
+					markerInfo = null;
+				}
+
 			}
 		});
 		return marker;
 	}
 	
-	private Marker createMarkerVia(final Via via) {
+	private Marker createMarkerVia(final Via via, final boolean verTodosPortales) {
 		
 		MarkerOptions opt = viaIcon1;
 		if (via.getHabitantes() > 100){
@@ -570,35 +762,47 @@ public class Principal implements EntryPoint{
 		
 		final Marker marker = new Marker(LatLng.newInstance(via.getCoordenadas()
 				.getLatitude(), via.getCoordenadas().getLongitude()), opt);
+		marker.setDraggingEnabled(true);
+
+		marker.addMarkerMouseOverHandler(new MarkerMouseOverHandler() {
+			public void onMouseOver(MarkerMouseOverEvent event) {
+				if (markerInfo != null && markerInfo == marker){
+					return;
+				}
+				infoWindowVia(marker, via, verTodosPortales);
+			}
+		});
+		
 		final MarkerMouseOutHandler out = new MarkerMouseOutHandler(){
 			public void onMouseOut(MarkerMouseOutEvent event) {
 				InfoWindow info = map.getInfoWindow();
 				info.close();
 			}
 		};
-		
-		marker.addMarkerMouseOverHandler(new MarkerMouseOverHandler(){
-			public void onMouseOver(MarkerMouseOverEvent event) {
-				infoWindowVia(marker, via);
-			}
-			
-		});
 		marker.addMarkerMouseOutHandler(out);
+		
+		
 		marker.addMarkerClickHandler(new MarkerClickHandler() {
 			public void onClick(MarkerClickEvent event) {
 				marker.removeMarkerMouseOutHandler(out);
 			}
 		});
+		
 		marker.addMarkerInfoWindowCloseHandler(new MarkerInfoWindowCloseHandler() {
 			public void onInfoWindowClose(MarkerInfoWindowCloseEvent event) {
+				marker.removeMarkerMouseOutHandler(out);
 				marker.addMarkerMouseOutHandler(out);
+				if (markerInfo == marker){
+					markerInfo = null;
+				}
+
 			}
 		});
 		return marker;
 	}
 	
 	
-	private void createPolylinePortal() {
+	private void crearPolilinea(final int opcion) {
 		String color = "#FF0000";
 		double opacity = 1.0;
 		int weight = 1;
@@ -614,62 +818,25 @@ public class Principal implements EntryPoint{
 		poly.addPolylineEndLineHandler(new PolylineEndLineHandler() {
 
 			public void onEnd(PolylineEndLineEvent event) {
-				nuevaZonaPortal(event.getSender());
-				enableButtons();
-			}
-		});
-	}
-
-	
-	private void createPolylineZona() {
-		String color = "#FF0000";
-		double opacity = 1.0;
-		int weight = 1;
-
-		PolyStyleOptions style = PolyStyleOptions.newInstance(color, weight,
-				opacity);
-
-		final Polyline poly = new Polyline(new LatLng[0]);
-		map.addOverlay(poly);
-		poly.setDrawingEnabled();
-		poly.setStrokeStyle(style);
-
-		poly.addPolylineEndLineHandler(new PolylineEndLineHandler() {
-
-			public void onEnd(PolylineEndLineEvent event) {
-				nuevaZona(event.getSender());
+				if (opcion == 0){
+					nuevaZonaVacia(event.getSender());
+				}
+				else if(opcion == 1){
+					nuevaZonaPortales(event.getSender());
+				}
+				else if(opcion == 2){
+					nuevaZonaVias(event.getSender());
+				}
 				enableButtons();
 			}
 		});
 	}
 	
 	
-	private void createPolylineVia() {
-		String color = "#FF0000";
-		double opacity = 1.0;
-		int weight = 1;
-
-		PolyStyleOptions style = PolyStyleOptions.newInstance(color, weight,
-				opacity);
-
-		final Polyline poly = new Polyline(new LatLng[0]);
-		map.addOverlay(poly);
-		poly.setDrawingEnabled();
-		poly.setStrokeStyle(style);
-
-		poly.addPolylineEndLineHandler(new PolylineEndLineHandler() {
-
-			public void onEnd(PolylineEndLineEvent event) {
-				nuevaZonaVias(event.getSender());
-				enableButtons();
-			}
-		});
-	}
-	
-	
-	private void nuevaZona(final Polyline pline) {
+	private void nuevaZonaVacia(final Polyline pline) {
 		try {
-			greetingService.getZona(new MyPolygon(pline, map),
+			final MyPolygon myPoly = new MyPolygon(pline, map);
+			greetingService.getZona(myPoly,
 					new AsyncCallback<Zona>() {
 						public void onFailure(Throwable caught) {
 							System.out.println("Error.");
@@ -678,6 +845,8 @@ public class Principal implements EntryPoint{
 							final Polygon poly = MyPolygon.getPolygon(pline);
 							ZonaClient zona = new ZonaClient(result);
 							zona.setPoly(poly);
+							zona.setMyPoly(myPoly);
+							zona.setVer(true);
 							nuevaZona(zona);
 						}
 					});
@@ -718,22 +887,63 @@ public class Principal implements EntryPoint{
 	
 	
 	
-	private void setInfo(ZonaClient zona){
+	private void setInfo(final ZonaClient zona){
 		info = map.getInfoWindow();
 		double sizeArea = zona.getPoly().getArea();
 		int densidad = (int) (zona.getHabitantes() / (sizeArea / 1000000));
-		info.open(zona.getPoly().getBounds().getCenter(),
-				new InfoWindowContent("<b>Área de la zona:</b> "
+	
+		HTML text = new HTML("<b>Área de la zona:</b> "
 						+ (int)sizeArea + " m<sup>2</sup>"
 						+ "<br><b>Personas empadronadas:</b> " + zona.getHabitantes()
 						+ "<br><b>Hojas padronales:</b> " + zona.getHojas()
-						+ "<br><b>Densidad poblacional:</b> " + densidad + " hab/km<sup>2</sup>")); 
+						+ "<br><b>Densidad poblacional:</b> " + densidad + " hab/km<sup>2</sup>");
+	
+		final VerticalPanel vertical = new VerticalPanel();
+		vertical.add(text);
+		
+		if(zona.isVer()){
+			HTML link1 = new HTML();
+			link1.setHTML("<br>Ver vías");
+			link1.addStyleName("ver");
+			link1.addClickHandler(new ClickHandler() {
+				public void onClick(ClickEvent event) {
+					try {
+						zona.setVer(false);
+						map.getInfoWindow().close();
+						zonaVias(zona);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			});
+			vertical.add(link1);
+			
+			HTML link2 = new HTML();
+			link2.addStyleName("ver");
+			link2.setHTML("Ver portales");
+			link2.addClickHandler(new ClickHandler() {
+				public void onClick(ClickEvent event) {
+					try {
+						zona.setVer(false);
+						map.getInfoWindow().close();
+						zonaPortales(zona);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			});
+			vertical.add(link2);
+		}
+		info.open(zona.getPoly().getBounds().getCenter(), new InfoWindowContent(vertical));	
+	
+	
 	}
 	
 	
 	private void nuevaZonaVias(final Polyline pline) {
 		try {
-			greetingService.getVias(new MyPolygon(pline, map),
+			final MyPolygon myPoly = new MyPolygon(pline, map);
+			greetingService.getVias(myPoly,
 					new AsyncCallback<Zona>() {
 						public void onFailure(Throwable caught) {
 							System.out.println("Error.");
@@ -742,12 +952,13 @@ public class Principal implements EntryPoint{
 						public void onSuccess(Zona result) {
 							ArrayList<Via> vias = result.getVias();
 							for (int i = 0; i < vias.size(); i++) {
-								map.addOverlay(createMarkerVia(vias.get(i)));
+								map.addOverlay(createMarkerVia(vias.get(i), true));
 							}
 
-							final Polygon poly = MyPolygon.getPolygon(pline);
 							ZonaClient zona = new ZonaClient();
-							zona.setPoly(poly);
+							zona.setPoly(MyPolygon.getPolygon(pline));
+							zona.setMyPoly(myPoly);
+							zona.setVer(false);
 							zona.setHabitantes(result.getHabitantes());
 							zona.setHojas(result.getHojas());
 							nuevaZona(zona);
@@ -758,10 +969,31 @@ public class Principal implements EntryPoint{
 		}
 	}
 	
-
-	private void nuevaZonaPortal(final Polyline pline) {
+	
+	private void zonaVias(ZonaClient zona) {
 		try {
-			greetingService.getPortales(new MyPolygon(pline, map),
+			greetingService.getVias(zona.getMyPoly(),
+					new AsyncCallback<Zona>() {
+						public void onFailure(Throwable caught) {
+							System.out.println("Error.");
+						}
+						public void onSuccess(Zona result) {
+							ArrayList<Via> vias = result.getVias();
+							for (int i = 0; i < vias.size(); i++) {
+								map.addOverlay(createMarkerVia(vias.get(i), true));
+							}
+						}
+					});
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+
+	private void nuevaZonaPortales(final Polyline pline) {
+		try {
+			final MyPolygon myPoly = new MyPolygon(pline, map);
+			greetingService.getPortales(myPoly,
 					new AsyncCallback<ArrayList<Portal>>() {
 						public void onFailure(Throwable caught) {
 							System.out.println("Error.");
@@ -772,13 +1004,15 @@ public class Principal implements EntryPoint{
 							int hojas = 0;
 							
 							for (int i = 0; i < result.size(); i++) {
-								map.addOverlay(createMarkerPortal(result.get(i)));
+								map.addOverlay(createMarkerPortal(result.get(i), false));
 								habitantes += result.get(i).getHabitantes();
 								hojas += result.get(i).getHojas();
 							}	
 							final Polygon poly = MyPolygon.getPolygon(pline);
 							ZonaClient zona = new ZonaClient();
 							zona.setPoly(poly);
+							zona.setMyPoly(myPoly);
+							zona.setVer(false);
 							zona.setHabitantes(habitantes);
 							zona.setHojas(hojas);
 							nuevaZona(zona);
@@ -790,7 +1024,24 @@ public class Principal implements EntryPoint{
 		}
 	}
 	
-	
+	private void zonaPortales(ZonaClient zona) {
+		try {
+			greetingService.getPortales(zona.getMyPoly(),
+					new AsyncCallback<ArrayList<Portal>>() {
+						public void onFailure(Throwable caught) {
+							System.out.println("Error.");
+						}
+
+						public void onSuccess(ArrayList<Portal> result) {
+							for (int i = 0; i < result.size(); i++) {
+								map.addOverlay(createMarkerPortal(result.get(i), false));
+							}	
+						}
+					});
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	
 	private void nuevoPortal(final LatLng point) {
 		try {
@@ -806,7 +1057,7 @@ public class Principal implements EntryPoint{
 								info.open(point, new InfoWindowContent("no hay ningún edificio poblado en las cercanías"));
 							}
 							else{
-								map.addOverlay(createMarkerPortal(portal));
+								map.addOverlay(createMarkerPortal(portal, true));
 							}
 						}
 						});
@@ -831,9 +1082,9 @@ public class Principal implements EntryPoint{
 									public void onFailure(Throwable caught) {}
 									public void onSuccess(ArrayList<Portal> result) {
 										for (Portal portal: result){
-											map.addOverlay(createMarkerPortal(portal));
+											map.addOverlay(createMarkerPortal(portal, false));
 										}
-										map.addOverlay(createMarkerVia(via));
+										map.addOverlay(createMarkerVia(via, false));
 									}
 								});
 							}
