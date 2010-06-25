@@ -13,12 +13,12 @@
   
   <servlet-mapping>
     <servlet-name>greetServlet</servlet-name>
-    <url-pattern>/rdftest/greet</url-pattern>
+    <url-pattern>/risp/greet</url-pattern>
   </servlet-mapping>
   
   <!-- Default page to serve -->
   <welcome-file-list>
-    <welcome-file>RdfTest.html</welcome-file>
+    <welcome-file>Risp.html</welcome-file>
   </welcome-file-list>
 
 </web-app>
