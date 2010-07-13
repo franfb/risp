@@ -42,10 +42,6 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 	private Property viaLabel;
 	private String vocab = "http://localhost:2020/vocab/resource/";
 	private String rdfs = "http://www.w3.org/2000/01/rdf-schema#";
-
-	private String rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-	private Property type;
-
 	private String sparql = "http://localhost:2020/sparql";
 	private Model model = getModel();
 
@@ -66,8 +62,6 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		longitudMetros = model.createProperty(vocab, "longitud");
 		nombreVia = model.createProperty(vocab, "nombre_completo_via");
 		viaLabel = model.createProperty(rdfs, "label");
-
-		type = model.createProperty(rdf, "type");
 		return model;
 	}
 
@@ -429,7 +423,8 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 			+" PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
 			+ "DESCRIBE ?por WHERE { "
 			+ "?por rdf:type vocab:portal . "
-		    + "?por vocab:nombre_completo_via \"" + via.getNombre() + "\" . }";
+		    //+ "?por vocab:nombre_completo_via \"" + via.getNombre() + "\" . }";
+		    + "?por vocab:codigo_de_via \"" + via.getCodigo() + "\" . }";
 		QueryExecution q = QueryExecutionFactory.sparqlService(sparql, query);
 		Model m = q.execDescribe();
 		model.add(m);
@@ -448,17 +443,21 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 	
 
 	public ArrayList<Portal> getPortales(String[] nombre, int numero) {
+		String filter = "";
+		for (int i = 0; i < nombre.length; i++){
+			filter += " FILTER( fn:contains (fn:lower-case(?nombre), fn:lower-case(\"" + nombre[i] + "\"))) ";
+		}
 		String query = "PREFIX vocab: <http://localhost:2020/vocab/resource/> "
 			+ "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
 			+ "PREFIX fn: <http://www.w3.org/2005/xpath-functions#> "
 			+ "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> "
 			+ "DESCRIBE ?por WHERE { "
 			+ "?por vocab:numero_del_portal \"" + numero + "\"^^xsd:int . "
-		    + "?por vocab:nombre_completo_via ?nombre . " +
-		    " FILTER( fn:contains (fn:lower-case(?nombre), fn:lower-case(\"" + nombre + "\"))) }";
+		    + "?por vocab:nombre_completo_via ?nombre . "
+		    + filter
+		    + " }";
 		QueryExecution q = QueryExecutionFactory.sparqlService(sparql, query);
 		Model m = q.execDescribe();
-		model.add(m);
 		ResIterator res = m.listSubjectsWithProperty(hojas_padronales);
 		if (!res.hasNext()){
 			return null;
@@ -481,14 +480,14 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 			+ "PREFIX fn: <http://www.w3.org/2005/xpath-functions#> "
 			+ "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> "
 			+ "DESCRIBE ?via WHERE { "
-			+ "?via rdf:type vocab:via"
+			+ "?via rdf:type vocab:via . "
 		    + "?via vocab:nombre_completo_via ?nombre . "
 		    + filter
 		    + " }";
 		QueryExecution q = QueryExecutionFactory.sparqlService(sparql, query);
 		Model m = q.execDescribe();
 		model.add(m);
-		ResIterator res = m.listSubjectsWithProperty(type, "vocab:via");
+		ResIterator res = m.listSubjectsWithProperty(nombreVia);
 		if (!res.hasNext()){
 			return null;
 		}
@@ -501,13 +500,15 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 				+ "?por rdf:type vocab:portal . "
 				+ "?por vocab:coordenada_latitud ?lat . "
 				+ "?por vocab:coordenada_longitud ?lng . "
-			    + "?por vocab:nombre_completo_via \"" + via.getRequiredProperty(nombreVia).getLiteral().getString() + "\" . "
-			    + "LIMIT 1 }";
+			    + "?por vocab:codigo_de_via \"" + via.getProperty(codigoVia).getString() + "\" . "
+			    + "} LIMIT 1";
 			QueryExecution q2 = QueryExecutionFactory.sparqlService(sparql, query2);
 			ResultSet res2 = q2.execSelect();
-			QuerySolution sol2 = res2.next();
-			MyLatLng coord = new MyLatLng(sol2.getLiteral("lat").getDouble(), sol2.getLiteral("lng").getDouble());
-			list.add(newVia(via, coord));
+			if (res2.hasNext()){
+				QuerySolution sol2 = res2.next();
+				MyLatLng coord = new MyLatLng(sol2.getLiteral("lat").getDouble(), sol2.getLiteral("lng").getDouble());
+				list.add(newVia(via, coord));
+			}
 		}
 		return list;
 	}

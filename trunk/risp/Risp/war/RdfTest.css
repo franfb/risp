@@ -14,6 +14,16 @@ h1 {
 	background-image: url("http://mispicaderos.net/fondo.png");
 }
 
+.texto17 {
+	font-family:"Century Gothic",Verdana,Tahoma;
+	font-size:17px;
+}
+
+.texto15 {
+	font-family:"Century Gothic",Verdana,Tahoma;
+	font-size:15px;
+}
+
 .texto13 {
 	font-family:"Century Gothic",Verdana,Tahoma;
 	font-size:13px;
@@ -38,6 +48,12 @@ h1 {
 	cursor: pointer;
 	text-decoration: underline;
 	color: #0000CC;
+	font-family:"Century Gothic",Verdana,Tahoma;
+	font-size:13px;
+}
+
+.cursor{
+	cursor: crosshair;
 }
 
 .sendButton {

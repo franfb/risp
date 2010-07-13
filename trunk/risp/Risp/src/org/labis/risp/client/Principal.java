@@ -9,8 +9,10 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.i18n.client.LocaleInfo;
 
+import com.google.gwt.maps.client.DraggableObject;
 import com.google.gwt.maps.client.InfoWindow;
 import com.google.gwt.maps.client.InfoWindowContent;
+import com.google.gwt.maps.client.MapUIOptions;
 import com.google.gwt.maps.client.MapWidget;
 import com.google.gwt.maps.client.event.MapClickHandler;
 import com.google.gwt.maps.client.event.MarkerClickHandler;
@@ -18,7 +20,11 @@ import com.google.gwt.maps.client.event.MarkerInfoWindowCloseHandler;
 import com.google.gwt.maps.client.event.MarkerMouseOutHandler;
 import com.google.gwt.maps.client.event.MarkerMouseOverHandler;
 import com.google.gwt.maps.client.event.PolygonClickHandler;
+import com.google.gwt.maps.client.event.PolylineClickHandler;
 import com.google.gwt.maps.client.event.PolylineEndLineHandler;
+import com.google.gwt.maps.client.event.PolylineLineUpdatedHandler;
+import com.google.gwt.maps.client.event.PolylineClickHandler.PolylineClickEvent;
+import com.google.gwt.maps.client.event.PolylineLineUpdatedHandler.PolylineLineUpdatedEvent;
 import com.google.gwt.maps.client.geom.LatLng;
 import com.google.gwt.maps.client.geom.Point;
 import com.google.gwt.maps.client.overlay.Icon;
@@ -46,11 +52,16 @@ public class Principal implements EntryPoint{
 	HTML portalLink;
 	HTML viaLink;
 	HTML zonaLink;
+	HTML limpiarLink;
 	
 	DialogBox dialogoPortal;
 	DialogBox dialogoVia;
 	DialogBox dialogoZona;
 	
+	DialogBox noResultados;
+	DialogBox noVia;
+	DialogBox noPortal;
+
 	private InfoWindow info;
 
 	private final GreetingServiceAsync greetingService = GWT
@@ -73,6 +84,9 @@ public class Principal implements EntryPoint{
 		crearDialogoPortal();
 		crearDialogoVia();
 		crearDialogoZona();
+		noResultados = crearDialogoGenerico("La búsqueda no ha producido ningún resultado.");
+		noVia = crearDialogoGenerico("No hay ninguna vía cerca.");
+		noPortal = crearDialogoGenerico("No hay ningún portal cerca.");
 		
 		Icon icon = Icon.newInstance();
 		icon.setIconAnchor(Point.newInstance(16, 16));
@@ -140,6 +154,12 @@ public class Principal implements EntryPoint{
 				dialogoZona.center();
 			}
 		});
+		
+		limpiarLink.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				map.clearOverlays();
+			}
+		});
 	}
 
 	
@@ -163,6 +183,7 @@ public class Principal implements EntryPoint{
 		textNumero.setStyleName("texto13");
 
 		Button button = new Button("Buscar");
+		button.setStyleName("texto13");
 		
 		horizontal1.add(textVia);
 		horizontal1.add(via);
@@ -177,42 +198,49 @@ public class Principal implements EntryPoint{
 		button.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
 				String texto = via.getText();
-				String[] resultado = texto.split(",");
-				if (resultado.length > 2 || resultado[0].isEmpty()){
+				String[] resultado = texto.split(" ");
+				for (int i = 0; i < resultado.length; i++){
+					resultado[i] = resultado[i].trim();
+				}
+				if (resultado.length < 2 || resultado[0].isEmpty()){
 					return;
 				}
-				System.out.println("CALLE: " + resultado[0]);
-				System.out.println("NUMERO: " + resultado[1]);
-				String nombre = resultado[0];
-				int numero = Integer.parseInt(resultado[1].trim());
-				
-//				try {
-//					greetingService.getPortales(nombre, numero,
-//							new AsyncCallback<ArrayList<Portal>>() {
-//								public void onFailure(Throwable caught) {
-//									System.out.println("Error.");
-//								}
-//
-//								public void onSuccess(final ArrayList<Portal> portales) {
-//									if (portales == null){
-//										System.out.println("LAS DE ABAJO LO OYEN TODO");
-//										InfoWindow info = map.getInfoWindow();
-//										info.open(map.getCenter(), new InfoWindowContent("no hay ningún portal con esa dirección"));
-//									}
-//									else{
-//										for (Portal p: portales){
-//											map.addOverlay(createMarkerPortal(p, true));
-//										}
-//									}
-//								}
-//								});
-//							}
-//					catch (Exception e) {
-//					e.printStackTrace();
-//				}
-				
+				int n = 0;
+				try{
+					n = Integer.parseInt(numero.getText().trim());
+				}
+				catch (NumberFormatException e){
+					return;
+				}
+				dialogoPortal.hide();
+				try {
+					greetingService.getPortales(resultado, n,
+							new AsyncCallback<ArrayList<Portal>>() {
+								public void onFailure(Throwable caught) {
+									System.out.println("Error.");
+								}
 
-				
+								public void onSuccess(final ArrayList<Portal> portales) {
+									if (portales == null){
+										noResultados.show();
+										noResultados.center();
+									}
+									else{
+										Marker m = null;
+										Portal por = null;
+										for (Portal p: portales){
+											m = createMarkerPortal(p, true);
+											por = p;
+											map.addOverlay(m);
+										}
+										infoWindowPortal(m, por, true);
+									}
+								}
+								});
+							}
+					catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		});
 		return vertical;
@@ -234,6 +262,7 @@ public class Principal implements EntryPoint{
 		textVia.setStyleName("texto13");
 
 		Button button = new Button("Buscar");
+		button.setStyleName("texto13");
 		
 		horizontal1.add(textVia);
 		horizontal1.add(via);
@@ -245,15 +274,15 @@ public class Principal implements EntryPoint{
 		
 		button.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
-				dialogoVia.hide();
 				String texto = via.getText();
 				String[] resultado = texto.split(" ");
 				for (int i = 0; i < resultado.length; i++){
 					resultado[i] = resultado[i].trim();
 				}
-				if (resultado[0].isEmpty()){
+				if (resultado.length < 2 || resultado[0].isEmpty()){
 					return;
 				}
+				dialogoVia.hide();
 				try {
 					greetingService.getVias(resultado,
 							new AsyncCallback<ArrayList<Via>>() {
@@ -263,14 +292,18 @@ public class Principal implements EntryPoint{
 
 								public void onSuccess(final ArrayList<Via> vias) {
 									if (vias == null){
-										System.out.println("LAS DE ABAJO LO OYEN TODO");
-										InfoWindow info = map.getInfoWindow();
-										info.open(map.getCenter(), new InfoWindowContent("no hay ningún portal con esa dirección"));
+										noResultados.show();
+										noResultados.center();
 									}
 									else{
+										Marker m = null;
+										Via via = null;
 										for (Via v: vias){
-											map.addOverlay(createMarkerVia(v, true));
+											m = createMarkerVia(v, true);
+											via = v;
+											map.addOverlay(m);
 										}
+										infoWindowVia(m, via, true);
 									}
 								}
 								});
@@ -278,9 +311,6 @@ public class Principal implements EntryPoint{
 					catch (Exception e) {
 					e.printStackTrace();
 				}
-				
-
-				
 			}
 		});
 		return vertical;
@@ -316,6 +346,8 @@ public class Principal implements EntryPoint{
                 + "Mostrar información padronal de una vía" + "</a>");
         zonaLink = new HTML("<a href=\"javascript:undefined;\">"
                 + "Mostrar información padronal de una zona" + "</a>");
+        limpiarLink = new HTML("<a href=\"javascript:undefined;\">"
+                + "Limpiar mapa" + "</a>");
 		HorizontalPanel gerencia = new HorizontalPanel();
 		gerencia.setSpacing(5);
 		HTML proyecto = new HTML("<a href=\"http://code.google.com/p/risp/\" target=\"_blank\">Página web del proyecto RISP </a>");
@@ -323,12 +355,13 @@ public class Principal implements EntryPoint{
         gerencia.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/la_laguna.gif"));
         
         titulo1.setStylePrimaryName("texto13");
-        bienvenida.setStyleName("texto13");
+        bienvenida.setStyleName("texto15");
         texto1.setStyleName("texto13");
 		proyecto.setStyleName("texto13");
         viaLink.setStyleName("texto13");
         portalLink.setStyleName("texto13");
         zonaLink.setStyleName("texto13");
+        limpiarLink.setStyleName("texto13");
         
         Image ull = new Image("http://www.ull.es/Public/images/wull/logo.gif");
         
@@ -341,6 +374,8 @@ public class Principal implements EntryPoint{
         columna2.add(viaLink);
         columna2.add(new HTML("<br>"));
         columna2.add(zonaLink);
+        columna2.add(new HTML("<br>"));
+        columna2.add(limpiarLink);
         columna2.add(new HTML("<br>"));
         columna2.add(new HTML("<br>"));
         columna2.add(new HTML("<br>"));
@@ -367,29 +402,50 @@ public class Principal implements EntryPoint{
         RootPanel.get().add(columna, 50, 0);
 	}
 	
+	private DialogBox crearDialogoGenerico(String mensaje) {
+		Button ok = new Button("ok");
+		final DialogBox dialogo = new DialogBox();
+		ok.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				dialogo.hide();
+			}
+		});
+		dialogo.setGlassEnabled(true);
+		dialogo.setAnimationEnabled(true);
+	    HTML texto = new HTML(mensaje);
+	    texto.setStyleName("texto15");
+	    ok.setStyleName("texto13");
+		VerticalPanel vertical = new VerticalPanel();
+		vertical.setSpacing(10);
+		vertical.add(texto);
+		vertical.add(ok);
+		vertical.setCellHorizontalAlignment(ok, HasHorizontalAlignment.ALIGN_CENTER);
+		dialogo.setWidget(vertical);
+		return dialogo;
+	}
 	
 	private void crearDialogoPortal() {
 		Button portal = new Button("Buscar por localización");
 		Button zona = new Button("Buscar por zona");
 		Button volver = new Button("Volver");
-		
+		portal.setStyleName("texto13");
+		zona.setStyleName("texto13");
+		volver.setStyleName("texto13");
 		volver.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
 				dialogoPortal.hide();
 			}
 		});
-		
 		zona.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
-				//disableButtons();
+				dialogoPortal.hide();
 				crearPolilinea(1);
-				//enableButtons();
 			}
 		});
-		
 		portal.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
-				//disableButtons();
+				dialogoPortal.hide();
+				map.getDragObject().setDraggableCursor("crosshair");
 				map.addMapClickHandler(new MapClickHandler(){
 					public void onClick(MapClickEvent event) {
 						map.removeMapClickHandler(this);
@@ -399,19 +455,14 @@ public class Principal implements EntryPoint{
 						else{
 							nuevoPortal(event.getOverlayLatLng());
 						}
-						//enableButtons();
+						map.getDragObject().setDraggableCursor(DraggableObject.getDraggableCursorDefault());
 					}
 				});
 			}
 		});
-		
-
-		
 		dialogoPortal = new DialogBox();
-	    //dialogoPortal.setText("Información de empadronamiento asociada a los portales del municipio.");
 	    dialogoPortal.setGlassEnabled(true);
 		dialogoPortal.setAnimationEnabled(true);
-		
 	    HTML text1 = new HTML("Se puede obtener información padronal de un portal por su localización geográfica. " +
 	    	"Para ello, pulse el siguiente botón y haga click en el mapa.");
 	    
@@ -427,8 +478,6 @@ public class Principal implements EntryPoint{
 	    VerticalPanel vertical = new VerticalPanel();
 	    vertical.setSpacing(10);
 	    dialogoPortal.setWidget(vertical);
-
-	    //vertical.add(new HTML("<br>"));
 	    vertical.add(text1);
 	    vertical.add(portal);
 	    vertical.add(new HTML("<br>"));
@@ -438,7 +487,6 @@ public class Principal implements EntryPoint{
 	    vertical.add(text3);
 	    vertical.add(panelBusquedaPortal());
 	    vertical.add(volver);
-	    
 	    vertical.setCellHorizontalAlignment(volver, HasHorizontalAlignment.ALIGN_RIGHT);
 	}
 
@@ -446,6 +494,9 @@ public class Principal implements EntryPoint{
 		Button via = new Button("Buscar por localización");
 		Button zona = new Button("Buscar por zona");
 		Button volver = new Button("Volver");
+		via.setStyleName("texto13");
+		zona.setStyleName("texto13");
+		volver.setStyleName("texto13");
 		
 		volver.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
@@ -455,12 +506,15 @@ public class Principal implements EntryPoint{
 		
 		zona.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
+				dialogoVia.hide();
 				crearPolilinea(2);
 			}
 		});
 		
 		via.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
+				dialogoVia.hide();
+				map.getDragObject().setDraggableCursor("crosshair");
 				map.addMapClickHandler(new MapClickHandler(){
 					public void onClick(MapClickEvent event) {
 						map.removeMapClickHandler(this);
@@ -470,18 +524,14 @@ public class Principal implements EntryPoint{
 						else{
 							nuevaVia(event.getOverlayLatLng());
 						}
+						map.getDragObject().setDraggableCursor(DraggableObject.getDraggableCursorDefault());
 					}
 				});
 			}
 		});
-		
-
-		
 		dialogoVia = new DialogBox();
-	    //dialogoVia.setText("Información de empadronamiento asociada a las vías del municipio.");
 	    dialogoVia.setGlassEnabled(true);
 		dialogoVia.setAnimationEnabled(true);
-		
 	    HTML text1 = new HTML("Se puede obtener información padronal de una vía por su localización geográfica. " +
 	    	"Para ello, pulse el siguiente botón y haga click en el mapa.");
 	    
@@ -497,8 +547,6 @@ public class Principal implements EntryPoint{
 	    VerticalPanel vertical = new VerticalPanel();
 	    vertical.setSpacing(10);
 	    dialogoVia.setWidget(vertical);
-
-	    //vertical.add(new HTML("<br>"));
 	    vertical.add(text1);
 	    vertical.add(via);
 	    vertical.add(new HTML("<br>"));
@@ -508,48 +556,37 @@ public class Principal implements EntryPoint{
 	    vertical.add(text3);
 	    vertical.add(panelBusquedaVia());
 	    vertical.add(volver);
-	    
 	    vertical.setCellHorizontalAlignment(volver, HasHorizontalAlignment.ALIGN_RIGHT);
 	}
 	
 	private void crearDialogoZona() {
 		Button zona = new Button("Buscar por zona");
 		Button volver = new Button("Volver");
-		
+		zona.setStyleName("texto13");
+		volver.setStyleName("texto13");
 		volver.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
 				dialogoZona.hide();
 			}
 		});
-		
 		zona.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
+				dialogoZona.hide();
 				crearPolilinea(0);
 			}
 		});
-		
-
 		dialogoZona = new DialogBox();
-		
-		//dialogoZona.setText("Información de empadronamiento asociada a una zona del municipio.");
 		dialogoZona.setGlassEnabled(true);
 		dialogoZona.setAnimationEnabled(true);
-
 	    HTML text1 = new HTML("Se puede obtener información padronal de una zona específica del municipio. " +
 	    	"Para ello, pulse el siguiente botón y construya en el mapa la zona de interés, mediante un polígono.");
-	    
-	    
 	    text1.setStyleName("texto13");
-
 	    VerticalPanel vertical = new VerticalPanel();
 	    vertical.setSpacing(10);
 	    dialogoZona.setWidget(vertical);
-
-	    //vertical.add(new HTML("<br>"));
 	    vertical.add(text1);
 	    vertical.add(zona);
 	    vertical.add(volver);
-	    
 	    vertical.setCellHorizontalAlignment(volver, HasHorizontalAlignment.ALIGN_RIGHT);
 	}
 	
@@ -571,6 +608,7 @@ public class Principal implements EntryPoint{
 				+ "<br>Personas empadronadas: "
 				+ portal.getHabitantes() + "<br>Hojas padronales: "
 				+ portal.getHojas());
+		text.setStyleName("texto13");
 		vertical.add(text);
 
 		
@@ -592,7 +630,9 @@ public class Principal implements EntryPoint{
 												for (Portal portal: result){
 													map.addOverlay(createMarkerPortal(portal, false));
 												}
-												map.addOverlay(createMarkerVia(via, false));
+												Marker m = createMarkerVia(via, false);
+												map.addOverlay(m);
+												infoWindowVia(m, via, false);
 											}
 										});
 									}
@@ -622,11 +662,8 @@ public class Principal implements EntryPoint{
 				+ via.getLongitud() + " m"
 				+ "<br>Código de vía: "
 				+ via.getCodigo());
+		text.setStyleName("texto13");
 		markerInfo = marker;
-		
-		
-		
-		
 
 		final VerticalPanel vertical = new VerticalPanel();
 		vertical.add(text);
@@ -646,7 +683,9 @@ public class Principal implements EntryPoint{
 								for (Portal portal: result){
 									map.addOverlay(createMarkerPortal(portal, false));
 								}
-								map.addOverlay(createMarkerVia(via, false));
+								Marker m = createMarkerVia(via, false);
+								map.addOverlay(m);
+								infoWindowVia(m, via, false);
 							}
 						});
 					}
@@ -694,6 +733,7 @@ public class Principal implements EntryPoint{
 			public void onMouseOut(MarkerMouseOutEvent event) {
 				InfoWindow info = map.getInfoWindow();
 				info.close();
+				markerInfo = null;
 			}
 		};
 		marker.addMarkerMouseOutHandler(out);
@@ -745,6 +785,7 @@ public class Principal implements EntryPoint{
 			public void onMouseOut(MarkerMouseOutEvent event) {
 				InfoWindow info = map.getInfoWindow();
 				info.close();
+				markerInfo = null;
 			}
 		};
 		marker.addMarkerMouseOutHandler(out);
@@ -774,11 +815,10 @@ public class Principal implements EntryPoint{
 		String color = "#FF0000";
 		double opacity = 1.0;
 		int weight = 1;
-
 		PolyStyleOptions style = PolyStyleOptions.newInstance(color, weight,
 				opacity);
 
-		final Polyline poly = new Polyline(new LatLng[0]);
+		Polyline poly = new Polyline(new LatLng[0]);
 		map.addOverlay(poly);
 		poly.setDrawingEnabled();
 		poly.setStrokeStyle(style);
@@ -867,6 +907,7 @@ public class Principal implements EntryPoint{
 						+ "<br><b>Densidad poblacional:</b> " + densidad + " hab/km<sup>2</sup>");
 	
 		final VerticalPanel vertical = new VerticalPanel();
+		text.setStyleName("texto13");
 		vertical.add(text);
 		
 		if(zona.isVer()){
@@ -1021,11 +1062,13 @@ public class Principal implements EntryPoint{
 
 						public void onSuccess(final Portal portal) {
 							if (portal == null){
-								InfoWindow info = map.getInfoWindow();
-								info.open(point, new InfoWindowContent("no hay ningún edificio poblado en las cercanías"));
+								noPortal.show();
+								noPortal.center();
 							}
 							else{
-								map.addOverlay(createMarkerPortal(portal, true));
+								Marker m = createMarkerPortal(portal, true);
+								map.addOverlay(m);
+								infoWindowPortal(m, portal, true);
 							}
 						}
 						});
@@ -1042,8 +1085,8 @@ public class Principal implements EntryPoint{
 						public void onFailure(Throwable caught) {}
 						public void onSuccess(final Via via) {
 							if (via == null){
-								InfoWindow info = map.getInfoWindow();
-								info.open(point, new InfoWindowContent("no hay ninguna vía en las cercanías"));
+								noVia.show();
+								noVia.center();
 							}
 							else{
 								greetingService.getPortales(via, new AsyncCallback<ArrayList<Portal>>(){
@@ -1052,7 +1095,9 @@ public class Principal implements EntryPoint{
 										for (Portal portal: result){
 											map.addOverlay(createMarkerPortal(portal, false));
 										}
-										map.addOverlay(createMarkerVia(via, false));
+										Marker m = createMarkerVia(via, false);
+										map.addOverlay(m);
+										infoWindowVia(m, via, false);
 									}
 								});
 							}
@@ -1064,234 +1109,3 @@ public class Principal implements EntryPoint{
 		}
 	}
 }
-
-
-//private void buildUi(String texto) {
-//map = new MapWidget();
-//LatLng tenerife = LatLng.newInstance(28.5160,-16.3761);
-//map.setSize("100%", "100%");
-//map.setCenter(tenerife, 13);
-//map.setUIToDefault();
-//
-////AbsolutePanel panel = new AbsolutePanel();
-//
-//VerticalPanel columna = new VerticalPanel();
-////columna.setSize("370px", "100%");
-//columna.setWidth("370px");
-//columna.setStyleName("columna");
-//
-////panel.setSize("100%", "100%");
-//
-//
-////panel.add(map, 0, 0);
-//
-////panel.add(columna, 50, 0);
-//
-//
-////panel.add(panelBusqueda(), 425, (int) (Window.getClientHeight() * 0.92));
-//
-////RootPanel.get().add(panel);
-//RootPanel.get().add(map, 0, 0);
-//RootPanel.get().add(columna, 50, 0);
-//
-//portalButton = new Button("simple");
-//viaButton = new Button("simple");
-//portalButtonZona = new Button("múltiple");
-//viaButtonZona = new Button("múltiple");
-//zonaButton = new Button("continuar");
-//
-//HTML titulo1 = new HTML("<h1>Información padronal<br>San Cristóbal de La Laguna</h1>");
-//
-//HTML bienvenida = new HTML("<br><b>Bienvenido/a la aplicacion de ejemplo del proyecto RISP!</b>");
-//
-//HTML texto1 = new HTML("<br>Esta aplicación consiste en " +
-//		"la reutilización de la información padronal de las bases de datos de la " +
-//		"Gerencia de Urbanismo de San Cristóbal de La Laguna, y que ha sido publicada gracias al trabajo " +
-//		"realizado por los mismos alumnos que han desarrollado este portal. Aquí, usted puede obtener diversa información relacionada con el registro " +
-//		"del padrón que se realiza en el municipio. A continuación se presenta la lista de cosas que se pueden " +
-//		"hacer:");
-//
-//
-//bienvenida.setStyleName(texto);
-//texto1.setStyleName(texto);
-//
-//
-//AbsolutePanel titulo = new AbsolutePanel();
-//titulo.setSize("293px", "20%");
-////titulo.setStyleName("uno");
-//
-//AbsolutePanel intro = new AbsolutePanel();
-//intro.setSize("293px", "30%");
-////intro.setStyleName("dos");
-//
-//AbsolutePanel funciones = new AbsolutePanel();
-//funciones.setSize("293px", "30%");
-////funciones.setStyleName("tres");
-//
-//AbsolutePanel logos = new AbsolutePanel();
-//logos.setSize("293px", "20%");
-////logos.setStyleName("cuatro");
-//
-//titulo.add(titulo1);
-////titulo.add(titulo2);
-//
-//
-////vpanel.add(titulo);
-//
-//intro.add(bienvenida);
-//intro.add(texto1);
-////vpanel.add(intro);
-//
-//
-//
-//
-//
-//
-//AbsolutePanel portalPanel = new AbsolutePanel();
-//HTML portalText = new HTML("Información de empadronamiento asociada a un edificio del municipio. " +
-//		"También se puede obtener la información de todos los edificios que se encuentren dentro de una zona que usted elija. " +
-//		"<br><br>Seleccione el tipo de búsqueda que desea e interactúe con el mapa:");
-//portalText.setStyleName(texto);
-//portalPanel.add(portalText);
-//HorizontalPanel portalBotones = new HorizontalPanel();
-//portalBotones.setSpacing(10);
-//portalBotones.add(portalButton);
-//portalBotones.add(portalButtonZona);
-//portalPanel.add(portalBotones);
-//
-//
-//portalDisclosure.addOpenHandler(new OpenHandler<DisclosurePanel>() {
-//	public void onOpen(OpenEvent<DisclosurePanel> event) {
-//		if (viaDisclosure.isOpen()){
-//			viaDisclosure.setOpen(false);
-//		}
-//		if (zonaDisclosure.isOpen()){
-//			zonaDisclosure.setOpen(false);
-//		}
-//	}
-//});
-//portalDisclosure.add(portalPanel);
-//portalDisclosure.setStyleName(texto);
-//funciones.add(portalDisclosure);
-//
-//
-//AbsolutePanel viaPanel = new AbsolutePanel();
-//HTML viaText = new HTML("Información de empadronamiento asociada a una vía del municipio." +
-//		" También puede obtener la información de todas las vías que se encuentren dentro de una zona que usted elija. " +
-//		"<br><br>Seleccione el tipo de búsqueda que desea e interactúe con el mapa:");
-//viaText.setStyleName(texto);
-//viaPanel.add(viaText);
-//HorizontalPanel viaBotones = new HorizontalPanel();
-//viaBotones.setSpacing(10);
-//viaBotones.add(viaButton);
-//viaBotones.add(viaButtonZona);
-//viaPanel.add(viaBotones);
-//
-//viaDisclosure.addOpenHandler(new OpenHandler<DisclosurePanel>() {
-//	public void onOpen(OpenEvent<DisclosurePanel> event) {
-//		if (portalDisclosure.isOpen()){
-//			portalDisclosure.setOpen(false);
-//		}
-//		if (zonaDisclosure.isOpen()){
-//			zonaDisclosure.setOpen(false);
-//		}
-//	}
-//});
-//viaDisclosure.add(viaPanel);
-//viaDisclosure.setStyleName(texto);
-//funciones.add(viaDisclosure);
-//
-//AbsolutePanel zonaPanel = new AbsolutePanel();
-//HTML zonaText = new HTML("Se muestra la información de empadronamiento asociada a una zona del municipio que usted elija. " +
-//		"<br><br>Pulse el botón de continuar e interactúe con el mapa para personalizar la zona de interés mediante una polilínea:");
-//zonaText.setStyleName(texto);
-//zonaPanel.add(zonaText);
-//HorizontalPanel zonaBotones = new HorizontalPanel();
-//zonaBotones.setSpacing(10);
-//zonaBotones.add(zonaButton);
-//zonaPanel.add(zonaBotones);
-//
-//
-//zonaDisclosure.addOpenHandler(new OpenHandler<DisclosurePanel>() {
-//	public void onOpen(OpenEvent<DisclosurePanel> event) {
-//		if (portalDisclosure.isOpen()){
-//			portalDisclosure.setOpen(false);
-//		}
-//		if (viaDisclosure.isOpen()){
-//			viaDisclosure.setOpen(false);
-//		}
-//	}
-//});
-//zonaDisclosure.add(zonaPanel);
-//zonaDisclosure.setStyleName(texto);
-//funciones.add(zonaDisclosure);
-//
-//HorizontalPanel gerencia = new HorizontalPanel();
-//
-//gerencia.setSpacing(5);
-//
-//HTML proyecto = new HTML("<a href=\"http://code.google.com/p/risp/\" target=\"_blank\">Página web del proyecto RISP </a>");
-//proyecto.setStyleName(texto);
-//
-//logos.add(proyecto);
-//logos.add(new Image("http://www.ull.es/Public/images/wull/logo.gif"));
-//gerencia.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/gerencia.gif"));
-//gerencia.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/la_laguna.gif"));
-//logos.add(gerencia);
-//
-////columna.add(titulo, 40, 0);
-////columna.add(intro, 40, titulo.getOffsetHeight());
-////columna.add(funciones, 40, titulo.getOffsetHeight() + intro.getOffsetHeight());
-////columna.add(logos, 40, titulo.getOffsetHeight() + intro.getOffsetHeight() + funciones.getOffsetHeight());
-//
-//columna.add(titulo);
-//columna.add(intro);
-//columna.add(funciones);
-//columna.add(logos);
-//
-//Icon icon = Icon.newInstance();
-//icon.setIconAnchor(Point.newInstance(16, 16));
-//icon.setInfoWindowAnchor(Point.newInstance(32, 0));
-//icon.setImageURL("http://www.visual-case.it/vc/pics/casetta_base.png");
-//portalIcon1 = MarkerOptions.newInstance();
-//portalIcon1.setIcon(icon);
-//
-//icon = Icon.newInstance();
-//icon.setIconAnchor(Point.newInstance(16, 16));
-//icon.setInfoWindowAnchor(Point.newInstance(32, 0));
-//icon.setImageURL("http://www.visual-case.it/vc/pics/casetta_green.png");
-//portalIcon2 = MarkerOptions.newInstance();
-//portalIcon2.setIcon(icon);
-//
-//icon = Icon.newInstance();
-//icon.setIconAnchor(Point.newInstance(16, 16));
-//icon.setInfoWindowAnchor(Point.newInstance(32, 0));
-//icon.setImageURL("http://www.visual-case.it/vc/pics/casetta_red.png");
-//portalIcon3 = MarkerOptions.newInstance();
-//portalIcon3.setIcon(icon);
-//
-//icon = Icon.newInstance();
-//icon.setIconAnchor(Point.newInstance(16, 16));
-//icon.setInfoWindowAnchor(Point.newInstance(32, 0));
-//icon.setImageURL("http://maps.google.com/mapfiles/kml/pal4/icon23.png");
-//viaIcon1 = MarkerOptions.newInstance();
-//viaIcon1.setIcon(icon);
-//viaIcon1.setDraggable(true);
-// 
-//icon = Icon.newInstance();
-//icon.setIconAnchor(Point.newInstance(16, 16));
-//icon.setInfoWindowAnchor(Point.newInstance(32, 0));
-//icon.setImageURL("http://maps.google.com/mapfiles/kml/pal4/icon54.png");
-//viaIcon2 = MarkerOptions.newInstance();
-//viaIcon2.setIcon(icon);
-//viaIcon2.setDraggable(true);
-//
-//icon = Icon.newInstance();
-//icon.setIconAnchor(Point.newInstance(16, 16));
-//icon.setInfoWindowAnchor(Point.newInstance(32, 0));
-//icon.setImageURL("http://maps.google.com/mapfiles/kml/pal4/icon7.png");
-//viaIcon3 = MarkerOptions.newInstance();
-//viaIcon3.setIcon(icon);
-//viaIcon3.setDraggable(true);
-//
-//}
