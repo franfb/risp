@@ -14,7 +14,7 @@ h1 {
 	background-image: url("http://mispicaderos.net/fondo.png");
 }
 
-.texto {
+.texto13 {
 	font-family:"Century Gothic",Verdana,Tahoma;
 	font-size:13px;
 }
@@ -22,6 +22,16 @@ h1 {
 .texto11 {
 	font-family:"Century Gothic",Verdana,Tahoma;
 	font-size:11px;
+}
+
+.texto9 {
+	font-family:"Century Gothic",Verdana,Tahoma;
+	font-size:9px;
+}
+
+.texto7 {
+	font-family:"Century Gothic",Verdana,Tahoma;
+	font-size:7px;
 }
 
 .ver{

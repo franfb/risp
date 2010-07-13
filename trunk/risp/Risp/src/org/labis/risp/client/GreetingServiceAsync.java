@@ -21,9 +21,10 @@ public interface GreetingServiceAsync {
 
 	void getPortal(MyLatLng point, AsyncCallback<Portal> callback);
 
-	void getPortales(String nombre, int numero,
+	void getPortales(String[] nombre, int numero,
 			AsyncCallback<ArrayList<Portal>> callback);
 
-	void getVias(String nombre, AsyncCallback<ArrayList<Via>> callback);
+	void getVias(String[] nombre, AsyncCallback<ArrayList<Via>> callback);
+
 
 }

@@ -3,13 +3,10 @@ package org.labis.risp.client;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.event.logical.shared.OpenEvent;
-import com.google.gwt.event.logical.shared.OpenHandler;
 import com.google.gwt.i18n.client.LocaleInfo;
 
 import com.google.gwt.maps.client.InfoWindow;
@@ -32,10 +29,8 @@ import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.maps.client.overlay.Polyline;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.AbsolutePanel;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DialogBox;
-import com.google.gwt.user.client.ui.DisclosurePanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -43,34 +38,24 @@ import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Widget;
 
 public class Principal implements EntryPoint{
 	private MapWidget map;
-	private Button portalButton;
-	private Button portalButtonZona;
-	private Button viaButtonZona;
-	private Button viaButton;
-	private Button zonaButton;
+
+	HTML portalLink;
+	HTML viaLink;
+	HTML zonaLink;
 	
-	final DisclosurePanel viaDisclosure = new DisclosurePanel(
-    "Mostrar información padronal de una vía");
-	final DisclosurePanel portalDisclosure = new DisclosurePanel(
-	"Mostrar información padronal de un portal");
-	final DisclosurePanel zonaDisclosure = new DisclosurePanel(
-	"Mostrar información padronal de una zona");
-	
-	DialogBox dialog;
+	DialogBox dialogoPortal;
+	DialogBox dialogoVia;
+	DialogBox dialogoZona;
 	
 	private InfoWindow info;
 
 	private final GreetingServiceAsync greetingService = GWT
 			.create(GreetingService.class);
 	
-	
-//	MarkerOptions portalIcon;
-//	MarkerOptions viaIcon;
-//	MarkerOptions viaIconGrande;
-
 	MarkerOptions portalIcon1;
 	MarkerOptions portalIcon2;
 	MarkerOptions portalIcon3;
@@ -80,359 +65,16 @@ public class Principal implements EntryPoint{
 	
 	Marker markerInfo = null;
 	
-	//LinkedList<Polygon> polys = new LinkedList<Polygon>();
 	LinkedList<ZonaClient> zonas = new LinkedList<ZonaClient>();
 	ZonaClient highlighted = null;
 	
-	
-	private void disableButtons(){
-		portalButtonZona.setEnabled(false);
-		viaButtonZona.setEnabled(false);
-		viaButton.setEnabled(false);
-		portalButton.setEnabled(false);
-		zonaButton.setEnabled(false);
-	}
-	
-	private void enableButtons(){
-		portalButtonZona.setEnabled(true);
-		viaButtonZona.setEnabled(true);
-		viaButton.setEnabled(true);
-		portalButton.setEnabled(true);
-		zonaButton.setEnabled(true);
-	}
-	
 	public void onModuleLoad() {
-		System.out.println("resolucion: " + Window.getClientWidth() + ", " + Window.getClientHeight());
 		buildUi();
-		dialog = createDialogBox();
+		crearDialogoPortal();
+		crearDialogoVia();
+		crearDialogoZona();
 		
-		
-		
-		
-		
-		portalButtonZona.addClickHandler(new ClickHandler(){
-			public void onClick(ClickEvent event) {
-				disableButtons();
-				//crearPolilinea(1);
-				dialog.show();
-				dialog.center();
-				enableButtons();
-			}
-		});
-
-		viaButtonZona.addClickHandler(new ClickHandler(){
-			public void onClick(ClickEvent event) {
-				disableButtons();
-				crearPolilinea(2);
-			}
-		});
-		
-		zonaButton.addClickHandler(new ClickHandler(){
-			public void onClick(ClickEvent event) {
-				disableButtons();
-				crearPolilinea(0);
-			}
-		});
-		
-		viaButton.addClickHandler(new ClickHandler(){
-			public void onClick(ClickEvent event) {
-				disableButtons();
-				map.addMapClickHandler(new MapClickHandler(){
-					public void onClick(MapClickEvent event) {
-						map.removeMapClickHandler(this);
-						if (event.getLatLng() != null){
-							nuevaVia(event.getLatLng());
-						}
-						else{
-							nuevaVia(event.getOverlayLatLng());
-						}
-						enableButtons();
-					}
-				});
-			}
-		});
-
-		portalButton.addClickHandler(new ClickHandler(){
-			public void onClick(ClickEvent event) {
-				disableButtons();
-				map.addMapClickHandler(new MapClickHandler(){
-					public void onClick(MapClickEvent event) {
-						map.removeMapClickHandler(this);
-						if (event.getLatLng() != null){
-							nuevoPortal(event.getLatLng());
-						}
-						else{
-							nuevoPortal(event.getOverlayLatLng());
-						}
-						enableButtons();
-					}
-				});
-			}
-		});
-	}
-
-	
-	private HorizontalPanel panelBusqueda(){
-		HorizontalPanel panel = new HorizontalPanel();
-		panel.setSpacing(10);
-		final TextBox text = new TextBox();
-		text.setWidth("30em");
-		panel.add(text);
-		Button button = new Button("Buscar vía o portal");
-		button.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				String texto = text.getText();
-				String[] resultado = texto.split(",");
-				if (resultado.length > 2 || resultado[0].isEmpty()){
-					return;
-				}
-				if (resultado.length == 1){
-					System.out.println("CALLE: " + resultado[0]);
-					
-//					try {
-//						greetingService.getVia(,
-//								new AsyncCallback<Via>() {
-//									public void onFailure(Throwable caught) {}
-//									public void onSuccess(final Via via) {
-//										if (via == null){
-//											InfoWindow info = map.getInfoWindow();
-//											info.open(point, new InfoWindowContent("no hay ninguna vía en las cercanías"));
-//										}
-//										else{
-//											greetingService.getPortales(via, new AsyncCallback<ArrayList<Portal>>(){
-//												public void onFailure(Throwable caught) {}
-//												public void onSuccess(ArrayList<Portal> result) {
-//													for (Portal portal: result){
-//														map.addOverlay(createMarkerPortal(portal, false));
-//													}
-//													map.addOverlay(createMarkerVia(via, false));
-//												}
-//											});
-//										}
-//									}
-//								});
-//							}
-//						catch (Exception e) {
-//						e.printStackTrace();
-//					}
-					return;
-				}
-				System.out.println("CALLE: " + resultado[0]);
-				System.out.println("NUMERO: " + resultado[1]);
-				String nombre = resultado[0];
-				int numero = Integer.parseInt(resultado[1].trim());
-				
-				try {
-					greetingService.getPortales(nombre, numero,
-							new AsyncCallback<ArrayList<Portal>>() {
-								public void onFailure(Throwable caught) {
-									System.out.println("Error.");
-								}
-
-								public void onSuccess(final ArrayList<Portal> portales) {
-									if (portales == null){
-										System.out.println("LAS DE ABAJO LO OYEN TODO");
-										InfoWindow info = map.getInfoWindow();
-										info.open(map.getCenter(), new InfoWindowContent("no hay ningún portal con esa dirección"));
-									}
-									else{
-										for (Portal p: portales){
-											map.addOverlay(createMarkerPortal(p, true));
-										}
-									}
-								}
-								});
-							}
-					catch (Exception e) {
-					e.printStackTrace();
-				}
-				
-
-				
-			}
-		});
-		panel.add(button);
-		return panel;
-	}
-	
-	
-	private void buildUi() {
-        map = new MapWidget();
-        LatLng tenerife = LatLng.newInstance(28.5160,-16.3761);
-        map.setSize("100%", "100%");
-        map.setCenter(tenerife, 13);
-        map.setUIToDefault();
-        
-        AbsolutePanel panel = new AbsolutePanel();
-        VerticalPanel vpanel = new VerticalPanel();
-        
-        AbsolutePanel columna = new AbsolutePanel();
-        
-        vpanel.setSize("293px", "100%");
-        vpanel.setStyleName("vpanel");
-        columna.setSize("370px", "100%");
-        columna.setStyleName("columna");
-        
-        panel.setSize("100%", "100%");
-        panel.add(map, 0, 0);
-        
-        panel.add(columna, 50, 0);
-        
-        panel.add(panelBusqueda(), 425, (int) (Window.getClientHeight() * 0.92));
-
-        RootPanel.get().add(panel);
-        
-        portalButton = new Button("simple");
-        viaButton = new Button("simple");
-        portalButtonZona = new Button("múltiple");
-        viaButtonZona = new Button("múltiple");
-        zonaButton = new Button("continuar");
-        
-        HTML titulo1 = new HTML("<h1>Información padronal<br>San Cristóbal de La Laguna</h1>");
-        
-        HTML bienvenida = new HTML("<br><b>Bienvenido/a la aplicacion de ejemplo del proyecto RISP!</b>");
-        
-        HTML texto1 = new HTML("<br>Esta aplicación consiste en " +
-        		"la reutilización de la información padronal de las bases de datos de la " +
-        		"Gerencia de Urbanismo de San Cristóbal de La Laguna, y que ha sido publicada gracias al trabajo " +
-        		"realizado por los mismos alumnos que han desarrollado este portal. Aquí, usted puede obtener diversa información relacionada con el registro " +
-        		"del padrón que se realiza en el municipio. A continuación se presenta la lista de cosas que se pueden " +
-        		"hacer:");
-        
-        
-        bienvenida.setStyleName("texto");
-        texto1.setStyleName("texto");
-        
-        
-        AbsolutePanel titulo = new AbsolutePanel();
-        titulo.setSize("293px", "20%");
-        //titulo.setStyleName("uno");
-        
-        AbsolutePanel intro = new AbsolutePanel();
-        intro.setSize("293px", "30%");
-        //intro.setStyleName("dos");
-        
-        AbsolutePanel funciones = new AbsolutePanel();
-        funciones.setSize("293px", "30%");
-        //funciones.setStyleName("tres");
-        
-        AbsolutePanel logos = new AbsolutePanel();
-        logos.setSize("293px", "20%");
-        //logos.setStyleName("cuatro");
-        
-        titulo.add(titulo1);
-        //titulo.add(titulo2);
-        
-        
-        //vpanel.add(titulo);
-
-        intro.add(bienvenida);
-        intro.add(texto1);
-        //vpanel.add(intro);
-        
-        
-        
-        
-        
-        
-        AbsolutePanel portalPanel = new AbsolutePanel();
-        HTML portalText = new HTML("Información de empadronamiento asociada a un edificio del municipio. " +
-        		"También se puede obtener la información de todos los edificios que se encuentren dentro de una zona que usted elija. " +
-        		"<br><br>Seleccione el tipo de búsqueda que desea e interactúe con el mapa:");
-        portalText.setStyleName("texto");
-        portalPanel.add(portalText);
-        HorizontalPanel portalBotones = new HorizontalPanel();
-        portalBotones.setSpacing(10);
-        portalBotones.add(portalButton);
-        portalBotones.add(portalButtonZona);
-        portalPanel.add(portalBotones);
-        
-        
-        portalDisclosure.addOpenHandler(new OpenHandler<DisclosurePanel>() {
-        	public void onOpen(OpenEvent<DisclosurePanel> event) {
-        		if (viaDisclosure.isOpen()){
-        			viaDisclosure.setOpen(false);
-        		}
-        		if (zonaDisclosure.isOpen()){
-        			zonaDisclosure.setOpen(false);
-        		}
-        	}
-        });
-        portalDisclosure.add(portalPanel);
-        portalDisclosure.setStyleName("texto");
-		funciones.add(portalDisclosure);
-		
-		
-		AbsolutePanel viaPanel = new AbsolutePanel();
-        HTML viaText = new HTML("Información de empadronamiento asociada a una vía del municipio." +
-        		" También puede obtener la información de todas las vías que se encuentren dentro de una zona que usted elija. " +
-        		"<br><br>Seleccione el tipo de búsqueda que desea e interactúe con el mapa:");
-        viaText.setStyleName("texto");
-        viaPanel.add(viaText);
-        HorizontalPanel viaBotones = new HorizontalPanel();
-        viaBotones.setSpacing(10);
-        viaBotones.add(viaButton);
-        viaBotones.add(viaButtonZona);
-        viaPanel.add(viaBotones);
-        
-        viaDisclosure.addOpenHandler(new OpenHandler<DisclosurePanel>() {
-        	public void onOpen(OpenEvent<DisclosurePanel> event) {
-        		if (portalDisclosure.isOpen()){
-        			portalDisclosure.setOpen(false);
-        		}
-        		if (zonaDisclosure.isOpen()){
-        			zonaDisclosure.setOpen(false);
-        		}
-        	}
-        });
-        viaDisclosure.add(viaPanel);
-        viaDisclosure.setStyleName("texto");
-		funciones.add(viaDisclosure);
-		
-		AbsolutePanel zonaPanel = new AbsolutePanel();
-        HTML zonaText = new HTML("Se muestra la información de empadronamiento asociada a una zona del municipio que usted elija. " +
-        		"<br><br>Pulse el botón de continuar e interactúe con el mapa para personalizar la zona de interés mediante una polilínea:");
-        zonaText.setStyleName("texto");
-        zonaPanel.add(zonaText);
-        HorizontalPanel zonaBotones = new HorizontalPanel();
-        zonaBotones.setSpacing(10);
-        zonaBotones.add(zonaButton);
-        zonaPanel.add(zonaBotones);
-        
-        
-        zonaDisclosure.addOpenHandler(new OpenHandler<DisclosurePanel>() {
-        	public void onOpen(OpenEvent<DisclosurePanel> event) {
-        		if (portalDisclosure.isOpen()){
-        			portalDisclosure.setOpen(false);
-        		}
-        		if (viaDisclosure.isOpen()){
-        			viaDisclosure.setOpen(false);
-        		}
-        	}
-        });
-        zonaDisclosure.add(zonaPanel);
-        zonaDisclosure.setStyleName("texto");
-		funciones.add(zonaDisclosure);
-		
-		HorizontalPanel gerencia = new HorizontalPanel();
-		
-		gerencia.setSpacing(5);
-		
-		HTML proyecto = new HTML("<a href=\"http://code.google.com/p/risp/\" target=\"_blank\">Página web del proyecto RISP </a>");
-		proyecto.setStyleName("texto");
-		
-        logos.add(proyecto);
-		logos.add(new Image("http://www.ull.es/Public/images/wull/logo.gif"));
-        gerencia.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/gerencia.gif"));
-        gerencia.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/la_laguna.gif"));
-        logos.add(gerencia);
-        
-        columna.add(titulo, 40, 0);
-        columna.add(intro, 40, titulo.getOffsetHeight());
-        columna.add(funciones, 40, titulo.getOffsetHeight() + intro.getOffsetHeight());
-        columna.add(logos, 40, titulo.getOffsetHeight() + intro.getOffsetHeight() + funciones.getOffsetHeight());
-		
-        Icon icon = Icon.newInstance();
+		Icon icon = Icon.newInstance();
 		icon.setIconAnchor(Point.newInstance(16, 16));
 		icon.setInfoWindowAnchor(Point.newInstance(32, 0));
 		icon.setImageURL("http://www.visual-case.it/vc/pics/casetta_base.png");
@@ -476,55 +118,440 @@ public class Principal implements EntryPoint{
 		viaIcon3 = MarkerOptions.newInstance();
 		viaIcon3.setIcon(icon);
 		viaIcon3.setDraggable(true);
-
+		
+		
+		portalLink.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				dialogoPortal.show();
+				dialogoPortal.center();
+			}
+		});
+		
+		viaLink.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				dialogoVia.show();
+				dialogoVia.center();
+			}
+		});
+		
+		zonaLink.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				dialogoZona.show();
+				dialogoZona.center();
+			}
+		});
 	}
+
+	
+	private Widget panelBusquedaPortal(){
+		VerticalPanel vertical = new VerticalPanel();
+		HorizontalPanel horizontal1 = new HorizontalPanel();
+		HorizontalPanel horizontal2 = new HorizontalPanel();
+		
+		horizontal1.setSpacing(10);
+		horizontal2.setSpacing(10);
+		
+		final TextBox via = new TextBox();
+		final TextBox numero = new TextBox();
+		via.setWidth("20em");
+		numero.setWidth("5em");
+		
+		HTML textVia = new HTML("Vía:  ");
+		HTML textNumero = new HTML("Número de portal:  ");
+
+		textVia.setStyleName("texto13");
+		textNumero.setStyleName("texto13");
+
+		Button button = new Button("Buscar");
+		
+		horizontal1.add(textVia);
+		horizontal1.add(via);
+		
+		horizontal2.add(textNumero);
+		horizontal2.add(numero);
+		horizontal2.add(button);
+
+		vertical.add(horizontal1);
+		vertical.add(horizontal2);
+		
+		button.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				String texto = via.getText();
+				String[] resultado = texto.split(",");
+				if (resultado.length > 2 || resultado[0].isEmpty()){
+					return;
+				}
+				System.out.println("CALLE: " + resultado[0]);
+				System.out.println("NUMERO: " + resultado[1]);
+				String nombre = resultado[0];
+				int numero = Integer.parseInt(resultado[1].trim());
+				
+//				try {
+//					greetingService.getPortales(nombre, numero,
+//							new AsyncCallback<ArrayList<Portal>>() {
+//								public void onFailure(Throwable caught) {
+//									System.out.println("Error.");
+//								}
+//
+//								public void onSuccess(final ArrayList<Portal> portales) {
+//									if (portales == null){
+//										System.out.println("LAS DE ABAJO LO OYEN TODO");
+//										InfoWindow info = map.getInfoWindow();
+//										info.open(map.getCenter(), new InfoWindowContent("no hay ningún portal con esa dirección"));
+//									}
+//									else{
+//										for (Portal p: portales){
+//											map.addOverlay(createMarkerPortal(p, true));
+//										}
+//									}
+//								}
+//								});
+//							}
+//					catch (Exception e) {
+//					e.printStackTrace();
+//				}
+				
+
+				
+			}
+		});
+		return vertical;
+	}
+	
+	private Widget panelBusquedaVia(){
+		VerticalPanel vertical = new VerticalPanel();
+		HorizontalPanel horizontal1 = new HorizontalPanel();
+		HorizontalPanel horizontal2 = new HorizontalPanel();
+		
+		horizontal1.setSpacing(10);
+		horizontal2.setSpacing(10);
+		
+		final TextBox via = new TextBox();
+		via.setWidth("20em");
+		
+		HTML textVia = new HTML("Vía:  ");
+
+		textVia.setStyleName("texto13");
+
+		Button button = new Button("Buscar");
+		
+		horizontal1.add(textVia);
+		horizontal1.add(via);
+		
+		horizontal2.add(button);
+
+		vertical.add(horizontal1);
+		vertical.add(horizontal2);
+		
+		button.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				dialogoVia.hide();
+				String texto = via.getText();
+				String[] resultado = texto.split(" ");
+				for (int i = 0; i < resultado.length; i++){
+					resultado[i] = resultado[i].trim();
+				}
+				if (resultado[0].isEmpty()){
+					return;
+				}
+				try {
+					greetingService.getVias(resultado,
+							new AsyncCallback<ArrayList<Via>>() {
+								public void onFailure(Throwable caught) {
+									System.out.println("Error.");
+								}
+
+								public void onSuccess(final ArrayList<Via> vias) {
+									if (vias == null){
+										System.out.println("LAS DE ABAJO LO OYEN TODO");
+										InfoWindow info = map.getInfoWindow();
+										info.open(map.getCenter(), new InfoWindowContent("no hay ningún portal con esa dirección"));
+									}
+									else{
+										for (Via v: vias){
+											map.addOverlay(createMarkerVia(v, true));
+										}
+									}
+								}
+								});
+							}
+					catch (Exception e) {
+					e.printStackTrace();
+				}
+				
+
+				
+			}
+		});
+		return vertical;
+	}
+
 
     
+	private void buildUi() {
+        map = new MapWidget();
+        LatLng tenerife = LatLng.newInstance(28.5160,-16.3761);
+        map.setSize("100%", "100%");
+        map.setCenter(tenerife, 13);
+        map.setUIToDefault();
+        
+        VerticalPanel columna = new VerticalPanel();
+        columna.setSize("370px", "100%");
+        columna.setStyleName("columna");
+        
+        VerticalPanel columna2 = new VerticalPanel();
+        columna2.setWidth("293px");
+        
+        HTML titulo1 = new HTML("<h1>Información padronal<br><br>San Cristóbal de La Laguna</h1>");
+        HTML bienvenida = new HTML("<b>Bienvenido/a la aplicación de ejemplo del proyecto RISP!</b>");
+        HTML texto1 = new HTML("<br>Esta aplicación consiste en " +
+        		"la reutilización de la información padronal de las bases de datos de la " +
+        		"Gerencia de Urbanismo de San Cristóbal de La Laguna, y que ha sido publicada gracias al trabajo " +
+        		"realizado por los mismos alumnos que han desarrollado este portal. Aquí, usted puede obtener diversa información relacionada con el registro " +
+        		"del padrón que se realiza en el municipio. A continuación se presenta la lista de cosas que se pueden " +
+        		"hacer:");
+        portalLink = new HTML("<a href=\"javascript:undefined;\">"
+                + "Mostrar información padronal de un portal" + "</a>");
+        viaLink = new HTML("<a href=\"javascript:undefined;\">"
+                + "Mostrar información padronal de una vía" + "</a>");
+        zonaLink = new HTML("<a href=\"javascript:undefined;\">"
+                + "Mostrar información padronal de una zona" + "</a>");
+		HorizontalPanel gerencia = new HorizontalPanel();
+		gerencia.setSpacing(5);
+		HTML proyecto = new HTML("<a href=\"http://code.google.com/p/risp/\" target=\"_blank\">Página web del proyecto RISP </a>");
+        gerencia.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/gerencia.gif"));
+        gerencia.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/la_laguna.gif"));
+        
+        titulo1.setStylePrimaryName("texto13");
+        bienvenida.setStyleName("texto13");
+        texto1.setStyleName("texto13");
+		proyecto.setStyleName("texto13");
+        viaLink.setStyleName("texto13");
+        portalLink.setStyleName("texto13");
+        zonaLink.setStyleName("texto13");
+        
+        Image ull = new Image("http://www.ull.es/Public/images/wull/logo.gif");
+        
+        columna2.add(titulo1);
+        columna2.add(bienvenida);
+        columna2.add(texto1);
+        columna2.add(new HTML("<br>"));
+        columna2.add(portalLink);
+        columna2.add(new HTML("<br>"));
+        columna2.add(viaLink);
+        columna2.add(new HTML("<br>"));
+        columna2.add(zonaLink);
+        columna2.add(new HTML("<br>"));
+        columna2.add(new HTML("<br>"));
+        columna2.add(new HTML("<br>"));
+        columna2.add(new HTML("<br>"));
+        columna2.add(new HTML("<br>"));
+        columna2.add(new HTML("<br>"));
+        columna2.add(proyecto);
+        columna2.add(ull);
+        columna2.add(gerencia);
+
+        columna2.setCellHorizontalAlignment(ull, HasHorizontalAlignment.ALIGN_CENTER);
+        columna2.setCellHorizontalAlignment(gerencia, HasHorizontalAlignment.ALIGN_CENTER);
+        columna2.setCellHorizontalAlignment(proyecto, HasHorizontalAlignment.ALIGN_CENTER);
+        
+        HorizontalPanel horizontal = new HorizontalPanel();
+        VerticalPanel vertical = new VerticalPanel();
+        vertical.setWidth("40px");
+        vertical.add(new HTML("<br>"));
+        horizontal.add(vertical);
+        horizontal.add(columna2);
+        columna.add(horizontal);
+        
+        RootPanel.get().add(map, 0, 0);
+        RootPanel.get().add(columna, 50, 0);
+	}
 	
-	private DialogBox createDialogBox() {
-	    // Create a dialog box and set the caption text
-	    final DialogBox dialogBox = new DialogBox();
-	    //dialogBox.ensureDebugId("cwDialogBox");
-	    dialogBox.setText("el texto del dialog box");
+	
+	private void crearDialogoPortal() {
+		Button portal = new Button("Buscar por localización");
+		Button zona = new Button("Buscar por zona");
+		Button volver = new Button("Volver");
+		
+		volver.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				dialogoPortal.hide();
+			}
+		});
+		
+		zona.addClickHandler(new ClickHandler(){
+			public void onClick(ClickEvent event) {
+				//disableButtons();
+				crearPolilinea(1);
+				//enableButtons();
+			}
+		});
+		
+		portal.addClickHandler(new ClickHandler(){
+			public void onClick(ClickEvent event) {
+				//disableButtons();
+				map.addMapClickHandler(new MapClickHandler(){
+					public void onClick(MapClickEvent event) {
+						map.removeMapClickHandler(this);
+						if (event.getLatLng() != null){
+							nuevoPortal(event.getLatLng());
+						}
+						else{
+							nuevoPortal(event.getOverlayLatLng());
+						}
+						//enableButtons();
+					}
+				});
+			}
+		});
+		
 
-	    // Create a table to layout the content
-	    VerticalPanel dialogContents = new VerticalPanel();
-	    dialogContents.setSpacing(4);
-	    dialogBox.setWidget(dialogContents);
+		
+		dialogoPortal = new DialogBox();
+	    //dialogoPortal.setText("Información de empadronamiento asociada a los portales del municipio.");
+	    dialogoPortal.setGlassEnabled(true);
+		dialogoPortal.setAnimationEnabled(true);
+		
+	    HTML text1 = new HTML("Se puede obtener información padronal de un portal por su localización geográfica. " +
+	    	"Para ello, pulse el siguiente botón y haga click en el mapa.");
+	    
+	    HTML text2 = new HTML("También se puede obtener información padronal de todos los portales que se encuentren dentro de una zona específica. " +
+	    	"Para ello, pulse el siguiente botón y construya en el mapa la zona de interés, mediante un polígono.");
+	    
+	    HTML text3 = new HTML("Por último, se puede buscar un portal introduciendo la dirección de la vía y el número de portal.");
+	    
+	    text1.setStyleName("texto13");
+	    text2.setStyleName("texto13");
+	    text3.setStyleName("texto13");
+	  
+	    VerticalPanel vertical = new VerticalPanel();
+	    vertical.setSpacing(10);
+	    dialogoPortal.setWidget(vertical);
 
-	    // Add some text to the top of the dialog
-	    HTML details = new HTML("los detalles del dialogo box");
-	    dialogContents.add(details);
-	    dialogContents.setCellHorizontalAlignment(details,
-	        HasHorizontalAlignment.ALIGN_CENTER);
-
-	    // Add an image to the dialog
-	    Image image = new Image("http://estaticos03.tiramillas.net/albumes/2010/07/09/machete/1278671677_extras_albumes_0.jpg");
-	    dialogContents.add(image);
-	    dialogContents.setCellHorizontalAlignment(image,
-	        HasHorizontalAlignment.ALIGN_CENTER);
-
-	    // Add a close button at the bottom of the dialog
-	    Button closeButton = new Button("cerrar",
-	        new ClickHandler() {
-	          public void onClick(ClickEvent event) {
-	            dialogBox.hide();
-	          }
-	        });
-	    dialogContents.add(closeButton);
-	    if (LocaleInfo.getCurrentLocale().isRTL()) {
-	      dialogContents.setCellHorizontalAlignment(closeButton,
-	          HasHorizontalAlignment.ALIGN_LEFT);
-
-	    } else {
-	      dialogContents.setCellHorizontalAlignment(closeButton,
-	          HasHorizontalAlignment.ALIGN_RIGHT);
-	    }
-
-	    // Return the dialog box
-	    return dialogBox;
+	    //vertical.add(new HTML("<br>"));
+	    vertical.add(text1);
+	    vertical.add(portal);
+	    vertical.add(new HTML("<br>"));
+	    vertical.add(text2);
+	    vertical.add(zona);
+	    vertical.add(new HTML("<br>"));
+	    vertical.add(text3);
+	    vertical.add(panelBusquedaPortal());
+	    vertical.add(volver);
+	    
+	    vertical.setCellHorizontalAlignment(volver, HasHorizontalAlignment.ALIGN_RIGHT);
 	}
 
+	private void crearDialogoVia() {
+		Button via = new Button("Buscar por localización");
+		Button zona = new Button("Buscar por zona");
+		Button volver = new Button("Volver");
+		
+		volver.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				dialogoVia.hide();
+			}
+		});
+		
+		zona.addClickHandler(new ClickHandler(){
+			public void onClick(ClickEvent event) {
+				crearPolilinea(2);
+			}
+		});
+		
+		via.addClickHandler(new ClickHandler(){
+			public void onClick(ClickEvent event) {
+				map.addMapClickHandler(new MapClickHandler(){
+					public void onClick(MapClickEvent event) {
+						map.removeMapClickHandler(this);
+						if (event.getLatLng() != null){
+							nuevaVia(event.getLatLng());
+						}
+						else{
+							nuevaVia(event.getOverlayLatLng());
+						}
+					}
+				});
+			}
+		});
+		
+
+		
+		dialogoVia = new DialogBox();
+	    //dialogoVia.setText("Información de empadronamiento asociada a las vías del municipio.");
+	    dialogoVia.setGlassEnabled(true);
+		dialogoVia.setAnimationEnabled(true);
+		
+	    HTML text1 = new HTML("Se puede obtener información padronal de una vía por su localización geográfica. " +
+	    	"Para ello, pulse el siguiente botón y haga click en el mapa.");
+	    
+	    HTML text2 = new HTML("También se puede obtener información padronal de todas las vías que se encuentren dentro de una zona específica. " +
+	    	"Para ello, pulse el siguiente botón y construya en el mapa la zona de interés, mediante un polígono.");
+	    
+	    HTML text3 = new HTML("Por último, se puede buscar una vía introduciendo el nombre en el siguiente campo de texto.");
+	    
+	    text1.setStyleName("texto13");
+	    text2.setStyleName("texto13");
+	    text3.setStyleName("texto13");
+	  
+	    VerticalPanel vertical = new VerticalPanel();
+	    vertical.setSpacing(10);
+	    dialogoVia.setWidget(vertical);
+
+	    //vertical.add(new HTML("<br>"));
+	    vertical.add(text1);
+	    vertical.add(via);
+	    vertical.add(new HTML("<br>"));
+	    vertical.add(text2);
+	    vertical.add(zona);
+	    vertical.add(new HTML("<br>"));
+	    vertical.add(text3);
+	    vertical.add(panelBusquedaVia());
+	    vertical.add(volver);
+	    
+	    vertical.setCellHorizontalAlignment(volver, HasHorizontalAlignment.ALIGN_RIGHT);
+	}
+	
+	private void crearDialogoZona() {
+		Button zona = new Button("Buscar por zona");
+		Button volver = new Button("Volver");
+		
+		volver.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				dialogoZona.hide();
+			}
+		});
+		
+		zona.addClickHandler(new ClickHandler(){
+			public void onClick(ClickEvent event) {
+				crearPolilinea(0);
+			}
+		});
+		
+
+		dialogoZona = new DialogBox();
+		
+		//dialogoZona.setText("Información de empadronamiento asociada a una zona del municipio.");
+		dialogoZona.setGlassEnabled(true);
+		dialogoZona.setAnimationEnabled(true);
+
+	    HTML text1 = new HTML("Se puede obtener información padronal de una zona específica del municipio. " +
+	    	"Para ello, pulse el siguiente botón y construya en el mapa la zona de interés, mediante un polígono.");
+	    
+	    
+	    text1.setStyleName("texto13");
+
+	    VerticalPanel vertical = new VerticalPanel();
+	    vertical.setSpacing(10);
+	    dialogoZona.setWidget(vertical);
+
+	    //vertical.add(new HTML("<br>"));
+	    vertical.add(text1);
+	    vertical.add(zona);
+	    vertical.add(volver);
+	    
+	    vertical.setCellHorizontalAlignment(volver, HasHorizontalAlignment.ALIGN_RIGHT);
+	}
 	
 	private void infoWindowPortal(final Marker marker, final Portal portal, boolean verTodasVias){
 		InfoWindow info = map.getInfoWindow();
@@ -768,7 +795,7 @@ public class Principal implements EntryPoint{
 				else if(opcion == 2){
 					nuevaZonaVias(event.getSender());
 				}
-				enableButtons();
+				//enableButtons();
 			}
 		});
 	}
@@ -1037,3 +1064,234 @@ public class Principal implements EntryPoint{
 		}
 	}
 }
+
+
+//private void buildUi(String texto) {
+//map = new MapWidget();
+//LatLng tenerife = LatLng.newInstance(28.5160,-16.3761);
+//map.setSize("100%", "100%");
+//map.setCenter(tenerife, 13);
+//map.setUIToDefault();
+//
+////AbsolutePanel panel = new AbsolutePanel();
+//
+//VerticalPanel columna = new VerticalPanel();
+////columna.setSize("370px", "100%");
+//columna.setWidth("370px");
+//columna.setStyleName("columna");
+//
+////panel.setSize("100%", "100%");
+//
+//
+////panel.add(map, 0, 0);
+//
+////panel.add(columna, 50, 0);
+//
+//
+////panel.add(panelBusqueda(), 425, (int) (Window.getClientHeight() * 0.92));
+//
+////RootPanel.get().add(panel);
+//RootPanel.get().add(map, 0, 0);
+//RootPanel.get().add(columna, 50, 0);
+//
+//portalButton = new Button("simple");
+//viaButton = new Button("simple");
+//portalButtonZona = new Button("múltiple");
+//viaButtonZona = new Button("múltiple");
+//zonaButton = new Button("continuar");
+//
+//HTML titulo1 = new HTML("<h1>Información padronal<br>San Cristóbal de La Laguna</h1>");
+//
+//HTML bienvenida = new HTML("<br><b>Bienvenido/a la aplicacion de ejemplo del proyecto RISP!</b>");
+//
+//HTML texto1 = new HTML("<br>Esta aplicación consiste en " +
+//		"la reutilización de la información padronal de las bases de datos de la " +
+//		"Gerencia de Urbanismo de San Cristóbal de La Laguna, y que ha sido publicada gracias al trabajo " +
+//		"realizado por los mismos alumnos que han desarrollado este portal. Aquí, usted puede obtener diversa información relacionada con el registro " +
+//		"del padrón que se realiza en el municipio. A continuación se presenta la lista de cosas que se pueden " +
+//		"hacer:");
+//
+//
+//bienvenida.setStyleName(texto);
+//texto1.setStyleName(texto);
+//
+//
+//AbsolutePanel titulo = new AbsolutePanel();
+//titulo.setSize("293px", "20%");
+////titulo.setStyleName("uno");
+//
+//AbsolutePanel intro = new AbsolutePanel();
+//intro.setSize("293px", "30%");
+////intro.setStyleName("dos");
+//
+//AbsolutePanel funciones = new AbsolutePanel();
+//funciones.setSize("293px", "30%");
+////funciones.setStyleName("tres");
+//
+//AbsolutePanel logos = new AbsolutePanel();
+//logos.setSize("293px", "20%");
+////logos.setStyleName("cuatro");
+//
+//titulo.add(titulo1);
+////titulo.add(titulo2);
+//
+//
+////vpanel.add(titulo);
+//
+//intro.add(bienvenida);
+//intro.add(texto1);
+////vpanel.add(intro);
+//
+//
+//
+//
+//
+//
+//AbsolutePanel portalPanel = new AbsolutePanel();
+//HTML portalText = new HTML("Información de empadronamiento asociada a un edificio del municipio. " +
+//		"También se puede obtener la información de todos los edificios que se encuentren dentro de una zona que usted elija. " +
+//		"<br><br>Seleccione el tipo de búsqueda que desea e interactúe con el mapa:");
+//portalText.setStyleName(texto);
+//portalPanel.add(portalText);
+//HorizontalPanel portalBotones = new HorizontalPanel();
+//portalBotones.setSpacing(10);
+//portalBotones.add(portalButton);
+//portalBotones.add(portalButtonZona);
+//portalPanel.add(portalBotones);
+//
+//
+//portalDisclosure.addOpenHandler(new OpenHandler<DisclosurePanel>() {
+//	public void onOpen(OpenEvent<DisclosurePanel> event) {
+//		if (viaDisclosure.isOpen()){
+//			viaDisclosure.setOpen(false);
+//		}
+//		if (zonaDisclosure.isOpen()){
+//			zonaDisclosure.setOpen(false);
+//		}
+//	}
+//});
+//portalDisclosure.add(portalPanel);
+//portalDisclosure.setStyleName(texto);
+//funciones.add(portalDisclosure);
+//
+//
+//AbsolutePanel viaPanel = new AbsolutePanel();
+//HTML viaText = new HTML("Información de empadronamiento asociada a una vía del municipio." +
+//		" También puede obtener la información de todas las vías que se encuentren dentro de una zona que usted elija. " +
+//		"<br><br>Seleccione el tipo de búsqueda que desea e interactúe con el mapa:");
+//viaText.setStyleName(texto);
+//viaPanel.add(viaText);
+//HorizontalPanel viaBotones = new HorizontalPanel();
+//viaBotones.setSpacing(10);
+//viaBotones.add(viaButton);
+//viaBotones.add(viaButtonZona);
+//viaPanel.add(viaBotones);
+//
+//viaDisclosure.addOpenHandler(new OpenHandler<DisclosurePanel>() {
+//	public void onOpen(OpenEvent<DisclosurePanel> event) {
+//		if (portalDisclosure.isOpen()){
+//			portalDisclosure.setOpen(false);
+//		}
+//		if (zonaDisclosure.isOpen()){
+//			zonaDisclosure.setOpen(false);
+//		}
+//	}
+//});
+//viaDisclosure.add(viaPanel);
+//viaDisclosure.setStyleName(texto);
+//funciones.add(viaDisclosure);
+//
+//AbsolutePanel zonaPanel = new AbsolutePanel();
+//HTML zonaText = new HTML("Se muestra la información de empadronamiento asociada a una zona del municipio que usted elija. " +
+//		"<br><br>Pulse el botón de continuar e interactúe con el mapa para personalizar la zona de interés mediante una polilínea:");
+//zonaText.setStyleName(texto);
+//zonaPanel.add(zonaText);
+//HorizontalPanel zonaBotones = new HorizontalPanel();
+//zonaBotones.setSpacing(10);
+//zonaBotones.add(zonaButton);
+//zonaPanel.add(zonaBotones);
+//
+//
+//zonaDisclosure.addOpenHandler(new OpenHandler<DisclosurePanel>() {
+//	public void onOpen(OpenEvent<DisclosurePanel> event) {
+//		if (portalDisclosure.isOpen()){
+//			portalDisclosure.setOpen(false);
+//		}
+//		if (viaDisclosure.isOpen()){
+//			viaDisclosure.setOpen(false);
+//		}
+//	}
+//});
+//zonaDisclosure.add(zonaPanel);
+//zonaDisclosure.setStyleName(texto);
+//funciones.add(zonaDisclosure);
+//
+//HorizontalPanel gerencia = new HorizontalPanel();
+//
+//gerencia.setSpacing(5);
+//
+//HTML proyecto = new HTML("<a href=\"http://code.google.com/p/risp/\" target=\"_blank\">Página web del proyecto RISP </a>");
+//proyecto.setStyleName(texto);
+//
+//logos.add(proyecto);
+//logos.add(new Image("http://www.ull.es/Public/images/wull/logo.gif"));
+//gerencia.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/gerencia.gif"));
+//gerencia.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/la_laguna.gif"));
+//logos.add(gerencia);
+//
+////columna.add(titulo, 40, 0);
+////columna.add(intro, 40, titulo.getOffsetHeight());
+////columna.add(funciones, 40, titulo.getOffsetHeight() + intro.getOffsetHeight());
+////columna.add(logos, 40, titulo.getOffsetHeight() + intro.getOffsetHeight() + funciones.getOffsetHeight());
+//
+//columna.add(titulo);
+//columna.add(intro);
+//columna.add(funciones);
+//columna.add(logos);
+//
+//Icon icon = Icon.newInstance();
+//icon.setIconAnchor(Point.newInstance(16, 16));
+//icon.setInfoWindowAnchor(Point.newInstance(32, 0));
+//icon.setImageURL("http://www.visual-case.it/vc/pics/casetta_base.png");
+//portalIcon1 = MarkerOptions.newInstance();
+//portalIcon1.setIcon(icon);
+//
+//icon = Icon.newInstance();
+//icon.setIconAnchor(Point.newInstance(16, 16));
+//icon.setInfoWindowAnchor(Point.newInstance(32, 0));
+//icon.setImageURL("http://www.visual-case.it/vc/pics/casetta_green.png");
+//portalIcon2 = MarkerOptions.newInstance();
+//portalIcon2.setIcon(icon);
+//
+//icon = Icon.newInstance();
+//icon.setIconAnchor(Point.newInstance(16, 16));
+//icon.setInfoWindowAnchor(Point.newInstance(32, 0));
+//icon.setImageURL("http://www.visual-case.it/vc/pics/casetta_red.png");
+//portalIcon3 = MarkerOptions.newInstance();
+//portalIcon3.setIcon(icon);
+//
+//icon = Icon.newInstance();
+//icon.setIconAnchor(Point.newInstance(16, 16));
+//icon.setInfoWindowAnchor(Point.newInstance(32, 0));
+//icon.setImageURL("http://maps.google.com/mapfiles/kml/pal4/icon23.png");
+//viaIcon1 = MarkerOptions.newInstance();
+//viaIcon1.setIcon(icon);
+//viaIcon1.setDraggable(true);
+// 
+//icon = Icon.newInstance();
+//icon.setIconAnchor(Point.newInstance(16, 16));
+//icon.setInfoWindowAnchor(Point.newInstance(32, 0));
+//icon.setImageURL("http://maps.google.com/mapfiles/kml/pal4/icon54.png");
+//viaIcon2 = MarkerOptions.newInstance();
+//viaIcon2.setIcon(icon);
+//viaIcon2.setDraggable(true);
+//
+//icon = Icon.newInstance();
+//icon.setIconAnchor(Point.newInstance(16, 16));
+//icon.setInfoWindowAnchor(Point.newInstance(32, 0));
+//icon.setImageURL("http://maps.google.com/mapfiles/kml/pal4/icon7.png");
+//viaIcon3 = MarkerOptions.newInstance();
+//viaIcon3.setIcon(icon);
+//viaIcon3.setDraggable(true);
+//
+//}

@@ -43,8 +43,8 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 	private String vocab = "http://localhost:2020/vocab/resource/";
 	private String rdfs = "http://www.w3.org/2000/01/rdf-schema#";
 
-	//private String rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-	//private Property type;
+	private String rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+	private Property type;
 
 	private String sparql = "http://localhost:2020/sparql";
 	private Model model = getModel();
@@ -67,7 +67,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		nombreVia = model.createProperty(vocab, "nombre_completo_via");
 		viaLabel = model.createProperty(rdfs, "label");
 
-		//type = model.createProperty(rdf, "type");
+		type = model.createProperty(rdf, "type");
 		return model;
 	}
 
@@ -350,7 +350,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 	
 	
 	private Portal newPortal(Resource portal) {
-		String via = "Sin vÃ­a asociada";
+		String via = "Sin vía asociada";
 		Statement s = portal.getProperty(nombreVia);
 		if (s != null) {
 			via = s.getLiteral().getString();
@@ -447,7 +447,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 	
 	
 
-	public ArrayList<Portal> getPortales(String nombre, int numero) {
+	public ArrayList<Portal> getPortales(String[] nombre, int numero) {
 		String query = "PREFIX vocab: <http://localhost:2020/vocab/resource/> "
 			+ "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
 			+ "PREFIX fn: <http://www.w3.org/2005/xpath-functions#> "
@@ -471,9 +471,45 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		return list;
 	}
 
-	public ArrayList<Via> getVias(String nombre) {
-		// TODO Auto-generated method stub
-		return null;
+	public ArrayList<Via> getVias(String[] nombre) {
+		String filter = "";
+		for (int i = 0; i < nombre.length; i++){
+			filter += " FILTER( fn:contains (fn:lower-case(?nombre), fn:lower-case(\"" + nombre[i] + "\"))) ";
+		}
+		String query = "PREFIX vocab: <http://localhost:2020/vocab/resource/> "
+			+ "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+			+ "PREFIX fn: <http://www.w3.org/2005/xpath-functions#> "
+			+ "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> "
+			+ "DESCRIBE ?via WHERE { "
+			+ "?via rdf:type vocab:via"
+		    + "?via vocab:nombre_completo_via ?nombre . "
+		    + filter
+		    + " }";
+		QueryExecution q = QueryExecutionFactory.sparqlService(sparql, query);
+		Model m = q.execDescribe();
+		model.add(m);
+		ResIterator res = m.listSubjectsWithProperty(type, "vocab:via");
+		if (!res.hasNext()){
+			return null;
+		}
+		ArrayList<Via> list = new ArrayList<Via>();
+		while (res.hasNext()) {
+			Resource via = res.next();
+			String query2 = "PREFIX vocab: <http://localhost:2020/vocab/resource/> "
+				+" PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+				+ "SELECT ?lat ?lng WHERE { "
+				+ "?por rdf:type vocab:portal . "
+				+ "?por vocab:coordenada_latitud ?lat . "
+				+ "?por vocab:coordenada_longitud ?lng . "
+			    + "?por vocab:nombre_completo_via \"" + via.getRequiredProperty(nombreVia).getLiteral().getString() + "\" . "
+			    + "LIMIT 1 }";
+			QueryExecution q2 = QueryExecutionFactory.sparqlService(sparql, query2);
+			ResultSet res2 = q2.execSelect();
+			QuerySolution sol2 = res2.next();
+			MyLatLng coord = new MyLatLng(sol2.getLiteral("lat").getDouble(), sol2.getLiteral("lng").getDouble());
+			list.add(newVia(via, coord));
+		}
+		return list;
 	}
 
 	public Via getVia(Portal portal) {
