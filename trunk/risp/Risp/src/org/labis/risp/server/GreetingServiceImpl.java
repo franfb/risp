@@ -152,36 +152,28 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		// fCA = (y-y2) * (x0-x2) - (x-x2) * (y0-y2);
 		// fBC = (y-y1) * (x2-x1) - (x-x1) * (y2-y1);
 		// if (fAB * fBC > 0 && fBC * fCA > 0)
-
 		Zona zona = new Zona();
 		zona.setHabitantes(0);
 		zona.setHojas(0);
-
 		for (int i = 0; i < poly.getTriangles(); i++) {
 			double y0 = poly.getTriangle(i)[0].getLatitude();
 			double y1 = poly.getTriangle(i)[1].getLatitude();
 			double y2 = poly.getTriangle(i)[2].getLatitude();
-
 			double x0 = poly.getTriangle(i)[0].getLongitude();
 			double x1 = poly.getTriangle(i)[1].getLongitude();
 			double x2 = poly.getTriangle(i)[2].getLongitude();
-
 			double x1x0 = x1 - x0;
 			double y1y0 = y1 - y0;
-
 			double x0x2 = x0 - x2;
 			double y0y2 = y0 - y2;
-
 			double x2x1 = x2 - x1;
 			double y2y1 = y2 - y1;
-
 			String queryString = "PREFIX vocab: <http://localhost:2020/vocab/resource/> "
 					+ "SELECT (sum(?hab) as ?habitantes) (sum(?pad) as ?hojas) WHERE { "
 					+ "?por vocab:coordenada_latitud ?lat . "
 					+ "?por vocab:coordenada_longitud ?lng . "
 					+ "?por vocab:habitantes ?hab . "
 					+ "?por vocab:hojas_padronales ?pad . " +
-
 					"FILTER (0 < " + "((?lat - "
 					+ y0
 					+ ") * "
@@ -205,7 +197,6 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 					+ // fBC
 					") "
 					+
-
 					"FILTER (0 < "
 					+ "((?lat - "
 					+ y2
@@ -225,7 +216,6 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 					+ " - (?lng - "
 					+ x1 + ") * " + y2y1 + ") " + // fBC
 					") " + ". }";
-
 			Query query = QueryFactory.create(queryString, Syntax.syntaxARQ);
 			QueryExecution q = QueryExecutionFactory.sparqlService(sparql,
 					query);
@@ -244,25 +234,19 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		HashSet<Integer> set = new HashSet<Integer>();
 		int habitantes = 0;
 		int hojas = 0;
-		
 		for (int i = 0; i < poly.getTriangles(); i++) {
 			double y0 = poly.getTriangle(i)[0].getLatitude();
 			double y1 = poly.getTriangle(i)[1].getLatitude();
 			double y2 = poly.getTriangle(i)[2].getLatitude();
-
 			double x0 = poly.getTriangle(i)[0].getLongitude();
 			double x1 = poly.getTriangle(i)[1].getLongitude();
 			double x2 = poly.getTriangle(i)[2].getLongitude();
-
 			double x1x0 = x1 - x0;
 			double y1y0 = y1 - y0;
-
 			double x0x2 = x0 - x2;
 			double y0y2 = y0 - y2;
-
 			double x2x1 = x2 - x1;
 			double y2y1 = y2 - y1;
-
 			String queryString = "PREFIX vocab: <http://localhost:2020/vocab/resource/> "
 					+ "SELECT ?habitantes ?habitantesVia ?hojas ?longitud ?nombre ?codigo ?lat ?lng WHERE { "
 					+ "?por vocab:coordenada_latitud ?lat . "
@@ -297,7 +281,6 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 					+ // fBC
 					") "
 					+
-
 					"FILTER (0 < "
 					+ "((?lat - "
 					+ y2
@@ -317,9 +300,6 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 					+ " - (?lng - "
 					+ x1 + ") * " + y2y1 + ") " + // fBC
 					") " + ". }";
-
-			
-			
 			Query query = QueryFactory.create(queryString, Syntax.syntaxARQ);
 			QueryExecution q = QueryExecutionFactory.sparqlService(sparql,
 					query);
@@ -397,33 +377,11 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		return portales;
 	}
 
-//	public ArrayList<Portal> getPortales(Via via) {
-//		ResIterator it = model.listSubjectsWithProperty(codigoVia, via
-//				.getCodigo());
-//		if (!it.hasNext()) {
-//			return null;
-//		}
-//		Resource v = it.next();
-//		it = model.listSubjectsWithProperty(portalVia, v);
-//		ArrayList<Portal> list = new ArrayList<Portal>();
-//		while (it.hasNext()) {
-//			Resource portal = it.next();
-//			if (!portal.hasProperty(portalLabel)) {
-//				model.read(portal.getURI());
-//				portal = model.getResource(portal.getURI());
-//			}
-//			list.add(newPortal(portal));
-//		}
-//		return list;
-//	}
-
-	
 	public ArrayList<Portal> getPortales(Via via) {
 		String query = "PREFIX vocab: <http://localhost:2020/vocab/resource/> "
 			+" PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
 			+ "DESCRIBE ?por WHERE { "
 			+ "?por rdf:type vocab:portal . "
-		    //+ "?por vocab:nombre_completo_via \"" + via.getNombre() + "\" . }";
 		    + "?por vocab:codigo_de_via \"" + via.getCodigo() + "\" . }";
 		QueryExecution q = QueryExecutionFactory.sparqlService(sparql, query);
 		Model m = q.execDescribe();

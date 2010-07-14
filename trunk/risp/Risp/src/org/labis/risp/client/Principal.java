@@ -7,12 +7,10 @@ import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.i18n.client.LocaleInfo;
 
 import com.google.gwt.maps.client.DraggableObject;
 import com.google.gwt.maps.client.InfoWindow;
 import com.google.gwt.maps.client.InfoWindowContent;
-import com.google.gwt.maps.client.MapUIOptions;
 import com.google.gwt.maps.client.MapWidget;
 import com.google.gwt.maps.client.event.MapClickHandler;
 import com.google.gwt.maps.client.event.MarkerClickHandler;
@@ -20,11 +18,7 @@ import com.google.gwt.maps.client.event.MarkerInfoWindowCloseHandler;
 import com.google.gwt.maps.client.event.MarkerMouseOutHandler;
 import com.google.gwt.maps.client.event.MarkerMouseOverHandler;
 import com.google.gwt.maps.client.event.PolygonClickHandler;
-import com.google.gwt.maps.client.event.PolylineClickHandler;
 import com.google.gwt.maps.client.event.PolylineEndLineHandler;
-import com.google.gwt.maps.client.event.PolylineLineUpdatedHandler;
-import com.google.gwt.maps.client.event.PolylineClickHandler.PolylineClickEvent;
-import com.google.gwt.maps.client.event.PolylineLineUpdatedHandler.PolylineLineUpdatedEvent;
 import com.google.gwt.maps.client.geom.LatLng;
 import com.google.gwt.maps.client.geom.Point;
 import com.google.gwt.maps.client.overlay.Icon;
@@ -33,7 +27,6 @@ import com.google.gwt.maps.client.overlay.MarkerOptions;
 import com.google.gwt.maps.client.overlay.PolyStyleOptions;
 import com.google.gwt.maps.client.overlay.Polygon;
 import com.google.gwt.maps.client.overlay.Polyline;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DialogBox;
@@ -53,10 +46,12 @@ public class Principal implements EntryPoint{
 	HTML viaLink;
 	HTML zonaLink;
 	HTML limpiarLink;
+	HTML leyendaLink;
 	
 	DialogBox dialogoPortal;
 	DialogBox dialogoVia;
 	DialogBox dialogoZona;
+	DialogBox dialogoLeyenda;
 	
 	DialogBox noResultados;
 	DialogBox noVia;
@@ -84,6 +79,7 @@ public class Principal implements EntryPoint{
 		crearDialogoPortal();
 		crearDialogoVia();
 		crearDialogoZona();
+		crearDialogoLeyenda();
 		noResultados = crearDialogoGenerico("La búsqueda no ha producido ningún resultado.");
 		noVia = crearDialogoGenerico("No hay ninguna vía cerca.");
 		noPortal = crearDialogoGenerico("No hay ningún portal cerca.");
@@ -158,6 +154,13 @@ public class Principal implements EntryPoint{
 		limpiarLink.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
 				map.clearOverlays();
+			}
+		});
+		
+		leyendaLink.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				dialogoLeyenda.show();
+				dialogoLeyenda.center();
 			}
 		});
 	}
@@ -348,6 +351,8 @@ public class Principal implements EntryPoint{
                 + "Mostrar información padronal de una zona" + "</a>");
         limpiarLink = new HTML("<a href=\"javascript:undefined;\">"
                 + "Limpiar mapa" + "</a>");
+        leyendaLink = new HTML("<a href=\"javascript:undefined;\">"
+                + "Mostrar leyenda" + "</a>");
 		HorizontalPanel gerencia = new HorizontalPanel();
 		gerencia.setSpacing(5);
 		HTML proyecto = new HTML("<a href=\"http://code.google.com/p/risp/\" target=\"_blank\">Página web del proyecto RISP </a>");
@@ -362,6 +367,7 @@ public class Principal implements EntryPoint{
         portalLink.setStyleName("texto13");
         zonaLink.setStyleName("texto13");
         limpiarLink.setStyleName("texto13");
+        leyendaLink.setStyleName("texto13");
         
         Image ull = new Image("http://www.ull.es/Public/images/wull/logo.gif");
         
@@ -377,7 +383,7 @@ public class Principal implements EntryPoint{
         columna2.add(new HTML("<br>"));
         columna2.add(limpiarLink);
         columna2.add(new HTML("<br>"));
-        columna2.add(new HTML("<br>"));
+        columna2.add(leyendaLink);
         columna2.add(new HTML("<br>"));
         columna2.add(new HTML("<br>"));
         columna2.add(new HTML("<br>"));
@@ -400,6 +406,74 @@ public class Principal implements EntryPoint{
         
         RootPanel.get().add(map, 0, 0);
         RootPanel.get().add(columna, 50, 0);
+	}
+	
+	
+	private void crearDialogoLeyenda() {
+		Button ok = new Button("ocultar");
+		dialogoLeyenda = new DialogBox();
+		ok.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				dialogoLeyenda.hide();
+			}
+		});
+		dialogoLeyenda.setGlassEnabled(true);
+		dialogoLeyenda.setAnimationEnabled(true);
+	    ok.setStyleName("texto13");
+		VerticalPanel vertical = new VerticalPanel();
+		vertical.setSpacing(10);
+	
+		HorizontalPanel horizontal1 = new HorizontalPanel();
+		horizontal1.setSpacing(10);
+		horizontal1.add(new Image("http://www.visual-case.it/vc/pics/casetta_base.png"));
+		HTML text1 = new HTML("Portal con menos de 10 habitantes");
+		text1.setStyleName("texto13");
+		horizontal1.add(text1);
+		
+		HorizontalPanel horizontal2 = new HorizontalPanel();
+		horizontal2.setSpacing(10);
+		horizontal2.add(new Image("http://www.visual-case.it/vc/pics/casetta_green.png"));
+		HTML text2 = new HTML("Portal con entre 10 y 50 habitantes");
+		text2.setStyleName("texto13");
+		horizontal2.add(text2);
+		
+		HorizontalPanel horizontal3 = new HorizontalPanel();
+		horizontal3.setSpacing(10);
+		horizontal3.add(new Image("http://www.visual-case.it/vc/pics/casetta_red.png"));
+		HTML text3 = new HTML("Portal con más de 50 habitantes");
+		text3.setStyleName("texto13");
+		horizontal3.add(text3);
+		
+		HorizontalPanel horizontal4 = new HorizontalPanel();
+		horizontal4.setSpacing(10);
+		horizontal4.add(new Image("http://maps.google.com/mapfiles/kml/pal4/icon23.png"));
+		HTML text4 = new HTML("Vía con menos de 100 habitantes");
+		text4.setStyleName("texto13");
+		horizontal4.add(text4);
+		
+		HorizontalPanel horizontal5 = new HorizontalPanel();
+		horizontal5.setSpacing(10);
+		horizontal5.add(new Image("http://maps.google.com/mapfiles/kml/pal4/icon54.png"));
+		HTML text5 = new HTML("Vía con entre 100 y 500 habitantes");
+		text5.setStyleName("texto13");
+		horizontal5.add(text5);
+		
+		HorizontalPanel horizontal6 = new HorizontalPanel();
+		horizontal6.setSpacing(10);
+		horizontal6.add(new Image("http://maps.google.com/mapfiles/kml/pal4/icon7.png"));
+		HTML text6 = new HTML("Vía con más de 500 habitantes");
+		text6.setStyleName("texto13");
+		horizontal6.add(text6);
+		
+		vertical.add(horizontal1);
+		vertical.add(horizontal2);
+		vertical.add(horizontal3);
+		vertical.add(horizontal4);
+		vertical.add(horizontal5);
+		vertical.add(horizontal6);
+		vertical.add(ok);
+		vertical.setCellHorizontalAlignment(ok, HasHorizontalAlignment.ALIGN_CENTER);
+		dialogoLeyenda.setWidget(vertical);
 	}
 	
 	private DialogBox crearDialogoGenerico(String mensaje) {
@@ -465,16 +539,13 @@ public class Principal implements EntryPoint{
 		dialogoPortal.setAnimationEnabled(true);
 	    HTML text1 = new HTML("Se puede obtener información padronal de un portal por su localización geográfica. " +
 	    	"Para ello, pulse el siguiente botón y haga click en el mapa.");
-	    
 	    HTML text2 = new HTML("También se puede obtener información padronal de todos los portales que se encuentren dentro de una zona específica. " +
 	    	"Para ello, pulse el siguiente botón y construya en el mapa la zona de interés, mediante un polígono.");
 	    
 	    HTML text3 = new HTML("Por último, se puede buscar un portal introduciendo la dirección de la vía y el número de portal.");
-	    
 	    text1.setStyleName("texto13");
 	    text2.setStyleName("texto13");
 	    text3.setStyleName("texto13");
-	  
 	    VerticalPanel vertical = new VerticalPanel();
 	    vertical.setSpacing(10);
 	    dialogoPortal.setWidget(vertical);
@@ -497,20 +568,17 @@ public class Principal implements EntryPoint{
 		via.setStyleName("texto13");
 		zona.setStyleName("texto13");
 		volver.setStyleName("texto13");
-		
 		volver.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
 				dialogoVia.hide();
 			}
 		});
-		
 		zona.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
 				dialogoVia.hide();
 				crearPolilinea(2);
 			}
 		});
-		
 		via.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
 				dialogoVia.hide();
@@ -539,11 +607,9 @@ public class Principal implements EntryPoint{
 	    	"Para ello, pulse el siguiente botón y construya en el mapa la zona de interés, mediante un polígono.");
 	    
 	    HTML text3 = new HTML("Por último, se puede buscar una vía introduciendo el nombre en el siguiente campo de texto.");
-	    
 	    text1.setStyleName("texto13");
 	    text2.setStyleName("texto13");
 	    text3.setStyleName("texto13");
-	  
 	    VerticalPanel vertical = new VerticalPanel();
 	    vertical.setSpacing(10);
 	    dialogoVia.setWidget(vertical);
@@ -600,18 +666,13 @@ public class Principal implements EntryPoint{
 			portal.getNumero() + 
 			"</b>";
 		}
-
 		VerticalPanel vertical = new VerticalPanel();
-
-		
 		HTML text = new HTML(nombreCalle
 				+ "<br>Personas empadronadas: "
 				+ portal.getHabitantes() + "<br>Hojas padronales: "
 				+ portal.getHojas());
 		text.setStyleName("texto13");
 		vertical.add(text);
-
-		
 		if(verTodasVias){
 			HTML link1 = new HTML();
 			link1.addStyleName("ver");
@@ -664,10 +725,8 @@ public class Principal implements EntryPoint{
 				+ via.getCodigo());
 		text.setStyleName("texto13");
 		markerInfo = marker;
-
 		final VerticalPanel vertical = new VerticalPanel();
 		vertical.add(text);
-		
 		if(verTodosPortales){
 			HTML link1 = new HTML();
 			link1.addStyleName("ver");
@@ -678,7 +737,6 @@ public class Principal implements EntryPoint{
 						greetingService.getPortales(via, new AsyncCallback<ArrayList<Portal>>(){
 							public void onFailure(Throwable caught) {}
 							public void onSuccess(ArrayList<Portal> result) {
-								//vertical.remove(link1);
 								map.removeOverlay(marker);
 								for (Portal portal: result){
 									map.addOverlay(createMarkerPortal(portal, false));
@@ -704,22 +762,14 @@ public class Principal implements EntryPoint{
 		MarkerOptions markerOpt = MarkerOptions.newInstance();
 		markerOpt.setClickable(true);
 		MarkerOptions opt = portalIcon1;
-		if (portal.getHabitantes() > 10){
+		if (portal.getHabitantes() >= 10){
 			opt = portalIcon2;
 		}
 		if (portal.getHabitantes() > 50){
 			opt = portalIcon3;
 		}
-		
-		
-		
 		final Marker marker = new Marker(LatLng.newInstance(portal.getCoordenadas()
 				.getLatitude(), portal.getCoordenadas().getLongitude()), opt);
-
-		
-		
-		
-		
 		marker.addMarkerMouseOverHandler(new MarkerMouseOverHandler() {
 			public void onMouseOver(MarkerMouseOverEvent event) {
 				if (markerInfo != null && markerInfo == marker){
@@ -728,7 +778,6 @@ public class Principal implements EntryPoint{
 				infoWindowPortal(marker, portal, verTodasVias);
 			}
 		});
-		
 		final MarkerMouseOutHandler out = new MarkerMouseOutHandler(){
 			public void onMouseOut(MarkerMouseOutEvent event) {
 				InfoWindow info = map.getInfoWindow();
@@ -737,14 +786,11 @@ public class Principal implements EntryPoint{
 			}
 		};
 		marker.addMarkerMouseOutHandler(out);
-		
-		
 		marker.addMarkerClickHandler(new MarkerClickHandler() {
 			public void onClick(MarkerClickEvent event) {
 				marker.removeMarkerMouseOutHandler(out);
 			}
 		});
-		
 		marker.addMarkerInfoWindowCloseHandler(new MarkerInfoWindowCloseHandler() {
 			public void onInfoWindowClose(MarkerInfoWindowCloseEvent event) {
 				marker.removeMarkerMouseOutHandler(out);
@@ -759,19 +805,16 @@ public class Principal implements EntryPoint{
 	}
 	
 	private Marker createMarkerVia(final Via via, final boolean verTodosPortales) {
-		
 		MarkerOptions opt = viaIcon1;
-		if (via.getHabitantes() > 100){
+		if (via.getHabitantes() >= 100){
 			opt = viaIcon2;
 		}
 		if (via.getHabitantes() > 500){
 			opt = viaIcon3;
 		}
-		
 		final Marker marker = new Marker(LatLng.newInstance(via.getCoordenadas()
 				.getLatitude(), via.getCoordenadas().getLongitude()), opt);
 		marker.setDraggingEnabled(true);
-
 		marker.addMarkerMouseOverHandler(new MarkerMouseOverHandler() {
 			public void onMouseOver(MarkerMouseOverEvent event) {
 				if (markerInfo != null && markerInfo == marker){
@@ -780,7 +823,6 @@ public class Principal implements EntryPoint{
 				infoWindowVia(marker, via, verTodosPortales);
 			}
 		});
-		
 		final MarkerMouseOutHandler out = new MarkerMouseOutHandler(){
 			public void onMouseOut(MarkerMouseOutEvent event) {
 				InfoWindow info = map.getInfoWindow();
@@ -789,14 +831,11 @@ public class Principal implements EntryPoint{
 			}
 		};
 		marker.addMarkerMouseOutHandler(out);
-		
-		
 		marker.addMarkerClickHandler(new MarkerClickHandler() {
 			public void onClick(MarkerClickEvent event) {
 				marker.removeMarkerMouseOutHandler(out);
 			}
 		});
-		
 		marker.addMarkerInfoWindowCloseHandler(new MarkerInfoWindowCloseHandler() {
 			public void onInfoWindowClose(MarkerInfoWindowCloseEvent event) {
 				marker.removeMarkerMouseOutHandler(out);
@@ -822,7 +861,6 @@ public class Principal implements EntryPoint{
 		map.addOverlay(poly);
 		poly.setDrawingEnabled();
 		poly.setStrokeStyle(style);
-
 		poly.addPolylineEndLineHandler(new PolylineEndLineHandler() {
 
 			public void onEnd(PolylineEndLineEvent event) {
@@ -835,7 +873,6 @@ public class Principal implements EntryPoint{
 				else if(opcion == 2){
 					nuevaZonaVias(event.getSender());
 				}
-				//enableButtons();
 			}
 		});
 	}
@@ -1088,19 +1125,9 @@ public class Principal implements EntryPoint{
 								noVia.show();
 								noVia.center();
 							}
-							else{
-								greetingService.getPortales(via, new AsyncCallback<ArrayList<Portal>>(){
-									public void onFailure(Throwable caught) {}
-									public void onSuccess(ArrayList<Portal> result) {
-										for (Portal portal: result){
-											map.addOverlay(createMarkerPortal(portal, false));
-										}
-										Marker m = createMarkerVia(via, false);
-										map.addOverlay(m);
-										infoWindowVia(m, via, false);
-									}
-								});
-							}
+							Marker m = createMarkerVia(via, true);
+							map.addOverlay(m);
+							infoWindowVia(m, via, true);
 						}
 					});
 				}
