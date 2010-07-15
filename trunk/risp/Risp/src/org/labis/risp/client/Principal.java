@@ -3,6 +3,8 @@ package org.labis.risp.client;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
+import org.apache.xerces.impl.io.Latin1Reader;
+
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -176,6 +178,8 @@ public class Principal implements EntryPoint{
 		
 		final TextBox via = new TextBox();
 		final TextBox numero = new TextBox();
+		via.setStyleName("texto13");
+		numero.setStyleName("texto13");
 		via.setWidth("20em");
 		numero.setWidth("5em");
 		
@@ -237,6 +241,16 @@ public class Principal implements EntryPoint{
 											map.addOverlay(m);
 										}
 										infoWindowPortal(m, por, true);
+										map.setCenter(m.getLatLng());
+										for (Portal p: portales){
+											LatLng c = LatLng.newInstance(
+												p.getCoordenadas().getLatitude(),
+												p.getCoordenadas().getLongitude()
+											);
+											while (!map.getBounds().containsLatLng(c)){
+												map.setZoomLevel(map.getZoomLevel() - 1);
+											}
+										}
 									}
 								}
 								});
@@ -258,6 +272,7 @@ public class Principal implements EntryPoint{
 		horizontal2.setSpacing(10);
 		
 		final TextBox via = new TextBox();
+		via.setStyleName("texto13");
 		via.setWidth("20em");
 		
 		HTML textVia = new HTML("Vía:  ");
@@ -307,10 +322,20 @@ public class Principal implements EntryPoint{
 											map.addOverlay(m);
 										}
 										infoWindowVia(m, via, true);
+										map.setCenter(m.getLatLng());
+										for (Via v: vias){
+											LatLng c = LatLng.newInstance(
+												v.getCoordenadas().getLatitude(),
+												v.getCoordenadas().getLongitude()
+											);
+											while (!map.getBounds().containsLatLng(c)){
+												map.setZoomLevel(map.getZoomLevel() - 1);
+											}
+										}
 									}
 								}
-								});
-							}
+							});
+						}
 					catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -319,8 +344,6 @@ public class Principal implements EntryPoint{
 		return vertical;
 	}
 
-
-    
 	private void buildUi() {
         map = new MapWidget();
         LatLng tenerife = LatLng.newInstance(28.5160,-16.3761);
