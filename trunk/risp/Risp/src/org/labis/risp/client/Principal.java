@@ -3,7 +3,6 @@ package org.labis.risp.client;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-import org.apache.xerces.impl.io.Latin1Reader;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
@@ -13,14 +12,23 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.maps.client.DraggableObject;
 import com.google.gwt.maps.client.InfoWindow;
 import com.google.gwt.maps.client.InfoWindowContent;
+import com.google.gwt.maps.client.MapPane;
 import com.google.gwt.maps.client.MapWidget;
+import com.google.gwt.maps.client.event.MapAddOverlayHandler;
 import com.google.gwt.maps.client.event.MapClickHandler;
+import com.google.gwt.maps.client.event.MapRemoveOverlayHandler;
 import com.google.gwt.maps.client.event.MarkerClickHandler;
 import com.google.gwt.maps.client.event.MarkerInfoWindowCloseHandler;
 import com.google.gwt.maps.client.event.MarkerMouseOutHandler;
 import com.google.gwt.maps.client.event.MarkerMouseOverHandler;
 import com.google.gwt.maps.client.event.PolygonClickHandler;
+import com.google.gwt.maps.client.event.PolylineClickHandler;
 import com.google.gwt.maps.client.event.PolylineEndLineHandler;
+import com.google.gwt.maps.client.event.PolylineVisibilityChangedHandler;
+import com.google.gwt.maps.client.event.MapAddOverlayHandler.MapAddOverlayEvent;
+import com.google.gwt.maps.client.event.MapRemoveOverlayHandler.MapRemoveOverlayEvent;
+import com.google.gwt.maps.client.event.PolylineClickHandler.PolylineClickEvent;
+import com.google.gwt.maps.client.event.PolylineVisibilityChangedHandler.PolylineVisibilityChangedEvent;
 import com.google.gwt.maps.client.geom.LatLng;
 import com.google.gwt.maps.client.geom.Point;
 import com.google.gwt.maps.client.overlay.Icon;
@@ -58,7 +66,11 @@ public class Principal implements EntryPoint{
 	DialogBox noResultados;
 	DialogBox noVia;
 	DialogBox noPortal;
-
+	
+	TextBox textBoxVia;
+	TextBox textBoxPortalVia;
+	TextBox textBoxPortalNumero;
+	
 	private InfoWindow info;
 
 	private final GreetingServiceAsync greetingService = GWT
@@ -134,6 +146,8 @@ public class Principal implements EntryPoint{
 		
 		portalLink.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
+				textBoxPortalNumero.setText("");
+				textBoxPortalVia.setText("");
 				dialogoPortal.show();
 				dialogoPortal.center();
 			}
@@ -141,6 +155,7 @@ public class Principal implements EntryPoint{
 		
 		viaLink.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
+				textBoxVia.setText("");
 				dialogoVia.show();
 				dialogoVia.center();
 			}
@@ -176,12 +191,12 @@ public class Principal implements EntryPoint{
 		horizontal1.setSpacing(10);
 		horizontal2.setSpacing(10);
 		
-		final TextBox via = new TextBox();
-		final TextBox numero = new TextBox();
-		via.setStyleName("texto13");
-		numero.setStyleName("texto13");
-		via.setWidth("20em");
-		numero.setWidth("5em");
+		textBoxPortalVia = new TextBox();
+		textBoxPortalNumero = new TextBox();
+		textBoxPortalVia.setStyleName("texto13");
+		textBoxPortalNumero.setStyleName("texto13");
+		textBoxPortalVia.setWidth("20em");
+		textBoxPortalNumero.setWidth("5em");
 		
 		HTML textVia = new HTML("Vía:  ");
 		HTML textNumero = new HTML("Número de portal:  ");
@@ -189,14 +204,14 @@ public class Principal implements EntryPoint{
 		textVia.setStyleName("texto13");
 		textNumero.setStyleName("texto13");
 
-		Button button = new Button("Buscar");
+		Button button = new Button("<b>Buscar</b>");
 		button.setStyleName("texto13");
 		
 		horizontal1.add(textVia);
-		horizontal1.add(via);
+		horizontal1.add(textBoxPortalVia);
 		
 		horizontal2.add(textNumero);
-		horizontal2.add(numero);
+		horizontal2.add(textBoxPortalNumero);
 		horizontal2.add(button);
 
 		vertical.add(horizontal1);
@@ -204,7 +219,7 @@ public class Principal implements EntryPoint{
 		
 		button.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
-				String texto = via.getText();
+				String texto = textBoxPortalVia.getText();
 				String[] resultado = texto.split(" ");
 				for (int i = 0; i < resultado.length; i++){
 					resultado[i] = resultado[i].trim();
@@ -214,13 +229,14 @@ public class Principal implements EntryPoint{
 				}
 				int n = 0;
 				try{
-					n = Integer.parseInt(numero.getText().trim());
+					n = Integer.parseInt(textBoxPortalNumero.getText().trim());
 				}
 				catch (NumberFormatException e){
 					return;
 				}
 				dialogoPortal.hide();
 				try {
+					map.getDragObject().setDraggableCursor("progress");
 					greetingService.getPortales(resultado, n,
 							new AsyncCallback<ArrayList<Portal>>() {
 								public void onFailure(Throwable caught) {
@@ -252,6 +268,7 @@ public class Principal implements EntryPoint{
 											}
 										}
 									}
+									map.getDragObject().setDraggableCursor(DraggableObject.getDraggableCursorDefault());
 								}
 								});
 							}
@@ -271,19 +288,19 @@ public class Principal implements EntryPoint{
 		horizontal1.setSpacing(10);
 		horizontal2.setSpacing(10);
 		
-		final TextBox via = new TextBox();
-		via.setStyleName("texto13");
-		via.setWidth("20em");
+		textBoxVia = new TextBox();
+		textBoxVia.setStyleName("texto13");
+		textBoxVia.setWidth("20em");
 		
 		HTML textVia = new HTML("Vía:  ");
 
 		textVia.setStyleName("texto13");
 
-		Button button = new Button("Buscar");
+		Button button = new Button("<b>Buscar</b>");
 		button.setStyleName("texto13");
 		
 		horizontal1.add(textVia);
-		horizontal1.add(via);
+		horizontal1.add(textBoxVia);
 		
 		horizontal2.add(button);
 
@@ -292,7 +309,7 @@ public class Principal implements EntryPoint{
 		
 		button.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
-				String texto = via.getText();
+				String texto = textBoxVia.getText();
 				String[] resultado = texto.split(" ");
 				for (int i = 0; i < resultado.length; i++){
 					resultado[i] = resultado[i].trim();
@@ -302,6 +319,7 @@ public class Principal implements EntryPoint{
 				}
 				dialogoVia.hide();
 				try {
+					map.getDragObject().setDraggableCursor("progress");
 					greetingService.getVias(resultado,
 							new AsyncCallback<ArrayList<Via>>() {
 								public void onFailure(Throwable caught) {
@@ -333,6 +351,7 @@ public class Principal implements EntryPoint{
 											}
 										}
 									}
+									map.getDragObject().setDraggableCursor(DraggableObject.getDraggableCursorDefault());
 								}
 							});
 						}
@@ -409,8 +428,6 @@ public class Principal implements EntryPoint{
         columna2.add(leyendaLink);
         columna2.add(new HTML("<br>"));
         columna2.add(new HTML("<br>"));
-        columna2.add(new HTML("<br>"));
-        columna2.add(new HTML("<br>"));
         columna2.add(proyecto);
         columna2.add(ull);
         columna2.add(gerencia);
@@ -432,9 +449,200 @@ public class Principal implements EntryPoint{
 	}
 	
 	
+	
+	
+	private DialogBox crearDialogoGenerico(String mensaje) {
+		Button ok = new Button("ok");
+		final DialogBox dialogo = new DialogBox();
+		dialogo.setText("ERROR");
+		ok.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				dialogo.hide();
+			}
+		});
+		dialogo.setGlassEnabled(true);
+		dialogo.setAnimationEnabled(true);
+	    HTML texto = new HTML(mensaje);
+	    texto.setStyleName("texto15");
+	    ok.setStyleName("texto13");
+		VerticalPanel vertical = new VerticalPanel();
+		vertical.setSpacing(10);
+		vertical.add(texto);
+		vertical.add(ok);
+		vertical.setCellHorizontalAlignment(ok, HasHorizontalAlignment.ALIGN_CENTER);
+		dialogo.setWidget(vertical);
+		return dialogo;
+	}
+	
+	private void crearDialogoPortal() {
+		Button portal = new Button("<b>Buscar portal por localización</b>");
+		Button zona = new Button("<b>Buscar portal por zona</b>");
+		Button volver = new Button("Volver");
+		portal.setStyleName("texto13");
+		zona.setStyleName("texto13");
+		volver.setStyleName("texto13");
+		volver.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				dialogoPortal.hide();
+			}
+		});
+		zona.addClickHandler(new ClickHandler(){
+			public void onClick(ClickEvent event) {
+				dialogoPortal.hide();
+				crearPolilinea(1);
+			}
+		});
+		portal.addClickHandler(new ClickHandler(){
+			public void onClick(ClickEvent event) {
+				dialogoPortal.hide();
+				map.getDragObject().setDraggableCursor("crosshair");
+				map.addMapClickHandler(new MapClickHandler(){
+					public void onClick(MapClickEvent event) {
+						map.removeMapClickHandler(this);
+						map.getDragObject().setDraggableCursor(DraggableObject.getDraggableCursorDefault());
+						if (event.getLatLng() != null){
+							nuevoPortal(event.getLatLng());
+						}
+						else{
+							nuevoPortal(event.getOverlayLatLng());
+						}
+					}
+				});
+			}
+		});
+		dialogoPortal = new DialogBox();
+		dialogoPortal.setTitle("Información padronal de un portal");
+		dialogoPortal.setText("INFORMACIÓN PADRONAL DE UN PORTAL");
+	    dialogoPortal.setGlassEnabled(true);
+		dialogoPortal.setAnimationEnabled(true);
+	    HTML text1 = new HTML("Se puede obtener información padronal de un portal por su localización geográfica. " +
+	    	"Para ello, pulse el siguiente botón y haga click en el mapa.");
+	    HTML text2 = new HTML("También se puede obtener información padronal de todos los portales que se encuentren dentro de una zona específica. " +
+	    	"Para ello, pulse el siguiente botón y construya en el mapa la zona de interés, mediante un polígono.");
+	    
+	    HTML text3 = new HTML("Por último, se puede buscar un portal introduciendo la dirección de la vía y el número de portal.");
+	    text1.setStyleName("texto13");
+	    text2.setStyleName("texto13");
+	    text3.setStyleName("texto13");
+	    VerticalPanel vertical = new VerticalPanel();
+	    vertical.setSpacing(10);
+	    dialogoPortal.setWidget(vertical);
+	    vertical.add(text1);
+	    vertical.add(portal);
+	    vertical.add(new HTML("<br>"));
+	    vertical.add(text2);
+	    vertical.add(zona);
+	    vertical.add(new HTML("<br>"));
+	    vertical.add(text3);
+	    vertical.add(panelBusquedaPortal());
+	    vertical.add(volver);
+	    vertical.setCellHorizontalAlignment(volver, HasHorizontalAlignment.ALIGN_RIGHT);
+	}
+
+	private void crearDialogoVia() {
+		Button via = new Button("<b>Buscar vía por localización</b>");
+		Button zona = new Button("<b>Buscar vía por zona</b>");
+		Button volver = new Button("Volver");
+		via.setStyleName("texto13");
+		zona.setStyleName("texto13");
+		volver.setStyleName("texto13");
+		volver.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				dialogoVia.hide();
+			}
+		});
+		zona.addClickHandler(new ClickHandler(){
+			public void onClick(ClickEvent event) {
+				dialogoVia.hide();
+				crearPolilinea(2);
+			}
+		});
+		via.addClickHandler(new ClickHandler(){
+			public void onClick(ClickEvent event) {
+				dialogoVia.hide();
+				map.getDragObject().setDraggableCursor("crosshair");
+				map.addMapClickHandler(new MapClickHandler(){
+					public void onClick(MapClickEvent event) {
+						map.removeMapClickHandler(this);
+						map.getDragObject().setDraggableCursor(DraggableObject.getDraggableCursorDefault());
+						if (event.getLatLng() != null){
+							nuevaVia(event.getLatLng());
+						}
+						else{
+							nuevaVia(event.getOverlayLatLng());
+						}
+					}
+				});
+			}
+		});
+		dialogoVia = new DialogBox();
+		dialogoVia.setTitle("Información padronal de una vía");
+		dialogoVia.setText("INFORMACIÓN PADRONAL DE UNA VÍA");
+	    dialogoVia.setGlassEnabled(true);
+		dialogoVia.setAnimationEnabled(true);
+	    HTML text1 = new HTML("Se puede obtener información padronal de una vía por su localización geográfica. " +
+	    	"Para ello, pulse el siguiente botón y haga click en el mapa.");
+	    
+	    HTML text2 = new HTML("También se puede obtener información padronal de todas las vías que se encuentren dentro de una zona específica. " +
+	    	"Para ello, pulse el siguiente botón y construya en el mapa la zona de interés, mediante un polígono.");
+	    
+	    HTML text3 = new HTML("Por último, se puede buscar una vía introduciendo el nombre en el siguiente campo de texto.");
+	    text1.setStyleName("texto13");
+	    text2.setStyleName("texto13");
+	    text3.setStyleName("texto13");
+	    VerticalPanel vertical = new VerticalPanel();
+	    vertical.setSpacing(10);
+	    dialogoVia.setWidget(vertical);
+	    vertical.add(text1);
+	    vertical.add(via);
+	    vertical.add(new HTML("<br>"));
+	    vertical.add(text2);
+	    vertical.add(zona);
+	    vertical.add(new HTML("<br>"));
+	    vertical.add(text3);
+	    vertical.add(panelBusquedaVia());
+	    vertical.add(volver);
+	    vertical.setCellHorizontalAlignment(volver, HasHorizontalAlignment.ALIGN_RIGHT);
+	}
+	
+	private void crearDialogoZona() {
+		Button zona = new Button("<b>Crear zona</b>");
+		Button volver = new Button("Volver");
+		zona.setStyleName("texto13");
+		volver.setStyleName("texto13");
+		volver.addClickHandler(new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				dialogoZona.hide();
+			}
+		});
+		zona.addClickHandler(new ClickHandler(){
+			public void onClick(ClickEvent event) {
+				dialogoZona.hide();
+				crearPolilinea(0);
+			}
+		});
+		dialogoZona = new DialogBox();
+		dialogoZona.setTitle("Información padronal de una zona");
+		dialogoZona.setText("INFORMACIÓN PADRONAL DE UNA ZONA");
+		dialogoZona.setGlassEnabled(true);
+		dialogoZona.setAnimationEnabled(true);
+	    HTML text1 = new HTML("Se puede obtener información padronal de una zona específica del municipio. " +
+	    	"Para ello, pulse el siguiente botón y construya en el mapa la zona de interés, mediante un polígono.");
+	    text1.setStyleName("texto13");
+	    VerticalPanel vertical = new VerticalPanel();
+	    vertical.setSpacing(10);
+	    dialogoZona.setWidget(vertical);
+	    vertical.add(text1);
+	    vertical.add(zona);
+	    vertical.add(volver);
+	    vertical.setCellHorizontalAlignment(volver, HasHorizontalAlignment.ALIGN_RIGHT);
+	}
+	
 	private void crearDialogoLeyenda() {
 		Button ok = new Button("ocultar");
 		dialogoLeyenda = new DialogBox();
+		dialogoLeyenda.setTitle("Leyenda");
+		dialogoLeyenda.setText("LEYENDA");
 		ok.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
 				dialogoLeyenda.hide();
@@ -499,186 +707,6 @@ public class Principal implements EntryPoint{
 		dialogoLeyenda.setWidget(vertical);
 	}
 	
-	private DialogBox crearDialogoGenerico(String mensaje) {
-		Button ok = new Button("ok");
-		final DialogBox dialogo = new DialogBox();
-		ok.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				dialogo.hide();
-			}
-		});
-		dialogo.setGlassEnabled(true);
-		dialogo.setAnimationEnabled(true);
-	    HTML texto = new HTML(mensaje);
-	    texto.setStyleName("texto15");
-	    ok.setStyleName("texto13");
-		VerticalPanel vertical = new VerticalPanel();
-		vertical.setSpacing(10);
-		vertical.add(texto);
-		vertical.add(ok);
-		vertical.setCellHorizontalAlignment(ok, HasHorizontalAlignment.ALIGN_CENTER);
-		dialogo.setWidget(vertical);
-		return dialogo;
-	}
-	
-	private void crearDialogoPortal() {
-		Button portal = new Button("Buscar por localización");
-		Button zona = new Button("Buscar por zona");
-		Button volver = new Button("Volver");
-		portal.setStyleName("texto13");
-		zona.setStyleName("texto13");
-		volver.setStyleName("texto13");
-		volver.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				dialogoPortal.hide();
-			}
-		});
-		zona.addClickHandler(new ClickHandler(){
-			public void onClick(ClickEvent event) {
-				dialogoPortal.hide();
-				crearPolilinea(1);
-			}
-		});
-		portal.addClickHandler(new ClickHandler(){
-			public void onClick(ClickEvent event) {
-				dialogoPortal.hide();
-				map.getDragObject().setDraggableCursor("crosshair");
-				map.addMapClickHandler(new MapClickHandler(){
-					public void onClick(MapClickEvent event) {
-						map.removeMapClickHandler(this);
-						if (event.getLatLng() != null){
-							nuevoPortal(event.getLatLng());
-						}
-						else{
-							nuevoPortal(event.getOverlayLatLng());
-						}
-						map.getDragObject().setDraggableCursor(DraggableObject.getDraggableCursorDefault());
-					}
-				});
-			}
-		});
-		dialogoPortal = new DialogBox();
-	    dialogoPortal.setGlassEnabled(true);
-		dialogoPortal.setAnimationEnabled(true);
-	    HTML text1 = new HTML("Se puede obtener información padronal de un portal por su localización geográfica. " +
-	    	"Para ello, pulse el siguiente botón y haga click en el mapa.");
-	    HTML text2 = new HTML("También se puede obtener información padronal de todos los portales que se encuentren dentro de una zona específica. " +
-	    	"Para ello, pulse el siguiente botón y construya en el mapa la zona de interés, mediante un polígono.");
-	    
-	    HTML text3 = new HTML("Por último, se puede buscar un portal introduciendo la dirección de la vía y el número de portal.");
-	    text1.setStyleName("texto13");
-	    text2.setStyleName("texto13");
-	    text3.setStyleName("texto13");
-	    VerticalPanel vertical = new VerticalPanel();
-	    vertical.setSpacing(10);
-	    dialogoPortal.setWidget(vertical);
-	    vertical.add(text1);
-	    vertical.add(portal);
-	    vertical.add(new HTML("<br>"));
-	    vertical.add(text2);
-	    vertical.add(zona);
-	    vertical.add(new HTML("<br>"));
-	    vertical.add(text3);
-	    vertical.add(panelBusquedaPortal());
-	    vertical.add(volver);
-	    vertical.setCellHorizontalAlignment(volver, HasHorizontalAlignment.ALIGN_RIGHT);
-	}
-
-	private void crearDialogoVia() {
-		Button via = new Button("Buscar por localización");
-		Button zona = new Button("Buscar por zona");
-		Button volver = new Button("Volver");
-		via.setStyleName("texto13");
-		zona.setStyleName("texto13");
-		volver.setStyleName("texto13");
-		volver.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				dialogoVia.hide();
-			}
-		});
-		zona.addClickHandler(new ClickHandler(){
-			public void onClick(ClickEvent event) {
-				dialogoVia.hide();
-				crearPolilinea(2);
-			}
-		});
-		via.addClickHandler(new ClickHandler(){
-			public void onClick(ClickEvent event) {
-				dialogoVia.hide();
-				map.getDragObject().setDraggableCursor("crosshair");
-				map.addMapClickHandler(new MapClickHandler(){
-					public void onClick(MapClickEvent event) {
-						map.removeMapClickHandler(this);
-						if (event.getLatLng() != null){
-							nuevaVia(event.getLatLng());
-						}
-						else{
-							nuevaVia(event.getOverlayLatLng());
-						}
-						map.getDragObject().setDraggableCursor(DraggableObject.getDraggableCursorDefault());
-					}
-				});
-			}
-		});
-		dialogoVia = new DialogBox();
-	    dialogoVia.setGlassEnabled(true);
-		dialogoVia.setAnimationEnabled(true);
-	    HTML text1 = new HTML("Se puede obtener información padronal de una vía por su localización geográfica. " +
-	    	"Para ello, pulse el siguiente botón y haga click en el mapa.");
-	    
-	    HTML text2 = new HTML("También se puede obtener información padronal de todas las vías que se encuentren dentro de una zona específica. " +
-	    	"Para ello, pulse el siguiente botón y construya en el mapa la zona de interés, mediante un polígono.");
-	    
-	    HTML text3 = new HTML("Por último, se puede buscar una vía introduciendo el nombre en el siguiente campo de texto.");
-	    text1.setStyleName("texto13");
-	    text2.setStyleName("texto13");
-	    text3.setStyleName("texto13");
-	    VerticalPanel vertical = new VerticalPanel();
-	    vertical.setSpacing(10);
-	    dialogoVia.setWidget(vertical);
-	    vertical.add(text1);
-	    vertical.add(via);
-	    vertical.add(new HTML("<br>"));
-	    vertical.add(text2);
-	    vertical.add(zona);
-	    vertical.add(new HTML("<br>"));
-	    vertical.add(text3);
-	    vertical.add(panelBusquedaVia());
-	    vertical.add(volver);
-	    vertical.setCellHorizontalAlignment(volver, HasHorizontalAlignment.ALIGN_RIGHT);
-	}
-	
-	private void crearDialogoZona() {
-		Button zona = new Button("Buscar por zona");
-		Button volver = new Button("Volver");
-		zona.setStyleName("texto13");
-		volver.setStyleName("texto13");
-		volver.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				dialogoZona.hide();
-			}
-		});
-		zona.addClickHandler(new ClickHandler(){
-			public void onClick(ClickEvent event) {
-				dialogoZona.hide();
-				crearPolilinea(0);
-			}
-		});
-		dialogoZona = new DialogBox();
-		dialogoZona.setGlassEnabled(true);
-		dialogoZona.setAnimationEnabled(true);
-	    HTML text1 = new HTML("Se puede obtener información padronal de una zona específica del municipio. " +
-	    	"Para ello, pulse el siguiente botón y construya en el mapa la zona de interés, mediante un polígono.");
-	    text1.setStyleName("texto13");
-	    VerticalPanel vertical = new VerticalPanel();
-	    vertical.setSpacing(10);
-	    dialogoZona.setWidget(vertical);
-	    vertical.add(text1);
-	    vertical.add(zona);
-	    vertical.add(volver);
-	    vertical.setCellHorizontalAlignment(volver, HasHorizontalAlignment.ALIGN_RIGHT);
-	}
-	
 	private void infoWindowPortal(final Marker marker, final Portal portal, boolean verTodasVias){
 		InfoWindow info = map.getInfoWindow();
 		String nombreCalle = "Desconocido";
@@ -696,13 +724,15 @@ public class Principal implements EntryPoint{
 				+ portal.getHojas());
 		text.setStyleName("texto13");
 		vertical.add(text);
-		if(verTodasVias){
+		if(verTodasVias && portal.getCodigoVia().compareTo("-") != 0){
 			HTML link1 = new HTML();
 			link1.addStyleName("ver");
 			link1.setHTML("<br>Ver toda la vía");
 			link1.addClickHandler(new ClickHandler() {
 				public void onClick(ClickEvent event) {
 					try {
+						map.getInfoWindow().close();
+						map.getDragObject().setDraggableCursor("progress");
 						greetingService.getVia(portal,
 								new AsyncCallback<Via>() {
 									public void onFailure(Throwable caught) {}
@@ -717,6 +747,7 @@ public class Principal implements EntryPoint{
 												Marker m = createMarkerVia(via, false);
 												map.addOverlay(m);
 												infoWindowVia(m, via, false);
+												map.getDragObject().setDraggableCursor(DraggableObject.getDraggableCursorDefault());
 											}
 										});
 									}
@@ -757,6 +788,8 @@ public class Principal implements EntryPoint{
 			link1.addClickHandler(new ClickHandler() {
 				public void onClick(ClickEvent event) {
 					try {
+						map.getInfoWindow().close();
+						map.getDragObject().setDraggableCursor("progress");
 						greetingService.getPortales(via, new AsyncCallback<ArrayList<Portal>>(){
 							public void onFailure(Throwable caught) {}
 							public void onSuccess(ArrayList<Portal> result) {
@@ -767,6 +800,7 @@ public class Principal implements EntryPoint{
 								Marker m = createMarkerVia(via, false);
 								map.addOverlay(m);
 								infoWindowVia(m, via, false);
+								map.getDragObject().setDraggableCursor(DraggableObject.getDraggableCursorDefault());
 							}
 						});
 					}
@@ -880,12 +914,11 @@ public class Principal implements EntryPoint{
 		PolyStyleOptions style = PolyStyleOptions.newInstance(color, weight,
 				opacity);
 
-		Polyline poly = new Polyline(new LatLng[0]);
+		final Polyline poly = new Polyline(new LatLng[0]);
 		map.addOverlay(poly);
 		poly.setDrawingEnabled();
 		poly.setStrokeStyle(style);
 		poly.addPolylineEndLineHandler(new PolylineEndLineHandler() {
-
 			public void onEnd(PolylineEndLineEvent event) {
 				if (opcion == 0){
 					nuevaZonaVacia(event.getSender());
@@ -900,10 +933,10 @@ public class Principal implements EntryPoint{
 		});
 	}
 	
-	
 	private void nuevaZonaVacia(final Polyline pline) {
 		try {
 			final MyPolygon myPoly = new MyPolygon(pline, map);
+			map.getDragObject().setDraggableCursor("progress");
 			greetingService.getZonass(myPoly,
 					new AsyncCallback<Zona>() {
 						public void onFailure(Throwable caught) {
@@ -916,6 +949,7 @@ public class Principal implements EntryPoint{
 							zona.setMyPoly(myPoly);
 							zona.setVer(true);
 							nuevaZona(zona);
+							map.getDragObject().setDraggableCursor(DraggableObject.getDraggableCursorDefault());
 						}
 					});
 		} catch (Exception e) {
@@ -1012,18 +1046,17 @@ public class Principal implements EntryPoint{
 	private void nuevaZonaVias(final Polyline pline) {
 		try {
 			final MyPolygon myPoly = new MyPolygon(pline, map);
+			map.getDragObject().setDraggableCursor("progress");
 			greetingService.getVias(myPoly,
 					new AsyncCallback<Zona>() {
 						public void onFailure(Throwable caught) {
 							System.out.println("Error.");
 						}
-
 						public void onSuccess(Zona result) {
 							ArrayList<Via> vias = result.getVias();
 							for (int i = 0; i < vias.size(); i++) {
 								map.addOverlay(createMarkerVia(vias.get(i), true));
 							}
-
 							ZonaClient zona = new ZonaClient();
 							zona.setPoly(MyPolygon.getPolygon(pline));
 							zona.setMyPoly(myPoly);
@@ -1031,6 +1064,7 @@ public class Principal implements EntryPoint{
 							zona.setHabitantes(result.getHabitantes());
 							zona.setHojas(result.getHojas());
 							nuevaZona(zona);
+							map.getDragObject().setDraggableCursor(DraggableObject.getDraggableCursorDefault());
 						}
 					});
 		} catch (Exception e) {
@@ -1041,6 +1075,7 @@ public class Principal implements EntryPoint{
 	
 	private void zonaVias(ZonaClient zona) {
 		try {
+			map.getDragObject().setDraggableCursor("progress");
 			greetingService.getVias(zona.getMyPoly(),
 					new AsyncCallback<Zona>() {
 						public void onFailure(Throwable caught) {
@@ -1051,6 +1086,7 @@ public class Principal implements EntryPoint{
 							for (int i = 0; i < vias.size(); i++) {
 								map.addOverlay(createMarkerVia(vias.get(i), true));
 							}
+							map.getDragObject().setDraggableCursor(DraggableObject.getDraggableCursorDefault());
 						}
 					});
 		} catch (Exception e) {
@@ -1062,6 +1098,7 @@ public class Principal implements EntryPoint{
 	private void nuevaZonaPortales(final Polyline pline) {
 		try {
 			final MyPolygon myPoly = new MyPolygon(pline, map);
+			map.getDragObject().setDraggableCursor("progress");
 			greetingService.getPortales(myPoly,
 					new AsyncCallback<ArrayList<Portal>>() {
 						public void onFailure(Throwable caught) {
@@ -1071,7 +1108,6 @@ public class Principal implements EntryPoint{
 						public void onSuccess(ArrayList<Portal> result) {
 							int habitantes = 0;
 							int hojas = 0;
-							
 							for (int i = 0; i < result.size(); i++) {
 								map.addOverlay(createMarkerPortal(result.get(i), false));
 								habitantes += result.get(i).getHabitantes();
@@ -1085,7 +1121,7 @@ public class Principal implements EntryPoint{
 							zona.setHabitantes(habitantes);
 							zona.setHojas(hojas);
 							nuevaZona(zona);
-
+							map.getDragObject().setDraggableCursor(DraggableObject.getDraggableCursorDefault());
 						}
 					});
 		} catch (Exception e) {
@@ -1095,6 +1131,7 @@ public class Principal implements EntryPoint{
 	
 	private void zonaPortales(ZonaClient zona) {
 		try {
+			map.getDragObject().setDraggableCursor("progress");
 			greetingService.getPortales(zona.getMyPoly(),
 					new AsyncCallback<ArrayList<Portal>>() {
 						public void onFailure(Throwable caught) {
@@ -1104,7 +1141,8 @@ public class Principal implements EntryPoint{
 						public void onSuccess(ArrayList<Portal> result) {
 							for (int i = 0; i < result.size(); i++) {
 								map.addOverlay(createMarkerPortal(result.get(i), false));
-							}	
+							}
+							map.getDragObject().setDraggableCursor(DraggableObject.getDraggableCursorDefault());
 						}
 					});
 		} catch (Exception e) {
@@ -1114,6 +1152,7 @@ public class Principal implements EntryPoint{
 	
 	private void nuevoPortal(final LatLng point) {
 		try {
+			map.getDragObject().setDraggableCursor("progress");
 			greetingService.getPortal(new MyLatLng(point),
 					new AsyncCallback<Portal>() {
 						public void onFailure(Throwable caught) {
@@ -1130,6 +1169,7 @@ public class Principal implements EntryPoint{
 								map.addOverlay(m);
 								infoWindowPortal(m, portal, true);
 							}
+							map.getDragObject().setDraggableCursor(DraggableObject.getDraggableCursorDefault());
 						}
 						});
 					}
@@ -1140,6 +1180,7 @@ public class Principal implements EntryPoint{
 	
 	private void nuevaVia(final LatLng point) {
 		try {
+			map.getDragObject().setDraggableCursor("progress");
 			greetingService.getVia(new MyLatLng(point),
 					new AsyncCallback<Via>() {
 						public void onFailure(Throwable caught) {}
@@ -1148,9 +1189,12 @@ public class Principal implements EntryPoint{
 								noVia.show();
 								noVia.center();
 							}
-							Marker m = createMarkerVia(via, true);
-							map.addOverlay(m);
-							infoWindowVia(m, via, true);
+							else{
+								Marker m = createMarkerVia(via, true);
+								map.addOverlay(m);
+								infoWindowVia(m, via, true);
+							}
+							map.getDragObject().setDraggableCursor(DraggableObject.getDraggableCursorDefault());
 						}
 					});
 				}

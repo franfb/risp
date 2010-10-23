@@ -9,15 +9,22 @@ public class Portal implements Serializable{
 	private int numero;
 	private int habitantes;
 	private int hojas;
+	private String codigoVia;
 	private String codigo;
 	private String via;
 	
 	public Portal(MyLatLng coordenadas, int numero, int habitantes, int hojas,
-			String codigo, String via) {
+			String codigoVia, String codigo, String via) {
 		this.coordenadas = coordenadas;
 		this.numero = numero;
 		this.habitantes = habitantes;
 		this.hojas = hojas;
+		if (codigoVia == null){
+			this.codigoVia = "-";
+		}
+		else{
+			this.codigoVia = codigoVia;
+		}
 		this.codigo = codigo;
 		this.via = via;
 	}
@@ -54,6 +61,19 @@ public class Portal implements Serializable{
 	
 	public void setHojas(int hojas) {
 		this.hojas = hojas;
+	}
+	
+	public String getCodigoVia(){
+		return codigoVia;
+	}
+	
+	public void setCodigoVia(String codigoVia){
+		if (codigoVia == null){
+			this.codigoVia = "-";
+		}
+		else{
+			this.codigoVia = codigoVia;
+		}
 	}
 	
 	public String getCodigo() {

@@ -40,12 +40,14 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 	private Property longitudMetros;
 	private Property nombreVia;
 	private Property viaLabel;
-	private String vocab = "http://localhost:2020/vocab/resource/";
+//	private String server = "http://82.165.137.100/risp/publicacion/";
+	private String server = "http://www2.neblire.com/risp/publicacion/";
+	private String vocab = server + "vocab/resource/";
 	private String rdfs = "http://www.w3.org/2000/01/rdf-schema#";
-	private String sparql = "http://localhost:2020/sparql";
+	private String sparql = server + "sparql";
 	private Model model = getModel();
 
-	private double min = 0.002;
+	private double min = 0.0002;
 	private double max = 0.02;
 
 	public Model getModel() {
@@ -130,7 +132,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 
 	private ResIterator getPortales(MyLatLng topRight, MyLatLng BottomLeft,
 			boolean conVia) {
-		String query = "PREFIX vocab: <http://localhost:2020/vocab/resource/> "
+		String query = "PREFIX vocab: <" + vocab + "> "
 				+ "DESCRIBE  ?por WHERE { "
 				+ "?por vocab:coordenada_latitud ?lat . " + "FILTER (?lat < "
 				+ topRight.getLatitude() + ") " + "FILTER (?lat > "
@@ -168,7 +170,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 			double y0y2 = y0 - y2;
 			double x2x1 = x2 - x1;
 			double y2y1 = y2 - y1;
-			String queryString = "PREFIX vocab: <http://localhost:2020/vocab/resource/> "
+			String queryString = "PREFIX vocab: <" + vocab + "> "
 					+ "SELECT (sum(?hab) as ?habitantes) (sum(?pad) as ?hojas) WHERE { "
 					+ "?por vocab:coordenada_latitud ?lat . "
 					+ "?por vocab:coordenada_longitud ?lng . "
@@ -247,7 +249,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 			double y0y2 = y0 - y2;
 			double x2x1 = x2 - x1;
 			double y2y1 = y2 - y1;
-			String queryString = "PREFIX vocab: <http://localhost:2020/vocab/resource/> "
+			String queryString = "PREFIX vocab: <" + vocab + "> "
 					+ "SELECT ?habitantes ?habitantesVia ?hojas ?longitud ?nombre ?codigo ?lat ?lng WHERE { "
 					+ "?por vocab:coordenada_latitud ?lat . "
 					+ "?por vocab:coordenada_longitud ?lng . "
@@ -329,6 +331,10 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		if (s != null) {
 			via = s.getLiteral().getString();
 		}
+		String codigoViaString = null;
+		if (portal.getProperty(codigoVia) != null){
+			codigoViaString = portal.getProperty(codigoVia).getLiteral().getString();
+		}
 		return new Portal(
 				new MyLatLng(portal.getRequiredProperty(coordenada_latitud)
 						.getLiteral().getDouble(), portal.getRequiredProperty(
@@ -338,6 +344,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 						.getInt(),
 				portal.getRequiredProperty(hojas_padronales).getLiteral()
 						.getInt(),
+				codigoViaString,
 				portal.getRequiredProperty(portalLabel).getLiteral()
 						.getString(), via);
 	}
@@ -378,7 +385,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 	}
 
 	public ArrayList<Portal> getPortales(Via via) {
-		String query = "PREFIX vocab: <http://localhost:2020/vocab/resource/> "
+		String query = "PREFIX vocab: <" + vocab + "> "
 			+" PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
 			+ "DESCRIBE ?por WHERE { "
 			+ "?por rdf:type vocab:portal . "
@@ -405,7 +412,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		for (int i = 0; i < nombre.length; i++){
 			filter += " FILTER( fn:contains (fn:lower-case(?nombre), fn:lower-case(\"" + nombre[i] + "\"))) ";
 		}
-		String query = "PREFIX vocab: <http://localhost:2020/vocab/resource/> "
+		String query = "PREFIX vocab: <" + vocab + "> "
 			+ "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
 			+ "PREFIX fn: <http://www.w3.org/2005/xpath-functions#> "
 			+ "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> "
@@ -433,7 +440,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		for (int i = 0; i < nombre.length; i++){
 			filter += " FILTER( fn:contains (fn:lower-case(?nombre), fn:lower-case(\"" + nombre[i] + "\"))) ";
 		}
-		String query = "PREFIX vocab: <http://localhost:2020/vocab/resource/> "
+		String query = "PREFIX vocab: <" + vocab + "> "
 			+ "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
 			+ "PREFIX fn: <http://www.w3.org/2005/xpath-functions#> "
 			+ "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> "
@@ -452,7 +459,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		ArrayList<Via> list = new ArrayList<Via>();
 		while (res.hasNext()) {
 			Resource via = res.next();
-			String query2 = "PREFIX vocab: <http://localhost:2020/vocab/resource/> "
+			String query2 = "PREFIX vocab: <" + vocab + "> "
 				+" PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
 				+ "SELECT ?lat ?lng WHERE { "
 				+ "?por rdf:type vocab:portal . "
@@ -470,13 +477,13 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		}
 		return list;
 	}
-
+	
 	public Via getVia(Portal portal) {
-		String query = "PREFIX vocab: <http://localhost:2020/vocab/resource/> "
+		String query = "PREFIX vocab: <" + vocab + "> "
 			+" PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
 			+ "DESCRIBE ?via WHERE { "
 			+ "?via rdf:type vocab:via . "
-		    + "?via vocab:nombre_completo_via \"" + portal.getVia() + "\" . }";
+		    + "?via vocab:codigo_de_via \"" + portal.getCodigoVia() + "\" . }";
 		QueryExecution q = QueryExecutionFactory.sparqlService(sparql, query);
 		Model m = q.execDescribe();
 		model.add(m);
