@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" output="test-classes" path="test"/>
+	<classpathentry kind="con" path="com.google.gwt.eclipse.core.GWT_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/arq-2.8.1.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/iri-0.7.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/junit-4.5.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/log4j-1.2.13.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/lucene-core-2.3.1.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/risp.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/slf4j-api-1.5.6.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/slf4j-log4j12-1.5.6.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/stax-api-1.0.1.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/wstx-asl-3.2.9.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/gwt-maps.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/jena-2.6.2.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/icu4j-3.4.4.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/xercesImpl-2.7.1.jar"/>
+	<classpathentry kind="lib" path="D:/ECLIPSE/plugins/com.google.gwt.eclipse.sdkbundle.2.0.4_2.0.4.v201006301309/gwt-2.0.4/gwt-user.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="file:/D:/ECLIPSE/plugins/com.google.gwt.eclipse.sdkbundle.2.0.4_2.0.4.v201006301309/gwt-2.0.4/doc/javadoc/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="D:/ECLIPSE/plugins/com.google.gwt.eclipse.sdkbundle.2.0.4_2.0.4.v201006301309/gwt-2.0.4/gwt-dev.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="file:/D:/ECLIPSE/plugins/com.google.gwt.eclipse.sdkbundle.2.0.4_2.0.4.v201006301309/gwt-2.0.4/doc/javadoc/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="output" path="war/WEB-INF/classes"/>
+</classpath>
