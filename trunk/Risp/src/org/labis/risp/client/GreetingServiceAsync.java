@@ -17,7 +17,7 @@ public interface GreetingServiceAsync {
 
 	void getPortales(Via via, AsyncCallback<ArrayList<Portal>> callback);
 
-	void getZonass(MyPolygon poly, AsyncCallback<Zona> callback);
+	void getZonas(MyPolygon poly, AsyncCallback<Zona> callback);
 
 	void getPortal(MyLatLng point, AsyncCallback<Portal> callback);
 

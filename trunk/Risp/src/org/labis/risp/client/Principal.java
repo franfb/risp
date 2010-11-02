@@ -19,7 +19,9 @@ import com.google.gwt.maps.client.event.MarkerInfoWindowCloseHandler;
 import com.google.gwt.maps.client.event.MarkerMouseOutHandler;
 import com.google.gwt.maps.client.event.MarkerMouseOverHandler;
 import com.google.gwt.maps.client.event.PolygonClickHandler;
+import com.google.gwt.maps.client.event.PolygonEndLineHandler;
 import com.google.gwt.maps.client.event.PolylineEndLineHandler;
+import com.google.gwt.maps.client.event.PolygonEndLineHandler.PolygonEndLineEvent;
 import com.google.gwt.maps.client.geom.LatLng;
 import com.google.gwt.maps.client.geom.Point;
 import com.google.gwt.maps.client.overlay.Icon;
@@ -916,6 +918,32 @@ public class Principal implements EntryPoint{
 	}
 	
 	
+//	private void crearPolilinea(final int opcion) {
+//		String color = "#FF0000";
+//		double opacity = 1.0;
+//		int weight = 1;
+//		PolyStyleOptions style = PolyStyleOptions.newInstance(color, weight,
+//				opacity);
+//
+//		final Polyline poly = new Polyline(new LatLng[0]);
+//		map.addOverlay(poly);
+//		poly.setDrawingEnabled();
+//		poly.setStrokeStyle(style);
+//		poly.addPolylineEndLineHandler(new PolylineEndLineHandler() {
+//			public void onEnd(PolylineEndLineEvent event) {
+//				if (opcion == 0){
+//					nuevaZonaVacia(event.getSender());
+//				}
+//				else if(opcion == 1){
+//					nuevaZonaPortales(event.getSender());
+//				}
+//				else if(opcion == 2){
+//					nuevaZonaVias(event.getSender());
+//				}
+//			}
+//		});
+//	}
+	
 	private void crearPolilinea(final int opcion) {
 		String color = "#FF0000";
 		double opacity = 1.0;
@@ -946,7 +974,7 @@ public class Principal implements EntryPoint{
 		try {
 			final MyPolygon myPoly = new MyPolygon(pline, map);
 			map.getDragObject().setDraggableCursor("progress");
-			greetingService.getZonass(myPoly,
+			greetingService.getZonas(myPoly,
 					new AsyncCallback<Zona>() {
 						public void onFailure(Throwable caught) {
 							error.show();
