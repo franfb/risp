@@ -67,6 +67,44 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		return model;
 	}
 
+	private Model executeDescribe(QueryExecution q){
+		Model m = null;
+		boolean success = false;
+		int count = 0;
+		while (! success && count < 4){
+			count++;
+			success = true;
+			try{
+				m = q.execDescribe(); 
+			}
+			catch (Exception e){
+				success = false;
+				System.out.println("SE PRODUJO EL FAMOSO ERROR HTTP EN DESCRIBE!!!!!");
+			};
+		}
+		System.out.println("EXITO!! " + count);
+		return m;
+	}
+		
+	private ResultSet executeSelect(QueryExecution q){
+		ResultSet result = null;
+		boolean success = false;
+		int count = 0;
+		while (! success && count < 4){
+			count++;
+			success = true;
+			try{
+				result = q.execSelect(); 
+			}
+			catch (Exception e){
+				success = false;
+				System.out.println("SE PRODUJO EL FAMOSO ERROR HTTP EN SELECT!!!!!");
+			};
+		}
+		System.out.println("EXITO!! " + count);
+		return result;
+	}
+	
 	private double distancia(Resource portal, MyLatLng point) {
 		double lat = portal.getRequiredProperty(coordenada_latitud).getLiteral()
 				.getDouble();
@@ -121,8 +159,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 	}
 
 	private Resource getVia(Resource portal) {
-		Resource via = model.getResource(portal.getProperty(portalVia)
-				.getResource().getURI());
+		Resource via = model.getResource(portal.getProperty(portalVia).getResource().getURI());
 		if (!via.hasProperty(viaLabel)) {
 			model.read(via.getURI());
 			via = model.getResource(via.getURI());
@@ -141,15 +178,14 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 				+ topRight.getLongitude() + ") " + "FILTER (?lng > "
 				+ BottomLeft.getLongitude() + ") . }";
 		QueryExecution q = QueryExecutionFactory.sparqlService(sparql, query);
-		Model m = q.execDescribe();
-		model.add(m);
+		Model m = executeDescribe(q);
 		if (conVia) {
 			return m.listSubjectsWithProperty(portalVia);
 		}
 		return m.listSubjects();
 	}
 
-	public Zona getZonass(MyPolygon poly) {
+	public Zona getZonas(MyPolygon poly) {
 		// fAB = (y-y0) * (x1-x0) - (x-x0) * (y1-y0);
 		// fCA = (y-y2) * (x0-x2) - (x-x2) * (y0-y2);
 		// fBC = (y-y1) * (x2-x1) - (x-x1) * (y2-y1);
@@ -221,7 +257,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 			Query query = QueryFactory.create(queryString, Syntax.syntaxARQ);
 			QueryExecution q = QueryExecutionFactory.sparqlService(sparql,
 					query);
-			ResultSet set = q.execSelect();
+			ResultSet set = executeSelect(q);
 			QuerySolution sol = set.nextSolution();
 			zona.setHabitantes(zona.getHabitantes()
 					+ sol.getLiteral("habitantes").getInt());
@@ -305,7 +341,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 			Query query = QueryFactory.create(queryString, Syntax.syntaxARQ);
 			QueryExecution q = QueryExecutionFactory.sparqlService(sparql,
 					query);
-			ResultSet it = q.execSelect();
+			ResultSet it = executeSelect(q);
 			while (it.hasNext()){
 				QuerySolution sol = it.next();
 				int codigo = Integer.parseInt(sol.getLiteral("codigo").getString());
@@ -391,8 +427,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 			+ "?por rdf:type vocab:portal . "
 		    + "?por vocab:codigo_de_via \"" + via.getCodigo() + "\" . }";
 		QueryExecution q = QueryExecutionFactory.sparqlService(sparql, query);
-		Model m = q.execDescribe();
-		model.add(m);
+		Model m = executeDescribe(q);
 		ResIterator res = m.listSubjectsWithProperty(hojas_padronales);
 		if (!res.hasNext()){
 			return null;
@@ -422,7 +457,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		    + filter
 		    + " }";
 		QueryExecution q = QueryExecutionFactory.sparqlService(sparql, query);
-		Model m = q.execDescribe();
+		Model m = executeDescribe(q);
 		ResIterator res = m.listSubjectsWithProperty(hojas_padronales);
 		if (!res.hasNext()){
 			return null;
@@ -450,8 +485,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		    + filter
 		    + " }";
 		QueryExecution q = QueryExecutionFactory.sparqlService(sparql, query);
-		Model m = q.execDescribe();
-		model.add(m);
+		Model m = executeDescribe(q);
 		ResIterator res = m.listSubjectsWithProperty(nombreVia);
 		if (!res.hasNext()){
 			return null;
@@ -468,7 +502,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 			    + "?por vocab:codigo_de_via \"" + via.getProperty(codigoVia).getString() + "\" . "
 			    + "} LIMIT 1";
 			QueryExecution q2 = QueryExecutionFactory.sparqlService(sparql, query2);
-			ResultSet res2 = q2.execSelect();
+			ResultSet res2 = executeSelect(q2);
 			if (res2.hasNext()){
 				QuerySolution sol2 = res2.next();
 				MyLatLng coord = new MyLatLng(sol2.getLiteral("lat").getDouble(), sol2.getLiteral("lng").getDouble());
@@ -485,8 +519,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 			+ "?via rdf:type vocab:via . "
 		    + "?via vocab:codigo_de_via \"" + portal.getCodigoVia() + "\" . }";
 		QueryExecution q = QueryExecutionFactory.sparqlService(sparql, query);
-		Model m = q.execDescribe();
-		model.add(m);
+		Model m = executeDescribe(q);
 		ResIterator res = m.listSubjectsWithProperty(longitudMetros);
 		if (!res.hasNext()){
 			return null;
