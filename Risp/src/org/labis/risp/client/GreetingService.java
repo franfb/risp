@@ -13,7 +13,7 @@ public interface GreetingService extends RemoteService {
 	ArrayList<Portal> getPortales(Via via);
 	ArrayList<Portal> getPortales(MyPolygon poly);
 	Zona getVias(MyPolygon poly);
-	Zona getZonas(MyPolygon poly);
+	Zona getZona(MyPolygon poly);
 	Via getVia(Portal portal);
 	ArrayList<Via> getVias(String[] nombre);
 }

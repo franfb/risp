@@ -40,7 +40,6 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 	private Property longitudMetros;
 	private Property nombreVia;
 	private Property viaLabel;
-//	private String server = "http://82.165.137.100/risp/publicacion/";
 	private String server = "http://www2.neblire.com/risp/publicacion/";
 	private String vocab = server + "vocab/resource/";
 	private String rdfs = "http://www.w3.org/2000/01/rdf-schema#";
@@ -185,7 +184,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		return m.listSubjects();
 	}
 
-	public Zona getZonas(MyPolygon poly) {
+	public Zona getZona(MyPolygon poly) {
 		// fAB = (y-y0) * (x1-x0) - (x-x0) * (y1-y0);
 		// fCA = (y-y2) * (x0-x2) - (x-x2) * (y0-y2);
 		// fBC = (y-y1) * (x2-x1) - (x-x1) * (y2-y1);
@@ -193,7 +192,7 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		Zona zona = new Zona();
 		zona.setHabitantes(0);
 		zona.setHojas(0);
-		for (int i = 0; i < poly.getTriangles(); i++) {
+		for (int i = 0; i < poly.getTriangleSize(); i++) {
 			double y0 = poly.getTriangle(i)[0].getLatitude();
 			double y1 = poly.getTriangle(i)[1].getLatitude();
 			double y2 = poly.getTriangle(i)[2].getLatitude();
@@ -265,14 +264,13 @@ public class GreetingServiceImpl extends RemoteServiceServlet implements
 		}
 		return zona;
 	}
-
 	
 	public Zona getVias(MyPolygon poly) {
 		ArrayList<Via> vias = new ArrayList<Via>();
 		HashSet<Integer> set = new HashSet<Integer>();
 		int habitantes = 0;
 		int hojas = 0;
-		for (int i = 0; i < poly.getTriangles(); i++) {
+		for (int i = 0; i < poly.getTriangleSize(); i++) {
 			double y0 = poly.getTriangle(i)[0].getLatitude();
 			double y1 = poly.getTriangle(i)[1].getLatitude();
 			double y2 = poly.getTriangle(i)[2].getLatitude();
