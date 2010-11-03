@@ -17,34 +17,30 @@ public class MyPolygon implements Serializable{
 	MyLatLng topRight, bottomLeft;
 	double area;
 	
-	
-	public static Polygon getPolygon(Polyline pline){
-		LatLng[] coord = new LatLng[pline.getVertexCount()];
-		for (int i = 0; i < pline.getVertexCount(); i++) {
-			coord[i] = pline.getVertex(i);
+	public static Polygon getPolygon(Polygon poly){
+		LatLng[] coord = new LatLng[poly.getVertexCount()];
+		for (int i = 0; i < poly.getVertexCount(); i++) {
+			coord[i] = poly.getVertex(i);
 		}
 		return new Polygon(coord, "#f33f00", 5, 1, "#ff0000", 0.2);
 	}
 	
-	
-	public MyPolygon(Polyline pline, MapWidget map){
-		Polygon poly = MyPolygon.getPolygon(pline);
+	public MyPolygon(Polygon poly, MapWidget map){
+		poly = getPolygon(poly);
 		poly.setVisible(false);
 		map.addOverlay(poly);
-		
 		vertex = new MyLatLng[poly.getVertexCount()];
 		for (int i = 0; i < vertex.length; i++){
 			vertex[i] = new MyLatLng(poly.getVertex(i));
 		}
-		
 		topRight = new MyLatLng(poly.getBounds().getNorthEast()); 
 		bottomLeft = new MyLatLng(poly.getBounds().getSouthWest());
 		area = poly.getArea();
-		
 		triangles = new MyLatLng[poly.getVertexCount() - 3][3];
-		
 		int size = 0;
+		int count = 0;
 		do{
+			count++;
 			for (int i = 0; i < poly.getVertexCount() - 1; i++){
 				LatLng[] ear = getEar(poly, i); 
 				if (ear != null){
@@ -56,17 +52,24 @@ public class MyPolygon implements Serializable{
 					break;
 				}
 			}
-		} while (size < triangles.length);
+		} while (size < triangles.length && count < triangles.length * 8);
+		if (count == triangles.length * 8){
+			vertex = null;
+			triangles = null;
+		}
 		map.removeOverlay(poly);
 	}		
 
 	public MyPolygon(){}
 	
 	public MyLatLng[] getTriangle(int index){
+		if (triangles == null){
+			return null;
+		}
 		return triangles[index];
 	}
 	
-	public int getTriangles(){
+	public int getTriangleSize(){
 		return triangles.length;
 	}
 	
@@ -93,15 +96,11 @@ public class MyPolygon implements Serializable{
 		if (next == poly.getVertexCount() - 1){
 			next = 0;
 		}
-		
 		LatLng[] l = {poly.getVertex(previous), poly.getVertex(next)};
 		Polyline line = new Polyline(l);
-		
-		
-	    if (! contains(poly, line.getBounds().getCenter())){
+	    if (poly.getVertexCount() > 4 && ! contains(poly, line.getBounds().getCenter())){
 	    	return null;
 	    }
-
 	    LatLng[] l2 = {poly.getVertex(index), poly.getVertex(previous), poly.getVertex(next), poly.getVertex(index)};
 	    Polygon triangle = new Polygon(l2);
 	    for (int i= 0; i < poly.getVertexCount() - 1; i++){    

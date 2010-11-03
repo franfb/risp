@@ -8,6 +8,8 @@ import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.logical.shared.CloseEvent;
+import com.google.gwt.event.logical.shared.CloseHandler;
 
 import com.google.gwt.maps.client.DraggableObject;
 import com.google.gwt.maps.client.InfoWindow;
@@ -20,8 +22,7 @@ import com.google.gwt.maps.client.event.MarkerMouseOutHandler;
 import com.google.gwt.maps.client.event.MarkerMouseOverHandler;
 import com.google.gwt.maps.client.event.PolygonClickHandler;
 import com.google.gwt.maps.client.event.PolygonEndLineHandler;
-import com.google.gwt.maps.client.event.PolylineEndLineHandler;
-import com.google.gwt.maps.client.event.PolygonEndLineHandler.PolygonEndLineEvent;
+import com.google.gwt.maps.client.event.PolygonRemoveHandler;
 import com.google.gwt.maps.client.geom.LatLng;
 import com.google.gwt.maps.client.geom.Point;
 import com.google.gwt.maps.client.overlay.Icon;
@@ -29,7 +30,7 @@ import com.google.gwt.maps.client.overlay.Marker;
 import com.google.gwt.maps.client.overlay.MarkerOptions;
 import com.google.gwt.maps.client.overlay.PolyStyleOptions;
 import com.google.gwt.maps.client.overlay.Polygon;
-import com.google.gwt.maps.client.overlay.Polyline;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DialogBox;
@@ -37,6 +38,7 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
+import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -60,6 +62,7 @@ public class Principal implements EntryPoint{
 	DialogBox noVia;
 	DialogBox noPortal;
 	DialogBox error;
+	DialogBox errorPoligono;
 	
 	TextBox textBoxVia;
 	TextBox textBoxPortalVia;
@@ -88,10 +91,11 @@ public class Principal implements EntryPoint{
 		crearDialogoVia();
 		crearDialogoZona();
 		crearDialogoLeyenda();
-		noResultados = crearDialogoGenerico("La búsqueda no ha producido ningún resultado.");
-		noVia = crearDialogoGenerico("No hay ninguna vía cerca.");
-		noPortal = crearDialogoGenerico("No hay ningún portal cerca.");
-		error = crearDialogoGenerico("Se ha producido un error. Vuelva a intentarlo.");
+		noResultados = crearDialogoGenerico("AVISO", "La búsqueda no ha producido ningún resultado.");
+		noVia = crearDialogoGenerico("AVISO", "No hay ninguna vía cerca.");
+		noPortal = crearDialogoGenerico("AVISO", "No hay ningún portal cerca.");
+		error = crearDialogoGenerico("ERROR", "Se ha producido un error. Vuelva a intentarlo.");
+		errorPoligono = crearDialogoGenerico("ERROR", "El polígono que ha introducido tiene segmentos que se cruzan. No puede utilizar este tipo de polígonos.");
 		
 		Icon icon = Icon.newInstance();
 		icon.setIconAnchor(Point.newInstance(16, 16));
@@ -397,12 +401,14 @@ public class Principal implements EntryPoint{
 		HorizontalPanel gerencia = new HorizontalPanel();
 		gerencia.setSpacing(5);
 		HTML proyecto = new HTML("<a href=\"http://code.google.com/p/risp/\" target=\"_blank\">Página web del proyecto RISP </a>");
+		HTML creadores = new HTML("<a href=\"mailto:danieltf@gmail.com, franfumero@gmail.com?subject=ABOUT%20RISP%20PROJECT\">Contacta con los creadores</a>");
         gerencia.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/gerencia.gif"));
         gerencia.add(new Image("http://www.gerenciaurbanismo.com/gerencia/GERENCIA/published/DEFAULT/img/layout_common/la_laguna.gif"));
         
         titulo1.setStylePrimaryName("texto13");
         bienvenida.setStyleName("texto15");
         texto1.setStyleName("texto13");
+		creadores.setStyleName("texto13");
 		proyecto.setStyleName("texto13");
         viaLink.setStyleName("texto13");
         portalLink.setStyleName("texto13");
@@ -426,6 +432,7 @@ public class Principal implements EntryPoint{
         columna2.add(new HTML("<br>"));
         columna2.add(leyendaLink);
         columna2.add(new HTML("<br>"));
+        columna2.add(creadores);
         columna2.add(new HTML("<br>"));
         columna2.add(proyecto);
         columna2.add(ull);
@@ -433,6 +440,7 @@ public class Principal implements EntryPoint{
 
         columna2.setCellHorizontalAlignment(ull, HasHorizontalAlignment.ALIGN_CENTER);
         columna2.setCellHorizontalAlignment(gerencia, HasHorizontalAlignment.ALIGN_CENTER);
+        columna2.setCellHorizontalAlignment(creadores, HasHorizontalAlignment.ALIGN_CENTER);
         columna2.setCellHorizontalAlignment(proyecto, HasHorizontalAlignment.ALIGN_CENTER);
         
         HorizontalPanel horizontal = new HorizontalPanel();
@@ -450,10 +458,10 @@ public class Principal implements EntryPoint{
 	
 	
 	
-	private DialogBox crearDialogoGenerico(String mensaje) {
+	private DialogBox crearDialogoGenerico(String title, String mensaje) {
 		Button ok = new Button("ok");
 		final DialogBox dialogo = new DialogBox();
-		dialogo.setText("ERROR");
+		dialogo.setText(title);
 		ok.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
 				dialogo.hide();
@@ -488,7 +496,7 @@ public class Principal implements EntryPoint{
 		zona.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
 				dialogoPortal.hide();
-				crearPolilinea(1);
+				crearPoligono(1);
 			}
 		});
 		portal.addClickHandler(new ClickHandler(){
@@ -553,7 +561,7 @@ public class Principal implements EntryPoint{
 		zona.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
 				dialogoVia.hide();
-				crearPolilinea(2);
+				crearPoligono(2);
 			}
 		});
 		via.addClickHandler(new ClickHandler(){
@@ -617,7 +625,7 @@ public class Principal implements EntryPoint{
 		zona.addClickHandler(new ClickHandler(){
 			public void onClick(ClickEvent event) {
 				dialogoZona.hide();
-				crearPolilinea(0);
+				crearPoligono(0);
 			}
 		});
 		dialogoZona = new DialogBox();
@@ -917,64 +925,60 @@ public class Principal implements EntryPoint{
 		return marker;
 	}
 	
-	
-//	private void crearPolilinea(final int opcion) {
-//		String color = "#FF0000";
-//		double opacity = 1.0;
-//		int weight = 1;
-//		PolyStyleOptions style = PolyStyleOptions.newInstance(color, weight,
-//				opacity);
-//
-//		final Polyline poly = new Polyline(new LatLng[0]);
-//		map.addOverlay(poly);
-//		poly.setDrawingEnabled();
-//		poly.setStrokeStyle(style);
-//		poly.addPolylineEndLineHandler(new PolylineEndLineHandler() {
-//			public void onEnd(PolylineEndLineEvent event) {
-//				if (opcion == 0){
-//					nuevaZonaVacia(event.getSender());
-//				}
-//				else if(opcion == 1){
-//					nuevaZonaPortales(event.getSender());
-//				}
-//				else if(opcion == 2){
-//					nuevaZonaVias(event.getSender());
-//				}
-//			}
-//		});
-//	}
-	
-	private void crearPolilinea(final int opcion) {
+	private void crearPoligono(final int opcion) {
 		String color = "#FF0000";
 		double opacity = 1.0;
 		int weight = 1;
-		PolyStyleOptions style = PolyStyleOptions.newInstance(color, weight,
-				opacity);
-
-		final Polyline poly = new Polyline(new LatLng[0]);
+		PolyStyleOptions style = PolyStyleOptions.newInstance(color, weight, opacity);
+		final Polygon poly = new Polygon(new LatLng[0]);
 		map.addOverlay(poly);
 		poly.setDrawingEnabled();
 		poly.setStrokeStyle(style);
-		poly.addPolylineEndLineHandler(new PolylineEndLineHandler() {
-			public void onEnd(PolylineEndLineEvent event) {
-				if (opcion == 0){
-					nuevaZonaVacia(event.getSender());
+		poly.addPolygonRemoveHandler(new PolygonRemoveHandler() {
+			public void onRemove(PolygonRemoveEvent event) {
+				for (int i = 0; i < zonas.size(); i++){
+					if (zonas.get(i).getPoly() == poly){
+						zonas.remove(i);
+						break;
+					}
 				}
-				else if(opcion == 1){
-					nuevaZonaPortales(event.getSender());
-				}
-				else if(opcion == 2){
-					nuevaZonaVias(event.getSender());
-				}
+			}
+		});
+		poly.addPolygonEndLineHandler(new PolygonEndLineHandler() {
+			public void onEnd(final PolygonEndLineEvent event) {
+				Timer t = new Timer() {
+					public void run() {
+						if (opcion == 0){
+							nuevaZonaVacia(event.getSender(), true);
+						}
+						else if(opcion == 1){
+							nuevaZonaPortales(event.getSender());
+						}
+						else if(opcion == 2){
+							nuevaZonaVias(event.getSender());
+						}
+					}
+				};
+				t.schedule(10);
 			}
 		});
 	}
 	
-	private void nuevaZonaVacia(final Polyline pline) {
+	private void nuevaZonaVacia(final Polygon poly, boolean verViasPortales) {
+		if (poly.getArea() > 3000000){
+			verViasPortales = false;
+		}
+		final boolean ver = verViasPortales;
+		final MyPolygon myPoly = new MyPolygon(poly, map);
+		if (myPoly.getTriangle(0) == null){
+			errorPoligono.show();
+			errorPoligono.center();
+			map.removeOverlay(poly);
+			return;
+		}
+		map.getDragObject().setDraggableCursor("progress");
 		try {
-			final MyPolygon myPoly = new MyPolygon(pline, map);
-			map.getDragObject().setDraggableCursor("progress");
-			greetingService.getZonas(myPoly,
+			greetingService.getZona(myPoly,
 					new AsyncCallback<Zona>() {
 						public void onFailure(Throwable caught) {
 							error.show();
@@ -982,11 +986,10 @@ public class Principal implements EntryPoint{
 							map.getDragObject().setDraggableCursor(DraggableObject.getDraggableCursorDefault());
 						}
 						public void onSuccess(final Zona result) {
-							final Polygon poly = MyPolygon.getPolygon(pline);
 							ZonaClient zona = new ZonaClient(result);
 							zona.setPoly(poly);
 							zona.setMyPoly(myPoly);
-							zona.setVer(true);
+							zona.setVer(ver);
 							nuevaZona(zona);
 							map.getDragObject().setDraggableCursor(DraggableObject.getDraggableCursorDefault());
 						}
@@ -998,6 +1001,7 @@ public class Principal implements EntryPoint{
 	
 	private void nuevaZona(ZonaClient zona){
 		zona.getPoly().setStrokeStyle(PolyStyleOptions.newInstance(zona.calculateColor()));
+		zona.getPoly().setStrokeStyle(PolyStyleOptions.getInstance(3));
 		zona.getPoly().setFillStyle(PolyStyleOptions.newInstance(zona.getColor(), 10, 0.3));
 		
 		map.addOverlay(zona.getPoly());
@@ -1082,10 +1086,27 @@ public class Principal implements EntryPoint{
 	}
 	
 	
-	private void nuevaZonaVias(final Polyline pline) {
+	private void nuevaZonaVias(final Polygon poly) {
+		if (poly.getArea() > 3000000){
+			DialogBox zonaGrande = crearDialogoGenerico("AVISO", "La zona solicitada es demasiado grande y tardaría en obtenerse. Se mostrará información padronal sin vías.");
+			zonaGrande.addCloseHandler(new CloseHandler<PopupPanel>() {
+				public void onClose(CloseEvent<PopupPanel> event) {
+					nuevaZonaVacia(poly, false);
+				}
+			});
+			zonaGrande.show();
+			zonaGrande.center();
+			return;
+		}
+		final MyPolygon myPoly = new MyPolygon(poly, map);
+		if (myPoly.getTriangle(0) == null){
+			errorPoligono.show();
+			errorPoligono.center();
+			map.removeOverlay(poly);
+			return;
+		}
+		map.getDragObject().setDraggableCursor("progress");
 		try {
-			final MyPolygon myPoly = new MyPolygon(pline, map);
-			map.getDragObject().setDraggableCursor("progress");
 			greetingService.getVias(myPoly,
 					new AsyncCallback<Zona>() {
 						public void onFailure(Throwable caught) {
@@ -1099,7 +1120,7 @@ public class Principal implements EntryPoint{
 								map.addOverlay(createMarkerVia(vias.get(i), true));
 							}
 							ZonaClient zona = new ZonaClient();
-							zona.setPoly(MyPolygon.getPolygon(pline));
+							zona.setPoly(poly);
 							zona.setMyPoly(myPoly);
 							zona.setVer(false);
 							zona.setHabitantes(result.getHabitantes());
@@ -1138,10 +1159,27 @@ public class Principal implements EntryPoint{
 	}
 	
 
-	private void nuevaZonaPortales(final Polyline pline) {
+	private void nuevaZonaPortales(final Polygon poly) {
+		if (poly.getArea() > 1500000){
+			DialogBox zonaGrande = crearDialogoGenerico("AVISO", "La zona solicitada es demasiado grande y tardaría en obtenerse. Se mostrará información padronal sin portales.");
+			zonaGrande.addCloseHandler(new CloseHandler<PopupPanel>() {
+				public void onClose(CloseEvent<PopupPanel> event) {
+					nuevaZonaVacia(poly, false);
+				}
+			});
+			zonaGrande.show();
+			zonaGrande.center();
+			return;
+		}
+		final MyPolygon myPoly = new MyPolygon(poly, map);
+		if (myPoly.getTriangle(0) == null){
+			errorPoligono.show();
+			errorPoligono.center();
+			map.removeOverlay(poly);
+			return;
+		}
+		map.getDragObject().setDraggableCursor("progress");
 		try {
-			final MyPolygon myPoly = new MyPolygon(pline, map);
-			map.getDragObject().setDraggableCursor("progress");
 			greetingService.getPortales(myPoly,
 					new AsyncCallback<ArrayList<Portal>>() {
 						public void onFailure(Throwable caught) {
@@ -1158,7 +1196,6 @@ public class Principal implements EntryPoint{
 								habitantes += result.get(i).getHabitantes();
 								hojas += result.get(i).getHojas();
 							}	
-							final Polygon poly = MyPolygon.getPolygon(pline);
 							ZonaClient zona = new ZonaClient();
 							zona.setPoly(poly);
 							zona.setMyPoly(myPoly);
