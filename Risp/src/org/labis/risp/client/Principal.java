@@ -834,7 +834,7 @@ public class Principal implements EntryPoint{
 	}
 	
 	
-	private Marker createMarkerPortal(final Portal portal, final boolean verTodasVias) {
+	private Marker createMarkerPortal(final Portal portal, final boolean verTodaVia) {
 		MarkerOptions markerOpt = MarkerOptions.newInstance();
 		markerOpt.setClickable(true);
 		MarkerOptions opt = portalIcon1;
@@ -851,7 +851,7 @@ public class Principal implements EntryPoint{
 				if (markerInfo != null && markerInfo == marker){
 					return;
 				}
-				infoWindowPortal(marker, portal, verTodasVias);
+				infoWindowPortal(marker, portal, verTodaVia);
 			}
 		});
 		final MarkerMouseOutHandler out = new MarkerMouseOutHandler(){
